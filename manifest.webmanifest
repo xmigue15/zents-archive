@@ -1,0 +1,34 @@
+{
+  "name": "Zent — Tus finanzas claras",
+  "short_name": "Zent",
+  "description": "Controla tus ingresos, gastos y cuentas de forma simple. Tus datos se guardan solo en tu dispositivo.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "./#/resumen",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f6fb",
+  "theme_color": "#5b5bd6",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
