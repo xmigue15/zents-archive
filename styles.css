@@ -459,6 +459,12 @@ body[data-view="ajustes"] .fab {
   min-width: 0;
 }
 
+.page-head .head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .page-head h2 {
   margin: 2px 0 0;
   font-size: clamp(24px, 3vw, 32px);

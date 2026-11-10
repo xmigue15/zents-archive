@@ -31,7 +31,8 @@
     moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>',
     monitor: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
     download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 4 5-4M5 20h14"/></svg>',
-    upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>'
+    upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>',
+    transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>'
   };
 
   const PALETTE = ['#5b5bd6', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#64748b'];
@@ -255,19 +256,21 @@
     if (!raw || typeof raw !== 'object') return null;
     const amount = toAmount(raw.amount);
     if (!amount) return null;
-    const type = raw.type === 'income' ? 'income' : 'expense';
+    const type = raw.type === 'transfer' ? 'transfer' : (raw.type === 'income' ? 'income' : 'expense');
+    const isTransfer = type === 'transfer';
     const date = /^\d{4}-\d{2}-\d{2}$/.test(String(raw.date || '')) ? String(raw.date) : todayISO();
     const now = new Date().toISOString();
     return {
       id: String(raw.id || uid()),
       type,
       amount,
-      description: String(raw.description || '').trim().slice(0, 80) || 'Movimiento',
-      categoryId: String(raw.categoryId || ''),
+      description: String(raw.description || '').trim().slice(0, 80) || (isTransfer ? 'Transferencia' : 'Movimiento'),
+      categoryId: isTransfer ? '' : String(raw.categoryId || ''),
       accountId: String(raw.accountId || ''),
+      toAccountId: isTransfer ? String(raw.toAccountId || '') : '',
       date,
       note: String(raw.note || '').trim().slice(0, 140),
-      gmf: Boolean(raw.gmf),
+      gmf: isTransfer ? false : Boolean(raw.gmf),
       createdAt: String(raw.createdAt || now),
       updatedAt: String(raw.updatedAt || now)
     };
@@ -295,11 +298,24 @@
 
     // Reparar referencias de respaldos antiguos o incompletos.
     out.movements.forEach((m) => {
+      if (m.type === 'transfer') {
+        if (!out.accounts.some((a) => a.id === m.accountId)) m.accountId = out.accounts[0].id;
+        m.categoryId = '';
+        m.gmf = false;
+        return;
+      }
       if (!out.accounts.some((a) => a.id === m.accountId)) m.accountId = out.accounts[0].id;
       if (!out.categories.some((c) => c.id === m.categoryId && c.type === m.type)) {
         const fallback = out.categories.find((c) => c.type === m.type);
         m.categoryId = fallback ? fallback.id : '';
       }
+    });
+
+    out.movements = out.movements.filter((m) => {
+      if (m.type !== 'transfer') return true;
+      return m.accountId !== m.toAccountId &&
+        out.accounts.some((a) => a.id === m.accountId) &&
+        out.accounts.some((a) => a.id === m.toAccountId);
     });
 
     return out;
@@ -325,6 +341,7 @@
     movAccount: 'all',
     statsMonth: currentMonth(),
     movementDraft: null,
+    transferDraft: null,
     confirmCallback: null,
     lastFocus: null,
     renderedView: null
@@ -353,8 +370,14 @@
     const account = accountById(id);
     if (!account) return 0;
     return state.movements.reduce((total, movement) => {
+      const amount = movementTotal(movement);
+      if (movement.type === 'transfer') {
+        if (movement.accountId === id) return total - amount;
+        if (movement.toAccountId === id) return total + amount;
+        return total;
+      }
       if (movement.accountId !== id) return total;
-      return total + (movement.type === 'income' ? movementTotal(movement) : -movementTotal(movement));
+      return total + (movement.type === 'income' ? amount : -amount);
     }, account.initial);
   }
 
@@ -366,14 +389,18 @@
     const result = { income: 0, expense: 0, count: 0 };
     state.movements.forEach((movement) => {
       if (ym && movement.date.slice(0, 7) !== ym) return;
-      result[movement.type] += movementTotal(movement);
+      if (movement.type === 'income' || movement.type === 'expense') {
+        result[movement.type] += movementTotal(movement);
+      }
       result.count += 1;
     });
     return result;
   }
 
   function movementCountForAccount(id) {
-    return state.movements.filter((m) => m.accountId === id).length;
+    return state.movements.filter((m) =>
+      m.accountId === id || (m.type === 'transfer' && m.toAccountId === id)
+    ).length;
   }
 
   function categoryBreakdown(type, ym) {
@@ -426,15 +453,19 @@
     return sortedMovements().filter((movement) => {
       if (ui.movMonth && movement.date.slice(0, 7) !== ui.movMonth) return false;
       if (ui.movType !== 'all' && movement.type !== ui.movType) return false;
-      if (ui.movAccount !== 'all' && movement.accountId !== ui.movAccount) return false;
+      if (ui.movAccount !== 'all' &&
+        movement.accountId !== ui.movAccount &&
+        !(movement.type === 'transfer' && movement.toAccountId === ui.movAccount)) return false;
       if (query) {
         const category = categoryById(movement.categoryId);
         const account = accountById(movement.accountId);
+        const toAccount = movement.type === 'transfer' ? accountById(movement.toAccountId) : null;
         const haystack = normalizeText([
           movement.description,
           movement.note,
           category && category.name,
-          account && account.name
+          account && account.name,
+          toAccount && toAccount.name
         ].join(' '));
         if (haystack.indexOf(query) === -1) return false;
       }
@@ -456,6 +487,25 @@
   }
 
   function movementRow(movement) {
+    if (movement.type === 'transfer') {
+      const from = accountById(movement.accountId);
+      const to = accountById(movement.toAccountId);
+      const title = (from ? from.name : 'Cuenta') + ' → ' + (to ? to.name : 'Cuenta');
+      const sub = [
+        formatDate(movement.date),
+        movement.note
+      ].filter(Boolean).join(' · ');
+
+      return '<button class="row" data-action="edit-transfer" data-id="' + esc(movement.id) + '">' +
+        '<span class="cat-ic" style="background:#06b6d422;color:#06b6d4">🔁</span>' +
+        '<span class="grow">' +
+          '<span class="title">' + esc(title) + '</span>' +
+          '<span class="sub">' + esc(sub) + '</span>' +
+        '</span>' +
+        '<b class="amt">' + formatMoney(movementTotal(movement)) + '</b>' +
+      '</button>';
+    }
+
     const category = categoryById(movement.categoryId);
     const account = accountById(movement.accountId);
     const color = catColor(category);
@@ -692,7 +742,10 @@
 
     return '<div class="page-head">' +
         '<div><p class="eyebrow">Patrimonio</p><h2>Cuentas</h2></div>' +
-        '<button class="btn sm" data-action="add-account">' + ICON.plus + ' Nueva</button>' +
+        '<div class="head-actions">' +
+          '<button class="btn ghost sm" data-action="add-transfer">' + ICON.transfer + ' Transferir</button>' +
+          '<button class="btn sm" data-action="add-account">' + ICON.plus + ' Nueva</button>' +
+        '</div>' +
       '</div>' +
       '<section class="hero">' +
         '<p class="hero-label">Saldo total</p>' +
@@ -1107,6 +1160,155 @@
     });
   }
 
+  function transferFormHTML() {
+    const draft = ui.transferDraft;
+    if (!draft) return '';
+    const accountOptions = (selectedId) => state.accounts.map((account) =>
+      '<option value="' + esc(account.id) + '"' + (account.id === selectedId ? ' selected' : '') + '>' + esc(account.name) + '</option>'
+    ).join('');
+
+    return '<div class="modal-head">' +
+        '<h2>' + (draft.id ? 'Editar transferencia' : 'Nueva transferencia') + '</h2>' +
+        '<button class="icon-btn sm" data-action="close-modal" aria-label="Cerrar">' + ICON.close + '</button>' +
+      '</div>' +
+      '<form id="transferForm" novalidate>' +
+        '<div class="grid-2">' +
+          '<div class="field"><label for="transferFrom">Desde</label><select class="select" id="transferFrom">' + accountOptions(draft.fromId) + '</select></div>' +
+          '<div class="field"><label for="transferTo">Hacia</label><select class="select" id="transferTo">' + accountOptions(draft.toId) + '</select></div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label for="transferAmount">Monto</label>' +
+          '<input class="input amount-input" id="transferAmount" inputmode="numeric" autocomplete="off" placeholder="$ 0" value="' + (draft.amount ? formatNumberInput(draft.amount) : '') + '" data-raw="' + (draft.amount || '') + '" data-amount-input data-autofocus>' +
+        '</div>' +
+        '<div class="grid-2">' +
+          '<div class="field"><label for="transferDate">Fecha</label><input class="input" id="transferDate" type="date" value="' + esc(draft.date) + '"></div>' +
+          '<div class="field"><label for="transferNote">Nota (opcional)</label><input class="input" id="transferNote" maxlength="140" autocomplete="off" placeholder="Detalle corto" value="' + esc(draft.note) + '"></div>' +
+        '</div>' +
+        (draft.id ? '<button type="button" class="btn danger block" data-action="delete-transfer" data-id="' + esc(draft.id) + '">' + ICON.trash + ' Eliminar transferencia</button>' : '') +
+        '<div class="modal-actions">' +
+          '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
+          '<button type="submit" class="btn">' + (draft.id ? 'Guardar cambios' : 'Transferir') + '</button>' +
+        '</div>' +
+      '</form>';
+  }
+
+  function openTransferModal(id) {
+    const existing = id ? state.movements.find((movement) => movement.id === id && movement.type === 'transfer') : null;
+    if (state.accounts.length < 2) {
+      toast('Necesitas al menos dos cuentas para transferir.');
+      navigate('cuentas');
+      return;
+    }
+
+    const fromId = existing ? existing.accountId : state.accounts[0].id;
+    const toAccount = existing
+      ? accountById(existing.toAccountId)
+      : state.accounts.find((account) => account.id !== fromId);
+
+    ui.transferDraft = {
+      id: existing ? existing.id : null,
+      fromId,
+      toId: toAccount ? toAccount.id : state.accounts[1].id,
+      amount: existing ? existing.amount : 0,
+      date: existing ? existing.date : todayISO(),
+      note: existing ? existing.note : ''
+    };
+    openModal(transferFormHTML());
+  }
+
+  function saveTransfer() {
+    const draft = ui.transferDraft;
+    if (!draft) return;
+
+    const from = $('#transferFrom');
+    const to = $('#transferTo');
+    const amount = $('#transferAmount');
+    const date = $('#transferDate');
+    const note = $('#transferNote');
+
+    if (from) draft.fromId = from.value;
+    if (to) draft.toId = to.value;
+    if (amount) draft.amount = Number(amount.dataset.raw || 0);
+    if (date) draft.date = date.value;
+    if (note) draft.note = note.value;
+
+    if (!draft.amount || draft.amount <= 0) {
+      toast('Escribe un monto mayor a cero.');
+      if (amount) amount.focus();
+      return;
+    }
+    if (!accountById(draft.fromId) || !accountById(draft.toId)) {
+      toast('Elige cuentas válidas.');
+      return;
+    }
+    if (draft.fromId === draft.toId) {
+      toast('Las cuentas de origen y destino deben ser diferentes.');
+      return;
+    }
+    if (!draft.date) draft.date = todayISO();
+
+    const wasEdit = !!draft.id;
+    const now = new Date().toISOString();
+
+    if (draft.id) {
+      const movement = state.movements.find((item) => item.id === draft.id);
+      if (movement) {
+        movement.type = 'transfer';
+        movement.amount = draft.amount;
+        movement.description = 'Transferencia';
+        movement.categoryId = '';
+        movement.accountId = draft.fromId;
+        movement.toAccountId = draft.toId;
+        movement.date = draft.date;
+        movement.note = draft.note.trim();
+        movement.gmf = false;
+        movement.updatedAt = now;
+      }
+    } else {
+      state.movements.push({
+        id: uid(),
+        type: 'transfer',
+        amount: draft.amount,
+        description: 'Transferencia',
+        categoryId: '',
+        accountId: draft.fromId,
+        toAccountId: draft.toId,
+        date: draft.date,
+        note: draft.note.trim(),
+        gmf: false,
+        createdAt: now,
+        updatedAt: now
+      });
+    }
+
+    save();
+    closeModal();
+    ui.transferDraft = null;
+    render();
+    toast(wasEdit ? 'Transferencia actualizada.' : 'Transferencia realizada.');
+  }
+
+  function deleteTransfer(id) {
+    const movement = state.movements.find((item) => item.id === id && item.type === 'transfer');
+    if (!movement) return;
+    const from = accountById(movement.accountId);
+    const to = accountById(movement.toAccountId);
+    confirmDialog({
+      title: 'Eliminar transferencia',
+      message: '¿Eliminar la transferencia de ' + formatMoney(movement.amount) + '?',
+      sub: (from ? from.name : 'Cuenta') + ' → ' + (to ? to.name : 'Cuenta') + '. Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      onConfirm: () => {
+        state.movements = state.movements.filter((item) => item.id !== id);
+        save();
+        ui.transferDraft = null;
+        closeModal();
+        render();
+        toast('Transferencia eliminada.');
+      }
+    });
+  }
+
   function openAccountModal(id) {
     const account = id ? accountById(id) : null;
     const defaultColor = PALETTE[state.accounts.length % PALETTE.length];
@@ -1456,6 +1658,18 @@
         deleteMovement(id);
         break;
 
+      case 'add-transfer':
+        openTransferModal();
+        break;
+
+      case 'edit-transfer':
+        openTransferModal(id);
+        break;
+
+      case 'delete-transfer':
+        deleteTransfer(id);
+        break;
+
       case 'movement-type': {
         syncMovementDraftFromForm();
         const draft = ui.movementDraft;
@@ -1626,6 +1840,9 @@
     if (form.id === 'movementForm') {
       event.preventDefault();
       saveMovement();
+    } else if (form.id === 'transferForm') {
+      event.preventDefault();
+      saveTransfer();
     } else if (form.id === 'accountForm') {
       event.preventDefault();
       saveAccount();
