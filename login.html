@@ -8,9 +8,10 @@
 <link rel="icon" href="icons/zent.svg" type="image/svg+xml">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="sync.js"></script>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: radial-gradient(1200px 600px at 15% -10%, rgba(91, 91, 214, 0.12), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(139, 92, 246, 0.09), transparent 55%), #f5f6fb; color: #141a2e; min-height: 100dvh; display: flex; align-items: center; justify-content: center; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: radial-gradient(1200px 600px at 15% -10%, rgba(91, 91, 214, 0.12), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(139, 92, 246, 0.09), transparent 55%), #f5f6fb; color: #141a2e; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .card { width: min(92vw, 400px); padding: 32px 24px; border-radius: 24px; background: #fff; border: 1px solid #e4e7f0; box-shadow: 0 20px 50px rgba(20, 26, 46, 0.1); }
   h1 { margin: 0 0 8px; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
   p { margin: 0 0 24px; color: #6b7280; font-size: 14px; }
@@ -26,9 +27,11 @@
   .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e4e7f0; }
   .link { background: none; border: 0; color: #5b5bd6; font-size: 13.5px; font-weight: 700; cursor: pointer; text-align: center; width: 100%; padding: 10px; }
   .link:hover { text-decoration: underline; }
-  .error { margin-top: 12px; color: #e11d48; font-size: 13px; font-weight: 600; display: none; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 12px 18px; border-radius: 999px; background: #141a2e; color: #fff; font-size: 13.5px; font-weight: 650; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .error { margin-top: 12px; color: #e11d48; font-size: 13px; font-weight: 600; display: none; line-height: 1.45; }
+  .error.ok { color: #0f9d76; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 12px 18px; border-radius: 999px; background: #141a2e; color: #fff; font-size: 13.5px; font-weight: 650; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; text-align: center; }
   .toast.on { opacity: 1; }
+  .hint { font-size: 12px; color: #9aa4ba; margin-top: 10px; text-align: center; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -40,51 +43,55 @@
   <h1>Zent</h1>
   <p>Inicia sesión para sincronizar tus finanzas en todos tus dispositivos.</p>
 
-  <div id="mode-login" style="display:block">
+  <div id="mode-login">
     <label for="loginEmail">Correo electrónico</label>
-    <input id="loginEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+    <input id="loginEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
     <label for="loginPassword">Contraseña</label>
     <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
-    <button class="btn" id="btnLogin" data-label="Iniciar sesión">Iniciar sesión</button>
+    <button class="btn" id="btnLogin" data-label="Iniciar sesión" type="button">Iniciar sesión</button>
   </div>
 
   <div class="divider">o</div>
 
   <div id="mode-signup" style="display:none">
     <label for="signupEmail">Correo electrónico</label>
-    <input id="signupEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+    <input id="signupEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
     <label for="signupPassword">Contraseña</label>
-    <input id="signupPassword" type="password" placeholder="••••••••" autocomplete="new-password">
-    <button class="btn" id="btnSignup" data-label="Crear cuenta">Crear cuenta</button>
+    <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+    <button class="btn" id="btnSignup" data-label="Crear cuenta" type="button">Crear cuenta</button>
+    <p class="hint">Te enviaremos un correo para confirmar la cuenta.</p>
   </div>
 
-  <button class="link" id="toggleMode">¿No tienes cuenta? Regístrate</button>
-  <button class="link" id="toggleLogin">¿Ya tienes cuenta? Inicia sesión</button>
+  <button class="link" id="toggleMode" type="button">¿No tienes cuenta? Regístrate</button>
+  <button class="link" id="toggleLogin" type="button" style="display:none">¿Ya tienes cuenta? Inicia sesión</button>
 
-  <div id="error" class="error"></div>
+  <div id="error" class="error" role="alert" aria-live="assertive"></div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
-(function() {
+(function () {
+  'use strict';
+
   const btnLogin = document.getElementById('btnLogin');
   const btnSignup = document.getElementById('btnSignup');
   const toggleMode = document.getElementById('toggleMode');
   const toggleLogin = document.getElementById('toggleLogin');
   const modeLogin = document.getElementById('mode-login');
   const modeSignup = document.getElementById('mode-signup');
-  const error = document.getElementById('error');
-  const toast = document.getElementById('toast');
+  const errorBox = document.getElementById('error');
+  const toastEl = document.getElementById('toast');
 
   function showToast(msg) {
-    toast.textContent = msg;
-    toast.classList.add('on');
-    setTimeout(() => toast.classList.remove('on'), 2400);
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    setTimeout(() => toastEl.classList.remove('on'), 2600);
   }
 
-  function showError(msg) {
-    error.textContent = msg;
-    error.style.display = 'block';
+  function showError(msg, ok) {
+    errorBox.textContent = msg;
+    errorBox.style.display = msg ? 'block' : 'none';
+    errorBox.classList.toggle('ok', Boolean(ok));
   }
 
   function setLoading(el, loading) {
@@ -92,44 +99,120 @@
     el.textContent = loading ? 'Procesando…' : el.dataset.label;
   }
 
+  function translateError(err) {
+    const msg = (err && err.message ? err.message : String(err || '')).toLowerCase();
+
+    if (msg.includes('invalid login credentials')) return 'Correo o contraseña incorrectos.';
+    if (msg.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y spam).';
+    if (msg.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Inicia sesión.';
+    if (msg.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
+    if (msg.includes('unable to validate email') || msg.includes('invalid email')) return 'El correo no es válido.';
+    if (msg.includes('rate limit') || msg.includes('too many requests')) return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+    if (msg.includes('signups not allowed')) return 'El registro está deshabilitado en Supabase.';
+    if (msg.includes('failed to fetch') || msg.includes('networkerror')) return 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.';
+    if (msg.includes('email address') && msg.includes('invalid')) return 'El correo no es válido.';
+    return (err && err.message) ? err.message : 'Ocurrió un error inesperado.';
+  }
+
+  function client() {
+    if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+      showError('No se pudo conectar con Supabase. Revisa tu conexión y recarga la página.');
+      return null;
+    }
+    return supabaseClient;
+  }
+
   toggleMode.addEventListener('click', () => {
     modeLogin.style.display = 'none';
     modeSignup.style.display = 'block';
-    error.style.display = 'none';
+    toggleMode.style.display = 'none';
+    toggleLogin.style.display = 'block';
+    showError('');
   });
+
   toggleLogin.addEventListener('click', () => {
     modeSignup.style.display = 'none';
     modeLogin.style.display = 'block';
-    error.style.display = 'none';
+    toggleMode.style.display = 'block';
+    toggleLogin.style.display = 'none';
+    showError('');
   });
 
-  btnLogin.addEventListener('click', async (e) => {
-    e.preventDefault();
+  async function handleLogin() {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
     if (!email || !password) { showError('Completa correo y contraseña.'); return; }
+
+    const sb = client();
+    if (!sb) return;
+
     showError('');
     setLoading(btnLogin, true);
-    const { data, error: err } = await supabaseClient.auth.signInWithPassword({ email, password });
-    setLoading(btnLogin, false);
-    if (err) { showError(err.message); return; }
-    showToast('Sesión iniciada.');
-    setTimeout(() => { location.href = 'index.html'; }, 600);
-  });
+    try {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) { showError(translateError(error)); return; }
+      showToast('Sesión iniciada.');
+      setTimeout(() => { location.href = 'index.html'; }, 500);
+    } catch (err) {
+      showError(translateError(err));
+    } finally {
+      setLoading(btnLogin, false);
+    }
+  }
 
-  btnSignup.addEventListener('click', async (e) => {
-    e.preventDefault();
+  async function handleSignup() {
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
     if (!email || !password) { showError('Completa correo y contraseña.'); return; }
+    if (password.length < 6) { showError('La contraseña debe tener al menos 6 caracteres.'); return; }
+
+    const sb = client();
+    if (!sb) return;
+
     showError('');
     setLoading(btnSignup, true);
-    const { data, error: err } = await supabaseClient.auth.signUp({ email, password });
-    setLoading(btnSignup, false);
-    if (err) { showError(err.message); return; }
-    showToast('Cuenta creada. Inicia sesión.');
-    setTimeout(() => { modeSignup.style.display = 'none'; modeLogin.style.display = 'block'; error.style.display = 'none'; }, 600);
+    try {
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if (error) { showError(translateError(error)); return; }
+
+      if (data && data.session) {
+        showToast('Cuenta creada. Entrando…');
+        setTimeout(() => { location.href = 'index.html'; }, 700);
+        return;
+      }
+
+      showError('Cuenta creada. Revisa tu correo (' + email + ') y haz clic en el enlace de confirmación. Después inicia sesión aquí.', true);
+      document.getElementById('signupPassword').value = '';
+    } catch (err) {
+      showError(translateError(err));
+    } finally {
+      setLoading(btnSignup, false);
+    }
+  }
+
+  btnLogin.addEventListener('click', handleLogin);
+  btnSignup.addEventListener('click', handleSignup);
+
+  document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLogin();
   });
+  document.getElementById('signupPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleSignup();
+  });
+
+  // Si ya hay una sesión activa, ir directo a la app.
+  (async () => {
+    if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+      showError('No se pudo cargar Supabase. Revisa tu conexión, desactiva bloqueadores y recarga la página.');
+      return;
+    }
+    try {
+      const { data } = await supabaseClient.auth.getSession();
+      if (data && data.session) location.replace('index.html');
+    } catch (err) {
+      console.warn('Zent: no se pudo comprobar la sesión.', err);
+    }
+  })();
 })();
 </script>
 </body>

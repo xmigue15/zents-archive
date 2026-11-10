@@ -314,7 +314,9 @@
       console.error('Zent: no se pudo guardar.', error);
       toast('No se pudieron guardar los datos en este dispositivo.');
     }
-    sync.saveState(state).catch(() => {});
+    if (window.sync) {
+      Promise.resolve(sync.saveState(state)).catch(() => {});
+    }
   }
 
   const accountById = (id) => state.accounts.find((a) => a.id === id) || null;
@@ -1489,8 +1491,19 @@
         break;
 
       case 'sign-out':
-        sync.signOut();
-        location.href = 'login.html';
+        (async () => {
+          try {
+            if (window.sync) await sync.signOut();
+          } catch (error) {
+            console.warn('Zent: error al cerrar sesión.', error);
+          }
+          try {
+            localStorage.removeItem(STORE_KEY);
+          } catch (error) {
+            /* sin acceso a localStorage */
+          }
+          location.href = 'login.html';
+        })();
         break;
 
       default:
@@ -1604,12 +1617,20 @@
   registerServiceWorker();
 
   (async () => {
+    if (!window.sync) return;
     try {
       const synced = await sync.loadStateFromSupabase();
       if (synced) {
         state = normalizeState(synced);
-        save();
+        try {
+          localStorage.setItem(STORE_KEY, JSON.stringify(state));
+        } catch (error) {
+          console.warn('Zent: no se pudo guardar la copia local.', error);
+        }
         render();
+      } else if (state.movements.length > 0 || state.accounts.length > 0) {
+        // Primera vez con esta cuenta: sube lo que ya exista en este dispositivo.
+        await sync.saveState(state);
       }
     } catch (error) {
       console.warn('Zent: no se pudo sincronizar con Supabase.', error);
