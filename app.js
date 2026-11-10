@@ -342,6 +342,7 @@
     statsMonth: currentMonth(),
     movementDraft: null,
     transferDraft: null,
+    categoryType: 'expense',
     confirmCallback: null,
     lastFocus: null,
     renderedView: null
@@ -648,9 +649,11 @@
       ['all', 'Todos'],
       ['income', 'Ingresos'],
       ['expense', 'Gastos']
-    ].map(([value, label]) =>
-      '<button class="chip' + (ui.movType === value ? ' active' : '') + '" data-action="mov-type-filter" data-value="' + value + '">' + label + '</button>'
-    ).join('');
+    ].map(([value, label]) => {
+      const active = ui.movType === value;
+      const tone = active && value !== 'all' ? ' ' + value : '';
+      return '<button type="button" class="' + (active ? 'active' + tone : '') + '" data-action="mov-type-filter" data-value="' + value + '">' + label + '</button>';
+    }).join('');
 
     return '<div class="page-head">' +
         '<div><p class="eyebrow">Historial</p><h2>Movimientos</h2></div>' +
@@ -661,14 +664,22 @@
           '<div class="search">' + ICON.search +
             '<input class="input" id="movSearch" type="search" autocomplete="off" placeholder="Buscar por descripción, categoría o cuenta" value="' + esc(ui.movQuery) + '" aria-label="Buscar movimientos">' +
           '</div>' +
-          '<div class="filter-top">' +
-            '<input class="input" id="movMonth" type="month" value="' + esc(ui.movMonth) + '" aria-label="Filtrar por mes" style="max-width:190px">' +
-            '<select class="select" id="movAccount" aria-label="Filtrar por cuenta" style="max-width:210px">' +
-              '<option value="all"' + (ui.movAccount === 'all' ? ' selected' : '') + '>Todas las cuentas</option>' + accountOptions +
-            '</select>' +
-            '<button class="chip' + (!ui.movMonth ? ' active' : '') + '" data-action="clear-month">Todo</button>' +
+          '<div class="filters-grid">' +
+            '<div class="filter-field">' +
+              '<div class="filter-label-row">' +
+                '<label class="filter-label" for="movMonth">Mes</label>' +
+                (ui.movMonth ? '<button type="button" class="link" data-action="clear-month">Ver todo</button>' : '') +
+              '</div>' +
+              '<input class="input" id="movMonth" type="month" value="' + esc(ui.movMonth) + '">' +
+            '</div>' +
+            '<div class="filter-field">' +
+              '<label class="filter-label" for="movAccount">Cuenta</label>' +
+              '<select class="select" id="movAccount">' +
+                '<option value="all"' + (ui.movAccount === 'all' ? ' selected' : '') + '>Todas las cuentas</option>' + accountOptions +
+              '</select>' +
+            '</div>' +
           '</div>' +
-          '<div class="chips">' + typeChips + '</div>' +
+          '<div class="segmented filter-types" role="group" aria-label="Tipo de movimiento">' + typeChips + '</div>' +
         '</div>' +
       '</section>' +
       '<div id="movResults">' + movementResultsHTML() + '</div>';
@@ -798,27 +809,6 @@
     '</button>';
   }
 
-  function categoryGroup(type, title) {
-    const categories = state.categories.filter((category) => category.type === type);
-    const items = categories.map((category) => {
-      const count = state.movements.filter((movement) => movement.categoryId === category.id).length;
-      const color = catColor(category);
-      return '<div class="category-item">' +
-        '<span class="cat-ic" style="background:' + color + '22;color:' + color + '">' + esc(category.emoji) + '</span>' +
-        '<span class="name">' + esc(category.name) + '</span>' +
-        '<span class="count">' + count + '</span>' +
-        '<button class="icon-btn sm danger" data-action="delete-category" data-id="' + esc(category.id) + '" aria-label="Eliminar categoría ' + esc(category.name) + '"' + (count ? ' disabled' : '') + '>' + ICON.trash + '</button>' +
-      '</div>';
-    }).join('');
-
-    return '<div>' +
-      '<div class="category-group-head"><h4>' + title + '</h4>' +
-        '<button class="icon-btn sm" data-action="add-category" data-type="' + type + '" aria-label="Agregar categoría">' + ICON.plus + '</button>' +
-      '</div>' +
-      '<div class="category-list">' + (items || '<p class="hint">Sin categorías.</p>') + '</div>' +
-    '</div>';
-  }
-
   function viewAjustes() {
     return '<div class="page-head"><div><p class="eyebrow">Preferencias</p><h2>Ajustes</h2></div></div>' +
       '<section class="card settings-block">' +
@@ -832,19 +822,15 @@
       '</section>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Categorías</h3>' +
-        '<p class="settings-desc">Agrega categorías propias. Las que ya tienen movimientos no se pueden eliminar.</p>' +
-        '<div class="category-groups">' +
-          categoryGroup('expense', 'Gastos') +
-          categoryGroup('income', 'Ingresos') +
-        '</div>' +
+        '<p class="settings-desc">Personaliza el nombre y el emoji de tus categorías, o crea nuevas.</p>' +
+        '<button class="btn ghost" data-action="manage-categories">' + ICON.edit + ' Administrar categorías</button>' +
       '</section>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Datos</h3>' +
-        '<p class="settings-desc">Zent guarda todo en este dispositivo. Exporta un respaldo antes de borrar los datos del navegador.</p>' +
+        '<p class="settings-desc">Zent guarda todo en este dispositivo y en tu cuenta. Exporta una copia en Excel cuando quieras.</p>' +
         '<div class="data-actions">' +
-          '<button class="btn ghost" data-action="export-data">' + ICON.download + ' Exportar respaldo</button>' +
-          '<button class="btn ghost" data-action="import-data">' + ICON.upload + ' Importar</button>' +
-          '<button class="btn danger" data-action="clear-data">' + ICON.trash + ' Borrar todo</button>' +
+          '<button class="btn ghost" data-action="export-data">' + ICON.download + ' Exportar a Excel</button>' +
+          '<button class="btn ghost" data-action="import-data">' + ICON.upload + ' Importar respaldo</button>' +
         '</div>' +
         '<input type="file" id="importFile" accept="application/json,.json" hidden>' +
       '</section>' +
@@ -1408,31 +1394,77 @@
     });
   }
 
-  function openCategoryModal(type) {
-    const kind = type === 'income' ? 'income' : 'expense';
-    openModal(
-      '<div class="modal-head">' +
-        '<h2>Nueva categoría</h2>' +
+  function categoriesModalHTML() {
+    const kind = ui.categoryType === 'income' ? 'income' : 'expense';
+    const categories = state.categories.filter((category) => category.type === kind);
+    const cards = categories.map((category) => {
+      const count = state.movements.filter((movement) => movement.categoryId === category.id).length;
+      const color = catColor(category);
+      return '<button type="button" class="category-card" data-action="edit-category" data-id="' + esc(category.id) + '">' +
+        '<span class="cat-ic" style="background:' + color + '22;color:' + color + '">' + esc(category.emoji) + '</span>' +
+        '<span class="name">' + esc(category.name) + '</span>' +
+        '<span class="count">' + count + '</span>' +
+      '</button>';
+    }).join('');
+
+    return '<div class="modal-head">' +
+        '<h2>Categorías</h2>' +
         '<button class="icon-btn sm" data-action="close-modal" aria-label="Cerrar">' + ICON.close + '</button>' +
       '</div>' +
-      '<form id="categoryForm" data-type="' + kind + '" novalidate>' +
+      '<div class="segmented" role="group" aria-label="Tipo de categoría">' +
+        '<button type="button" class="' + (kind === 'expense' ? 'active expense' : '') + '" data-action="category-tab" data-type="expense">Gastos</button>' +
+        '<button type="button" class="' + (kind === 'income' ? 'active income' : '') + '" data-action="category-tab" data-type="income">Ingresos</button>' +
+      '</div>' +
+      '<p class="hint category-hint">Toca una categoría para cambiar su nombre o emoji.</p>' +
+      '<div class="category-grid">' + (cards || '<p class="hint">Sin categorías.</p>') + '</div>' +
+      '<button type="button" class="btn ghost block mt-16" data-action="add-category" data-type="' + kind + '">' + ICON.plus + ' Nueva categoría</button>';
+  }
+
+  function openCategoriesModal(type) {
+    ui.categoryType = type === 'income' ? 'income' : 'expense';
+    openModal(categoriesModalHTML());
+  }
+
+  function refreshCategoriesModal() {
+    const modal = $('#modalRoot .modal');
+    if (!modal) return;
+    modal.innerHTML = categoriesModalHTML();
+  }
+
+  function openCategoryModal(idOrType) {
+    const existing = typeof idOrType === 'string' && state.categories.some((category) => category.id === idOrType)
+      ? categoryById(idOrType)
+      : null;
+    const kind = existing ? existing.type : (idOrType === 'income' ? 'income' : 'expense');
+    const count = existing ? state.movements.filter((movement) => movement.categoryId === existing.id).length : 0;
+    const canDelete = Boolean(existing) && count === 0 &&
+      state.categories.filter((category) => category.type === kind).length > 1;
+
+    openModal(
+      '<div class="modal-head">' +
+        '<h2>' + (existing ? 'Editar categoría' : 'Nueva categoría') + '</h2>' +
+        '<button class="icon-btn sm" data-action="close-modal" aria-label="Cerrar">' + ICON.close + '</button>' +
+      '</div>' +
+      '<form id="categoryForm" data-id="' + esc(existing ? existing.id : '') + '" data-type="' + kind + '" novalidate>' +
         '<div class="field">' +
           '<label for="catName">Nombre</label>' +
-          '<input class="input" id="catName" maxlength="40" autocomplete="off" placeholder="Ej. Mascotas, Café, Freelance" value="" data-autofocus>' +
+          '<input class="input" id="catName" maxlength="40" autocomplete="off" placeholder="Ej. Mascotas, Café, Freelance" value="' + esc(existing ? existing.name : '') + '" data-autofocus>' +
         '</div>' +
         '<div class="grid-2">' +
           '<div class="field">' +
             '<label for="catEmoji">Emoji</label>' +
-            '<input class="input" id="catEmoji" maxlength="4" autocomplete="off" value="' + (kind === 'income' ? '💰' : '📦') + '">' +
+            '<input class="input" id="catEmoji" maxlength="4" autocomplete="off" value="' + esc(existing ? existing.emoji : (kind === 'income' ? '💰' : '📦')) + '">' +
           '</div>' +
           '<div class="field">' +
-            '<label for="catColor">Color</label>' +
-            '<input id="catColor" type="color" value="' + PALETTE[state.categories.length % PALETTE.length] + '" style="width:100%;height:48px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)">' +
+            '<label>Tipo</label>' +
+            '<div class="input static-field">' + (kind === 'income' ? 'Ingreso' : 'Gasto') + '</div>' +
           '</div>' +
         '</div>' +
+        (existing && count > 0 ? '<p class="hint">Esta categoría tiene ' + count + ' movimiento' + (count === 1 ? '' : 's') + ' y no se puede eliminar.</p>' : '') +
+        (canDelete ? '<button type="button" class="btn danger block" data-action="delete-category" data-id="' + esc(existing.id) + '">' + ICON.trash + ' Eliminar categoría</button>' : '') +
         '<div class="modal-actions">' +
-          '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
-          '<button type="submit" class="btn">Crear categoría</button>' +
+          '<button type="button" class="btn ghost" data-action="back-categories">Cancelar</button>' +
+          '<button type="submit" class="btn">' + (existing ? 'Guardar cambios' : 'Crear categoría') + '</button>' +
         '</div>' +
       '</form>'
     );
@@ -1441,13 +1473,12 @@
   function saveCategory() {
     const form = $('#categoryForm');
     if (!form) return;
+    const id = form.dataset.id || '';
     const type = form.dataset.type === 'income' ? 'income' : 'expense';
     const nameInput = $('#catName');
     const emojiInput = $('#catEmoji');
-    const colorInput = $('#catColor');
     const name = nameInput ? nameInput.value.trim() : '';
     const emoji = emojiInput ? emojiInput.value.trim().slice(0, 4) : '';
-    const color = colorInput && isColor(colorInput.value) ? colorInput.value : PALETTE[0];
 
     if (!name) {
       toast('Escribe un nombre para la categoría.');
@@ -1456,24 +1487,33 @@
     }
 
     const duplicate = state.categories.some((category) =>
-      category.type === type && normalizeText(category.name) === normalizeText(name)
+      category.id !== id && category.type === type && normalizeText(category.name) === normalizeText(name)
     );
     if (duplicate) {
       toast('Ya existe una categoría con ese nombre.');
       return;
     }
 
-    state.categories.push({
-      id: uid(),
-      name,
-      type,
-      emoji: emoji || (type === 'income' ? '💰' : '📦'),
-      color
-    });
+    if (id) {
+      const category = categoryById(id);
+      if (category) {
+        category.name = name;
+        category.emoji = emoji || category.emoji;
+      }
+    } else {
+      const sameType = state.categories.filter((category) => category.type === type).length;
+      state.categories.push({
+        id: uid(),
+        name,
+        type,
+        emoji: emoji || (type === 'income' ? '💰' : '📦'),
+        color: PALETTE[sameType % PALETTE.length]
+      });
+    }
     save();
-    closeModal();
     render();
-    toast('Categoría creada.');
+    toast(id ? 'Categoría actualizada.' : 'Categoría creada.');
+    openCategoriesModal(type);
   }
 
   function deleteCategory(id) {
@@ -1500,6 +1540,7 @@
         closeModal();
         render();
         toast('Categoría eliminada.');
+        openCategoriesModal(category.type);
       }
     });
   }
@@ -1524,23 +1565,251 @@
      Datos: exportar, importar y borrar
      ------------------------------------------------------------ */
 
+  const CRC32_TABLE = (() => {
+    const table = new Uint32Array(256);
+    for (let n = 0; n < 256; n += 1) {
+      let c = n;
+      for (let k = 0; k < 8; k += 1) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      table[n] = c >>> 0;
+    }
+    return table;
+  })();
+
+  function crc32(bytes) {
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i += 1) {
+      crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function zipStore(files) {
+    const encoder = new TextEncoder();
+    const parts = [];
+    const central = [];
+    let offset = 0;
+    const now = new Date();
+    const dosTime = ((now.getHours() << 11) | (now.getMinutes() << 5) | Math.floor(now.getSeconds() / 2)) & 0xFFFF;
+    const dosDate = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+
+    files.forEach((file) => {
+      const nameBytes = encoder.encode(file.name);
+      const data = typeof file.data === 'string' ? encoder.encode(file.data) : file.data;
+      const crc = crc32(data);
+
+      const local = new Uint8Array(30 + nameBytes.length);
+      const localView = new DataView(local.buffer);
+      localView.setUint32(0, 0x04034b50, true);
+      localView.setUint16(4, 20, true);
+      localView.setUint16(6, 0x0800, true);
+      localView.setUint16(8, 0, true);
+      localView.setUint16(10, dosTime, true);
+      localView.setUint16(12, dosDate, true);
+      localView.setUint32(14, crc, true);
+      localView.setUint32(18, data.length, true);
+      localView.setUint32(22, data.length, true);
+      localView.setUint16(26, nameBytes.length, true);
+      localView.setUint16(28, 0, true);
+      local.set(nameBytes, 30);
+      parts.push(local, data);
+
+      const header = new Uint8Array(46 + nameBytes.length);
+      const headerView = new DataView(header.buffer);
+      headerView.setUint32(0, 0x02014b50, true);
+      headerView.setUint16(4, 20, true);
+      headerView.setUint16(6, 20, true);
+      headerView.setUint16(8, 0x0800, true);
+      headerView.setUint16(10, 0, true);
+      headerView.setUint16(12, dosTime, true);
+      headerView.setUint16(14, dosDate, true);
+      headerView.setUint32(16, crc, true);
+      headerView.setUint32(20, data.length, true);
+      headerView.setUint32(24, data.length, true);
+      headerView.setUint16(28, nameBytes.length, true);
+      headerView.setUint16(30, 0, true);
+      headerView.setUint16(32, 0, true);
+      headerView.setUint16(34, 0, true);
+      headerView.setUint16(36, 0, true);
+      headerView.setUint32(38, 0, true);
+      headerView.setUint32(42, offset, true);
+      header.set(nameBytes, 46);
+      central.push(header);
+
+      offset += local.length + data.length;
+    });
+
+    const centralSize = central.reduce((sum, part) => sum + part.length, 0);
+    const end = new Uint8Array(22);
+    const endView = new DataView(end.buffer);
+    endView.setUint32(0, 0x06054b50, true);
+    endView.setUint16(4, 0, true);
+    endView.setUint16(6, 0, true);
+    endView.setUint16(8, files.length, true);
+    endView.setUint16(10, files.length, true);
+    endView.setUint32(12, centralSize, true);
+    endView.setUint32(16, offset, true);
+    endView.setUint16(20, 0, true);
+
+    return new Blob(parts.concat(central, [end]), {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+  }
+
+  function xlsxColumn(index) {
+    let value = index + 1;
+    let letters = '';
+    while (value > 0) {
+      const mod = (value - 1) % 26;
+      letters = String.fromCharCode(65 + mod) + letters;
+      value = Math.floor((value - 1) / 26);
+    }
+    return letters;
+  }
+
+  function xlsxCell(ref, value, style) {
+    const styleAttr = style ? ' s="' + style + '"' : '';
+    if (value === null || value === undefined || value === '') {
+      return '<c r="' + ref + '"' + styleAttr + '/>';
+    }
+    if (typeof value === 'number' && isFinite(value)) {
+      return '<c r="' + ref + '"' + styleAttr + '><v>' + value + '</v></c>';
+    }
+    return '<c r="' + ref + '"' + styleAttr + ' t="inlineStr"><is><t xml:space="preserve">' + esc(value) + '</t></is></c>';
+  }
+
+  function xlsxSheetXML(headers, rows) {
+    const allRows = [headers].concat(rows);
+    const body = allRows.map((row, rowIndex) =>
+      '<row r="' + (rowIndex + 1) + '">' +
+        row.map((value, colIndex) =>
+          xlsxCell(xlsxColumn(colIndex) + (rowIndex + 1), value, rowIndex === 0 ? 1 : 0)
+        ).join('') +
+      '</row>'
+    ).join('');
+
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+        '<sheetData>' + body + '</sheetData>' +
+      '</worksheet>';
+  }
+
+  function buildBackupXlsx() {
+    const movementsSheet = xlsxSheetXML(
+      ['Fecha', 'Tipo', 'Descripción', 'Categoría', 'Cuenta origen', 'Cuenta destino', 'Monto', '4x1000', 'Nota'],
+      sortedMovements().map((movement) => {
+        const category = categoryById(movement.categoryId);
+        const account = accountById(movement.accountId);
+        const toAccount = movement.type === 'transfer' ? accountById(movement.toAccountId) : null;
+        return [
+          movement.date,
+          movement.type === 'transfer' ? 'Transferencia' : (movement.type === 'income' ? 'Ingreso' : 'Gasto'),
+          movement.description || '',
+          category ? category.name : '',
+          account ? account.name : '',
+          toAccount ? toAccount.name : '',
+          movement.amount,
+          movementTax(movement),
+          movement.note || ''
+        ];
+      })
+    );
+
+    const accountsSheet = xlsxSheetXML(
+      ['Cuenta', 'Saldo inicial', 'Saldo actual'],
+      state.accounts.map((account) => [account.name, account.initial, accountBalance(account.id)])
+    );
+
+    const categoriesSheet = xlsxSheetXML(
+      ['Categoría', 'Tipo', 'Emoji'],
+      state.categories.map((category) => [
+        category.name,
+        category.type === 'income' ? 'Ingreso' : 'Gasto',
+        category.emoji
+      ])
+    );
+
+    const contentTypes = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+        '<Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+      '</Types>';
+
+    const rootRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+      '</Relationships>';
+
+    const workbook = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+        '<sheets>' +
+          '<sheet name="Movimientos" sheetId="1" r:id="rId1"/>' +
+          '<sheet name="Cuentas" sheetId="2" r:id="rId2"/>' +
+          '<sheet name="Categorías" sheetId="3" r:id="rId3"/>' +
+        '</sheets>' +
+      '</workbook>';
+
+    const workbookRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+        '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>' +
+        '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>' +
+        '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+      '</Relationships>';
+
+    const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+        '<fonts count="2">' +
+          '<font><sz val="11"/><name val="Calibri"/></font>' +
+          '<font><b/><sz val="11"/><name val="Calibri"/></font>' +
+        '</fonts>' +
+        '<fills count="2">' +
+          '<fill><patternFill patternType="none"/></fill>' +
+          '<fill><patternFill patternType="gray125"/></fill>' +
+        '</fills>' +
+        '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+        '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+        '<cellXfs count="2">' +
+          '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+          '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+        '</cellXfs>' +
+        '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+      '</styleSheet>';
+
+    return zipStore([
+      { name: '[Content_Types].xml', data: contentTypes },
+      { name: '_rels/.rels', data: rootRels },
+      { name: 'xl/workbook.xml', data: workbook },
+      { name: 'xl/_rels/workbook.xml.rels', data: workbookRels },
+      { name: 'xl/styles.xml', data: styles },
+      { name: 'xl/worksheets/sheet1.xml', data: movementsSheet },
+      { name: 'xl/worksheets/sheet2.xml', data: accountsSheet },
+      { name: 'xl/worksheets/sheet3.xml', data: categoriesSheet }
+    ]);
+  }
+
   function exportData() {
-    const payload = {
-      app: 'zent',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      data: state
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'zent-' + todayISO() + '.json';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-    toast('Respaldo descargado.');
+    try {
+      const blob = buildBackupXlsx();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'zent-respaldo-' + todayISO() + '.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      toast('Respaldo Excel descargado.');
+    } catch (error) {
+      console.error('Zent: no se pudo generar el Excel.', error);
+      toast('No se pudo generar el respaldo.');
+    }
   }
 
   function importData(file) {
@@ -1575,24 +1844,6 @@
     reader.readAsText(file);
   }
 
-  function clearAllData() {
-    confirmDialog({
-      title: 'Borrar todos los datos',
-      message: 'Se eliminarán todos tus movimientos, cuentas y categorías personalizadas de este dispositivo.',
-      sub: 'Esta acción no se puede deshacer. Exporta un respaldo antes si quieres conservar algo.',
-      confirmText: 'Borrar todo',
-      onConfirm: () => {
-        const theme = state.theme;
-        state = freshState();
-        state.theme = theme;
-        save();
-        closeModal();
-        render();
-        toast('Datos borrados.');
-      }
-    });
-  }
-
   /* ------------------------------------------------------------
      Filtros
      ------------------------------------------------------------ */
@@ -1600,6 +1851,22 @@
   function renderMovementResults() {
     const container = $('#movResults');
     if (container) container.innerHTML = movementResultsHTML();
+  }
+
+  function updateMonthClearLink() {
+    const row = document.querySelector('.filter-label-row');
+    if (!row) return;
+    const existing = row.querySelector('[data-action="clear-month"]');
+    if (ui.movMonth && !existing) {
+      const link = document.createElement('button');
+      link.type = 'button';
+      link.className = 'link';
+      link.dataset.action = 'clear-month';
+      link.textContent = 'Ver todo';
+      row.appendChild(link);
+    } else if (!ui.movMonth && existing) {
+      existing.remove();
+    }
   }
 
   function clearFilters() {
@@ -1707,8 +1974,25 @@
         deleteAccount(id);
         break;
 
+      case 'manage-categories':
+        openCategoriesModal(ui.categoryType);
+        break;
+
+      case 'category-tab':
+        ui.categoryType = button.dataset.type === 'income' ? 'income' : 'expense';
+        refreshCategoriesModal();
+        break;
+
       case 'add-category':
         openCategoryModal(button.dataset.type);
+        break;
+
+      case 'edit-category':
+        openCategoryModal(id);
+        break;
+
+      case 'back-categories':
+        openCategoriesModal(ui.categoryType);
         break;
 
       case 'delete-category':
@@ -1718,7 +2002,10 @@
       case 'mov-type-filter':
         ui.movType = button.dataset.value || 'all';
         $$('[data-action="mov-type-filter"]').forEach((chip) => {
-          chip.classList.toggle('active', chip.dataset.value === ui.movType);
+          const active = chip.dataset.value === ui.movType;
+          chip.classList.toggle('active', active);
+          chip.classList.toggle('income', active && chip.dataset.value === 'income');
+          chip.classList.toggle('expense', active && chip.dataset.value === 'expense');
         });
         renderMovementResults();
         break;
@@ -1755,10 +2042,6 @@
         if (input) input.click();
         break;
       }
-
-      case 'clear-data':
-        clearAllData();
-        break;
 
       case 'sign-out':
         (async () => {
@@ -1803,8 +2086,7 @@
 
     if (target.id === 'movMonth') {
       ui.movMonth = target.value;
-      const chip = document.querySelector('[data-action="clear-month"]');
-      if (chip) chip.classList.toggle('active', !ui.movMonth);
+      updateMonthClearLink();
       renderMovementResults();
       return;
     }
