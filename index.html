@@ -47,7 +47,7 @@
       </button>
     </nav>
     <div class="side-foot">
-      <p class="privacy-note">Tus datos se guardan solo en este dispositivo.</p>
+      <p class="privacy-note">Tus datos se sincronizan con Supabase.</p>
     </div>
   </aside>
 
@@ -87,6 +87,21 @@
 
 <div id="modalRoot"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="sync.js"></script>
+<script>
+(async () => {
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+    location.href = 'login.html';
+    return;
+  }
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    location.href = 'login.html';
+  }
+})();
+</script>
 <script src="app.js" defer></script>
 </body>
 </html>

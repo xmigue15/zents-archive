@@ -2,7 +2,7 @@
 
 **Tus finanzas claras.** Aplicación web para registrar ingresos, gastos, cuentas y categorías, y entender tu dinero mes a mes.
 
-Esta primera versión es **local-first**: no hay login, no hay pagos y tus datos nunca salen de tu dispositivo. Todo se guarda en el `localStorage` del navegador.
+Esta versión sincroniza tus datos con **Supabase**: inicias sesión con correo y contraseña, y tus movimientos, cuentas y categorías se guardan en la nube para usarlos desde cualquier dispositivo.
 
 ## Funciones incluidas
 
@@ -40,13 +40,54 @@ Sube el contenido de esta carpeta a cualquier hosting estático: GitHub Pages, N
 
 Para instalar como app, ábrela desde `https` o `localhost` y usa la opción **Instalar app** del navegador.
 
-## Tus datos
+## Tus datos y Supabase
 
-- Se guardan solo en el navegador de ese dispositivo y ese dominio.
-- Si borras los datos del sitio o usas otro navegador, no aparecerán.
-- Usa **Ajustes → Exportar respaldo** antes de limpiar el navegador o cambiar de dispositivo.
-- **Ajustes → Importar** reemplaza los datos actuales por los del respaldo.
-- **Ajustes → Borrar todo** elimina movimientos, cuentas y categorías personalizadas de ese dispositivo.
+Tus datos se sincronizan con Supabase mediante autenticación de correo y contraseña. Cada usuario solo ve sus propios datos gracias a Row Level Security.
+
+### Configurar Supabase (una sola vez)
+
+En tu proyecto de Supabase, ve a **SQL Editor** y ejecuta:
+
+```sql
+create extension if not exists "uuid-ossp";
+
+create table if not exists public.user_states (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users not null unique,
+  state jsonb not null default '{}'::jsonb,
+  updated_at timestamptz default now()
+);
+
+alter table public.user_states enable row level security;
+
+create policy "Users can view their own state"
+  on public.user_states for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own state"
+  on public.user_states for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own state"
+  on public.user_states for update
+  using (auth.uid() = user_id);
+```
+
+Luego, en **Authentication → Settings**, confirma que tienes habilitado **Email confirmations** si quieres que los usuarios verifiquen su correo al registrarse.
+
+### Notas
+
+- Tus datos se guardan en `localStorage` como respaldo local y se suben a Supabase tras cada cambio.
+- Si cierras sesión, se borra la sesión actual pero los datos siguen en Supabase para la próxima vez que inicies sesión con la misma cuenta.
+- Usa **Ajustes → Exportar respaldo** para descargar una copia JSON de tus datos en cualquier momento.
+- **Ajustes → Borrar todo** elimina los datos de este dispositivo y los sube vacíos a Supabase (cuidado: esto sobrescribe en la nube).
+
+## Cómo usar en tu celular
+
+1. Despliega esta carpeta en un hosting con HTTPS (Netlify, Vercel, Cloudflare Pages, GitHub Pages, etc.).
+2. Abre la URL desde el navegador de tu celular.
+3. Regístrate o inicia sesión con tu correo y contraseña.
+4. Tus datos aparecen automáticamente en todos los dispositivos donde inicies sesión con la misma cuenta.
 
 ## Estructura
 

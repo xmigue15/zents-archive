@@ -314,6 +314,7 @@
       console.error('Zent: no se pudo guardar.', error);
       toast('No se pudieron guardar los datos en este dispositivo.');
     }
+    sync.saveState(state).catch(() => {});
   }
 
   const accountById = (id) => state.accounts.find((a) => a.id === id) || null;
@@ -771,7 +772,13 @@
         '<h3 class="settings-title">Acerca de</h3>' +
         '<div class="about-box">' +
           '<span class="brand-mark">Z</span>' +
-          '<div><b>Zent</b><span>Versión ' + APP_VERSION + ' · Peso colombiano (COP)</span><span>Tus datos se guardan solo en este dispositivo.</span></div>' +
+          '<div><b>Zent</b><span>Versión ' + APP_VERSION + ' · Peso colombiano (COP)</span><span>Tus datos se sincronizan en Supabase.</span></div>' +
+        '</div>' +
+      '</section>' +
+      '<section class="card settings-block">' +
+        '<h3 class="settings-title">Cuenta</h3>' +
+        '<div class="data-actions">' +
+          '<button class="btn danger" data-action="sign-out">Cerrar sesión</button>' +
         '</div>' +
       '</section>';
   }
@@ -1481,6 +1488,11 @@
         clearAllData();
         break;
 
+      case 'sign-out':
+        sync.signOut();
+        location.href = 'login.html';
+        break;
+
       default:
         break;
     }
@@ -1590,4 +1602,17 @@
   applyTheme();
   render();
   registerServiceWorker();
+
+  (async () => {
+    try {
+      const synced = await sync.loadStateFromSupabase();
+      if (synced) {
+        state = normalizeState(synced);
+        save();
+        render();
+      }
+    } catch (error) {
+      console.warn('Zent: no se pudo sincronizar con Supabase.', error);
+    }
+  })();
 })();
