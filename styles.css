@@ -1429,7 +1429,8 @@ textarea {
   background: var(--surface-2);
 }
 
-.about-box .brand-mark {
+.about-logo {
+  flex: none;
   width: 46px;
   height: 46px;
 }
@@ -1648,15 +1649,20 @@ textarea {
    ============================================================ */
 
 html {
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
 }
 
 input,

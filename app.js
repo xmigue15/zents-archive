@@ -798,7 +798,7 @@
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Acerca de</h3>' +
         '<div class="about-box">' +
-          '<span class="brand-mark">Z</span>' +
+          '<img class="about-logo" src="icons/zent.svg" alt="Zent" width="46" height="46">' +
           '<div><b>Zent</b><span>Versión ' + APP_VERSION + ' · Peso colombiano (COP)</span><span>Tus datos se sincronizan en Supabase.</span></div>' +
         '</div>' +
       '</section>' +
