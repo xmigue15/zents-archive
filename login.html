@@ -49,6 +49,7 @@
     <label for="loginPassword">Contraseña</label>
     <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
     <button class="btn" id="btnLogin" data-label="Iniciar sesión" type="button">Iniciar sesión</button>
+    <button class="link" id="resendLink" type="button" style="display:none">Reenviar correo de confirmación</button>
   </div>
 
   <div class="divider">o</div>
@@ -81,6 +82,15 @@
   const modeSignup = document.getElementById('mode-signup');
   const errorBox = document.getElementById('error');
   const toastEl = document.getElementById('toast');
+  const resendLink = document.getElementById('resendLink');
+
+  function redirectTo() {
+    return new URL('login.html', location.href).href;
+  }
+
+  function showResend(show) {
+    resendLink.style.display = show ? 'block' : 'none';
+  }
 
   function showToast(msg) {
     toastEl.textContent = msg;
@@ -127,6 +137,7 @@
     modeSignup.style.display = 'block';
     toggleMode.style.display = 'none';
     toggleLogin.style.display = 'block';
+    showResend(false);
     showError('');
   });
 
@@ -147,10 +158,16 @@
     if (!sb) return;
 
     showError('');
+    showResend(false);
     setLoading(btnLogin, true);
     try {
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) { showError(translateError(error)); return; }
+      if (error) {
+        const message = translateError(error);
+        showError(message);
+        showResend(/confirmar tu correo/i.test(message));
+        return;
+      }
       showToast('Sesión iniciada.');
       setTimeout(() => { location.href = 'index.html'; }, 500);
     } catch (err) {
@@ -175,7 +192,7 @@
       const { data, error } = await sb.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: new URL('index.html', location.href).href }
+        options: { emailRedirectTo: redirectTo() }
       });
       if (error) { showError(translateError(error)); return; }
 
@@ -204,8 +221,44 @@
     if (e.key === 'Enter') handleSignup();
   });
 
+  resendLink.addEventListener('click', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) {
+      showError('Escribe tu correo en el campo de arriba para reenviar la confirmación.');
+      return;
+    }
+    const sb = client();
+    if (!sb) return;
+
+    showError('');
+    resendLink.disabled = true;
+    try {
+      const { error } = await sb.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: redirectTo() }
+      });
+      if (error) { showError(translateError(error)); return; }
+      showToast('Correo reenviado. Revisa tu bandeja y spam.');
+    } catch (err) {
+      showError(translateError(err));
+    } finally {
+      resendLink.disabled = false;
+    }
+  });
+
   // Si ya hay una sesión activa, ir directo a la app.
   (async () => {
+    // Errores que Supabase devuelve al volver del enlace de confirmación.
+    if (location.hash) {
+      const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const message = params.get('error_description') || params.get('error');
+      if (message) {
+        showError(decodeURIComponent(message.replace(/\+/g, ' ')));
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    }
+
     if (typeof supabaseClient === 'undefined' || !supabaseClient) {
       showError('No se pudo cargar Supabase. Revisa tu conexión, desactiva bloqueadores y recarga la página.');
       return;
