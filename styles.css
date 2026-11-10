@@ -948,7 +948,7 @@ textarea {
   border-radius: 12px;
   background: var(--surface-2);
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -1040,6 +1040,42 @@ textarea {
   font-variant-numeric: tabular-nums;
   padding: 14px;
   text-align: center;
+}
+
+.gmf-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.gmf-box input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+.gmf-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.gmf-text small {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 /* ============================================================
@@ -1605,4 +1641,32 @@ textarea {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ============================================================
+   Vista fija: sin zoom y sin selección de texto
+   ============================================================ */
+
+html {
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+select {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+button,
+a {
+  -webkit-touch-callout: none;
 }

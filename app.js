@@ -136,6 +136,28 @@
     return numberFormatter.format(Number(value) || 0);
   }
 
+  const GMF_RATE = 0.004;
+
+  function movementTax(movement) {
+    if (!movement || !movement.gmf) return 0;
+    return Math.round((Number(movement.amount) || 0) * GMF_RATE);
+  }
+
+  function movementTotal(movement) {
+    const amount = Number(movement.amount) || 0;
+    const tax = movementTax(movement);
+    if (!tax) return amount;
+    return movement.type === 'income' ? Math.max(0, amount - tax) : amount + tax;
+  }
+
+  function gmfHintText(amount, type, enabled) {
+    if (!enabled) return 'Se suma el 0,4% del monto.';
+    const tax = Math.round((Number(amount) || 0) * GMF_RATE);
+    if (!tax) return '0,4% del monto.';
+    const total = type === 'income' ? Math.max(0, amount - tax) : amount + tax;
+    return '4x1000: ' + formatMoney(tax) + ' · Total: ' + formatMoney(total);
+  }
+
   function dateFromISO(value) {
     const d = new Date(String(value) + 'T00:00:00');
     return isFinite(d.getTime()) ? d : null;
@@ -245,6 +267,7 @@
       accountId: String(raw.accountId || ''),
       date,
       note: String(raw.note || '').trim().slice(0, 140),
+      gmf: Boolean(raw.gmf),
       createdAt: String(raw.createdAt || now),
       updatedAt: String(raw.updatedAt || now)
     };
@@ -331,7 +354,7 @@
     if (!account) return 0;
     return state.movements.reduce((total, movement) => {
       if (movement.accountId !== id) return total;
-      return total + (movement.type === 'income' ? movement.amount : -movement.amount);
+      return total + (movement.type === 'income' ? movementTotal(movement) : -movementTotal(movement));
     }, account.initial);
   }
 
@@ -343,7 +366,7 @@
     const result = { income: 0, expense: 0, count: 0 };
     state.movements.forEach((movement) => {
       if (ym && movement.date.slice(0, 7) !== ym) return;
-      result[movement.type] += movement.amount;
+      result[movement.type] += movementTotal(movement);
       result.count += 1;
     });
     return result;
@@ -373,7 +396,7 @@
         }
         row = unknown;
       }
-      row.total += movement.amount;
+      row.total += movementTotal(movement);
       row.count += 1;
     });
 
@@ -438,10 +461,12 @@
     const color = catColor(category);
     const emoji = category ? category.emoji : (movement.type === 'income' ? '💰' : '💸');
     const title = movement.description || (category && category.name) || 'Movimiento';
+    const tax = movementTax(movement);
     const sub = [
       category && category.name,
       account && account.name,
-      formatDate(movement.date)
+      formatDate(movement.date),
+      tax > 0 ? '4x1000 ' + formatMoney(tax) : ''
     ].filter(Boolean).join(' · ');
     const sign = movement.type === 'income' ? '+' : '−';
 
@@ -451,7 +476,7 @@
         '<span class="title">' + esc(title) + '</span>' +
         '<span class="sub">' + esc(sub) + '</span>' +
       '</span>' +
-      '<b class="amt ' + (movement.type === 'income' ? 'in' : 'out') + '">' + sign + ' ' + formatMoney(movement.amount) + '</b>' +
+      '<b class="amt ' + (movement.type === 'income' ? 'in' : 'out') + '">' + sign + ' ' + formatMoney(movementTotal(movement)) + '</b>' +
     '</button>';
   }
 
@@ -601,8 +626,8 @@
 
   function movementResultsHTML() {
     const list = filteredMovements();
-    const income = list.filter((m) => m.type === 'income').reduce((sum, m) => sum + m.amount, 0);
-    const expense = list.filter((m) => m.type === 'expense').reduce((sum, m) => sum + m.amount, 0);
+    const income = list.filter((m) => m.type === 'income').reduce((sum, m) => sum + movementTotal(m), 0);
+    const expense = list.filter((m) => m.type === 'expense').reduce((sum, m) => sum + movementTotal(m), 0);
 
     if (!state.movements.length) {
       return '<section class="card mt-16">' + emptyState(
@@ -887,6 +912,17 @@
     if (amount) setTimeout(() => { try { amount.focus(); } catch (error) { /* ignorar */ } }, 20);
   }
 
+  function updateGmfHint() {
+    const draft = ui.movementDraft;
+    const hint = $('#movGmfHint');
+    if (!draft || !hint) return;
+    const amountInput = $('#movAmount');
+    const gmfInput = $('#movGmf');
+    const amount = Number(amountInput ? amountInput.dataset.raw : draft.amount) || 0;
+    const enabled = gmfInput ? gmfInput.checked : draft.gmf;
+    hint.textContent = gmfHintText(amount, draft.type, enabled);
+  }
+
   function movementFormHTML() {
     const draft = ui.movementDraft;
     if (!draft) return '';
@@ -913,6 +949,10 @@
           '<label for="movAmount">Monto</label>' +
           '<input class="input amount-input" id="movAmount" inputmode="numeric" autocomplete="off" placeholder="$ 0" value="' + (draft.amount ? formatNumberInput(draft.amount) : '') + '" data-raw="' + (draft.amount || '') + '" data-amount-input data-autofocus>' +
         '</div>' +
+        '<label class="gmf-box">' +
+          '<input type="checkbox" id="movGmf"' + (draft.gmf ? ' checked' : '') + '>' +
+          '<span class="gmf-text">Aplicar 4x1000<small id="movGmfHint">' + esc(gmfHintText(draft.amount, draft.type, draft.gmf)) + '</small></span>' +
+        '</label>' +
         '<div class="field">' +
           '<label for="movDescription">Descripción</label>' +
           '<input class="input" id="movDescription" maxlength="80" autocomplete="off" placeholder="Ej. Almuerzo, salario, mercado" value="' + esc(draft.description) + '">' +
@@ -951,7 +991,8 @@
       categoryId: existing ? existing.categoryId : (firstCategory ? firstCategory.id : ''),
       accountId: existing ? existing.accountId : state.accounts[0].id,
       date: existing ? existing.date : todayISO(),
-      note: existing ? existing.note : ''
+      note: existing ? existing.note : '',
+      gmf: existing ? Boolean(existing.gmf) : false
     };
     openModal(movementFormHTML());
   }
@@ -966,6 +1007,7 @@
     const account = $('#formAccount');
     const date = $('#movDate');
     const note = $('#movNote');
+    const gmf = $('#movGmf');
 
     if (amount) draft.amount = Number(amount.dataset.raw || 0);
     if (description) draft.description = description.value;
@@ -973,6 +1015,7 @@
     if (account) draft.accountId = account.value;
     if (date) draft.date = date.value;
     if (note) draft.note = note.value;
+    if (gmf) draft.gmf = gmf.checked;
   }
 
   function saveMovement() {
@@ -1008,6 +1051,7 @@
         movement.accountId = draft.accountId;
         movement.date = draft.date;
         movement.note = draft.note.trim();
+        movement.gmf = Boolean(draft.gmf);
         movement.updatedAt = now;
       }
     } else {
@@ -1020,6 +1064,7 @@
         accountId: draft.accountId,
         date: draft.date,
         note: draft.note.trim(),
+        gmf: Boolean(draft.gmf),
         createdAt: now,
         updatedAt: now
       });
@@ -1524,6 +1569,7 @@
       const digits = String(target.value || '').replace(/\D/g, '').slice(0, 12);
       target.dataset.raw = digits;
       target.value = digits ? formatNumberInput(Number(digits)) : '';
+      updateGmfHint();
     }
   });
 
@@ -1547,6 +1593,12 @@
     if (target.id === 'statsMonth') {
       ui.statsMonth = target.value || currentMonth();
       render();
+      return;
+    }
+
+    if (target.id === 'movGmf') {
+      if (ui.movementDraft) ui.movementDraft.gmf = target.checked;
+      updateGmfHint();
       return;
     }
 
