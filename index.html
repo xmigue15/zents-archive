@@ -17,12 +17,29 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="styles.css">
 <script>
+  var __zentTouchX = null;
+  var __zentTouchY = null;
   document.addEventListener('gesturestart', function (event) { event.preventDefault(); }, { passive: false });
   document.addEventListener('gesturechange', function (event) { event.preventDefault(); }, { passive: false });
   document.addEventListener('gestureend', function (event) { event.preventDefault(); }, { passive: false });
+  document.addEventListener('touchstart', function (event) {
+    if (event.touches && event.touches.length === 1) {
+      __zentTouchX = event.touches[0].clientX;
+      __zentTouchY = event.touches[0].clientY;
+    }
+  }, { passive: true });
   document.addEventListener('touchmove', function (event) {
-    if (event.touches && event.touches.length > 1) event.preventDefault();
+    if (!event.touches) return;
+    if (event.touches.length > 1) { event.preventDefault(); return; }
+    if (__zentTouchX === null) return;
+    var dx = Math.abs(event.touches[0].clientX - __zentTouchX);
+    var dy = Math.abs(event.touches[0].clientY - __zentTouchY);
+    if (dx > dy && dx > 6) event.preventDefault();
   }, { passive: false });
+  document.addEventListener('touchend', function () {
+    __zentTouchX = null;
+    __zentTouchY = null;
+  }, { passive: true });
 </script>
 </head>
 <body>

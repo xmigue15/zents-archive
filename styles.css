@@ -1496,19 +1496,32 @@ textarea {
   background: rgba(8, 10, 20, 0.52);
   backdrop-filter: blur(4px);
   animation: fade 0.18s ease;
+  overflow: hidden;
+  touch-action: pan-y;
 }
 
 .modal {
   width: 100%;
   max-width: 560px;
+  min-width: 0;
   max-height: 92dvh;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  touch-action: pan-y;
   padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
   border: 1px solid var(--line);
   border-radius: 24px 24px 0 0;
   background: var(--surface);
   box-shadow: var(--shadow-lg);
   animation: sheet 0.22s ease;
+}
+
+.modal .field,
+.modal .grid-2 > *,
+.modal .segmented,
+.modal .segmented button,
+.modal .gmf-box {
+  min-width: 0;
 }
 
 @media (min-width: 640px) {
