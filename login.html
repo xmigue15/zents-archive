@@ -172,7 +172,11 @@
     showError('');
     setLoading(btnSignup, true);
     try {
-      const { data, error } = await sb.auth.signUp({ email, password });
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: new URL('index.html', location.href).href }
+      });
       if (error) { showError(translateError(error)); return; }
 
       if (data && data.session) {
