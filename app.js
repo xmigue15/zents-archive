@@ -887,7 +887,12 @@
     const dialog = root.querySelector('.modal');
     const heading = dialog && dialog.querySelector('.modal-head h2');
     if (heading) dialog.setAttribute('aria-label', heading.textContent);
-    document.body.classList.add('modal-open');
+    if (!document.body.classList.contains('modal-open')) {
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      document.body.dataset.scrollY = String(scrollY);
+      document.body.style.top = '-' + scrollY + 'px';
+      document.body.classList.add('modal-open');
+    }
     const target = root.querySelector('[data-autofocus]') || root.querySelector('input, select, textarea, button');
     if (target) setTimeout(() => { try { target.focus(); } catch (error) { /* ignorar */ } }, 40);
   }
@@ -896,7 +901,13 @@
     const root = $('#modalRoot');
     if (!root || !root.firstElementChild) return;
     root.innerHTML = '';
+    const scrollY = Number(document.body.dataset.scrollY || 0);
     document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    delete document.body.dataset.scrollY;
+    if (scrollY) {
+      try { window.scrollTo(0, scrollY); } catch (error) { /* ignorar */ }
+    }
     ui.confirmCallback = null;
     if (ui.lastFocus && typeof ui.lastFocus.focus === 'function') {
       try { ui.lastFocus.focus(); } catch (error) { /* ignorar */ }

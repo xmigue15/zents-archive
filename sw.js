@@ -3,7 +3,7 @@
    Guarda el shell de la app para que funcione sin conexión.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v8';
+const CACHE_NAME = 'zent-v9';
 const APP_SHELL = [
   './',
   './index.html',

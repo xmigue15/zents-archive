@@ -1482,6 +1482,10 @@ textarea {
    ============================================================ */
 
 .modal-open {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
   overflow: hidden;
 }
 
@@ -1496,7 +1500,6 @@ textarea {
   background: rgba(8, 10, 20, 0.52);
   backdrop-filter: blur(4px);
   animation: fade 0.18s ease;
-  overflow: hidden;
   touch-action: pan-y;
 }
 
@@ -1507,6 +1510,8 @@ textarea {
   max-height: 92dvh;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
   border: 1px solid var(--line);
