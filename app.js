@@ -200,6 +200,12 @@
 
   const COUNT_DURATION = 1000;
   const COUNT_STAGGER = 60;
+  /* Curva de salida: arranca rápido y frena hasta el final (ease-out quart). */
+  const COUNT_EASE = 4;
+
+  function countEase(t) {
+    return 1 - Math.pow(1 - t, COUNT_EASE);
+  }
 
   function runCounters(scope) {
     if (!scope) return;
@@ -224,7 +230,7 @@
           return;
         }
         const t = Math.min(1, (now - started) / COUNT_DURATION);
-        const eased = 1 - Math.pow(1 - t, 3);
+        const eased = countEase(t);
         node.textContent = formatMoney(target * eased);
         if (t < 1) {
           requestAnimationFrame(step);
