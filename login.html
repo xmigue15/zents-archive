@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#5b5bd6">
+<meta name="theme-color" content="#b08d6a">
 <title>Zent — Iniciar sesión</title>
 <link rel="icon" href="icons/zent.svg" type="image/svg+xml">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -36,38 +36,38 @@
 </script>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: radial-gradient(1200px 600px at 15% -10%, rgba(91, 91, 214, 0.12), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(139, 92, 246, 0.09), transparent 55%), #f5f6fb; color: #141a2e; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: pan-y; overflow-x: hidden; overflow-x: clip; overscroll-behavior-x: none; }
-  .card { width: min(92vw, 400px); padding: 32px 24px; border-radius: 24px; background: #fff; border: 1px solid #e4e7f0; box-shadow: 0 20px 50px rgba(20, 26, 46, 0.1); }
-  h1 { margin: 0 0 8px; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
-  p { margin: 0 0 24px; color: #6b7280; font-size: 14px; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: radial-gradient(900px 520px at 12% -6%, rgba(255, 252, 244, 0.92), transparent 62%), radial-gradient(760px 460px at 92% 4%, rgba(142, 182, 155, 0.3), transparent 60%), radial-gradient(700px 520px at 70% 100%, rgba(176, 141, 106, 0.22), transparent 62%), linear-gradient(168deg, #efe7da 0%, #e6dccd 48%, #ded2c1 100%); background-attachment: fixed; color: #1d2a25; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: pan-y; overflow-x: hidden; overflow-x: clip; overscroll-behavior-x: none; }
+  .card { width: min(92vw, 400px); padding: 32px 24px; border-radius: 28px; background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(255, 255, 255, 0.74); box-shadow: 0 20px 50px rgba(122, 102, 72, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.65); backdrop-filter: blur(22px) saturate(115%); -webkit-backdrop-filter: blur(22px) saturate(115%); }
+  h1 { margin: 0 0 8px; font-size: 26px; font-weight: 400; letter-spacing: -0.015em; font-family: Georgia, "Times New Roman", serif; }
+  p { margin: 0 0 24px; color: #7b7568; font-size: 14px; }
   .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; text-decoration: none; color: inherit; }
-  .mark { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #5b5bd6, #8b5cf6); color: #fff; font-weight: 900; font-size: 20px; display: grid; place-items: center; }
-  label { display: block; font-size: 12.5px; font-weight: 700; color: #6b7280; margin-bottom: 6px; margin-top: 16px; }
-  input { width: 100%; padding: 12px 14px; border: 1px solid #e4e7f0; border-radius: 12px; background: #f7f8fd; font-size: 16px; margin-bottom: 8px; outline: none; -webkit-user-select: text; user-select: text; }
-  input:focus { border-color: #5b5bd6; box-shadow: 0 0 0 3px rgba(91, 91, 214, 0.12); }
-  .btn { width: 100%; padding: 12px; border: 0; border-radius: 12px; background: linear-gradient(135deg, #5b5bd6, #8b5cf6); color: #fff; font-size: 15px; font-weight: 750; cursor: pointer; margin-top: 20px; }
-  .btn:hover { filter: brightness(1.06); }
+  .mark { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #163b32, #0b2b26); color: #fff; font-weight: 900; font-size: 20px; display: grid; place-items: center; box-shadow: 0 10px 24px rgba(22, 59, 50, 0.28); }
+  label { display: block; font-size: 12.5px; font-weight: 700; color: #7b7568; margin-bottom: 6px; margin-top: 16px; }
+  input { width: 100%; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, 0.72); border-radius: 14px; background: rgba(255, 255, 255, 0.55); font-size: 16px; margin-bottom: 8px; outline: none; -webkit-user-select: text; user-select: text; }
+  input:focus { border-color: #b08d6a; box-shadow: 0 0 0 3px rgba(176, 141, 106, 0.16); }
+  .btn { width: 100%; padding: 12px; border: 0; border-radius: 999px; background: #b08d6a; color: #fff; font-size: 15px; font-weight: 650; cursor: pointer; margin-top: 20px; box-shadow: 0 10px 24px rgba(176, 141, 106, 0.32); }
+  .btn:hover { filter: brightness(1.05); }
   .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 11px; border: 1px solid #e4e7f0; border-radius: 12px; background: #fff; color: #141a2e; font-size: 14.5px; font-weight: 700; cursor: pointer; }
-  .google-btn:hover { background: #f7f8fd; }
+  .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 11px; border: 1px solid rgba(255, 255, 255, 0.72); border-radius: 14px; background: rgba(255, 255, 255, 0.55); color: #1d2a25; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+  .google-btn:hover { background: rgba(255, 255, 255, 0.78); }
   .google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .google-btn svg { width: 18px; height: 18px; flex: none; }
-  .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; font-size: 12px; color: #9aa4ba; }
-  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e4e7f0; }
-  .link { background: none; border: 0; color: #5b5bd6; font-size: 13.5px; font-weight: 700; cursor: pointer; text-align: center; width: 100%; padding: 10px; }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; font-size: 12px; color: #8d8676; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(122, 110, 88, 0.18); }
+  .link { background: none; border: 0; color: #b08d6a; font-size: 13.5px; font-weight: 700; cursor: pointer; text-align: center; width: 100%; padding: 10px; }
   .link:hover { text-decoration: underline; }
-  .error { margin-top: 12px; color: #e11d48; font-size: 13px; font-weight: 600; display: none; line-height: 1.45; }
-  .error.ok { color: #0f9d76; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 12px 18px; border-radius: 999px; background: #141a2e; color: #fff; font-size: 13.5px; font-weight: 650; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; text-align: center; }
+  .error { margin-top: 12px; color: #a65d4a; font-size: 13px; font-weight: 600; display: none; line-height: 1.45; }
+  .error.ok { color: #4f7f63; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 12px 18px; border-radius: 999px; background: #163b32; color: #daf1de; font-size: 13.5px; font-weight: 650; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; text-align: center; }
   .toast.on { opacity: 1; }
-  .hint { font-size: 12px; color: #9aa4ba; margin-top: 10px; text-align: center; line-height: 1.5; }
+  .hint { font-size: 12px; color: #8d8676; margin-top: 10px; text-align: center; line-height: 1.5; }
 </style>
 </head>
 <body>
 <div class="card">
   <a class="brand" href="index.html">
     <span class="mark" aria-hidden="true">Z</span>
-    <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.03em;">Zent</span>
+    <span style="font-size: 21px; font-family: Georgia, 'Times New Roman', serif; letter-spacing: -0.01em;">Zent</span>
   </a>
   <h1>Zent</h1>
   <p>Inicia sesión para sincronizar tus finanzas en todos tus dispositivos.</p>

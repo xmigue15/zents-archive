@@ -1,0 +1,708 @@
+/* ============================================================
+   Zent — tema "Nayda"
+   Basado en las referencias enviadas por el usuario:
+   · vidrio esmerilado cálido (frosted glass sobre arena)
+   · editorial serif crema/camel
+   · paleta de verdes profundos
+     #051F20 #0B2B26 #163B32 #8EB69B #DAF1DE
+   Se carga DESPUÉS de styles.css y solo redefine variables y
+   componentes: la lógica de la app no se toca.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. Variables — modo claro
+   ------------------------------------------------------------ */
+
+:root,
+:root[data-theme="light"] {
+  --bg: #ece3d6;
+  --bg-2: #e3d9ca;
+  --surface: rgba(255, 255, 255, 0.6);
+  --surface-2: rgba(255, 255, 255, 0.44);
+  --text: #1d2a25;
+  --muted: #7b7568;
+  --line: rgba(122, 110, 88, 0.18);
+  --brand: #b08d6a;
+  --brand-2: #8eb69b;
+  --brand-soft: rgba(176, 141, 106, 0.16);
+  --income: #4f7f63;
+  --income-soft: rgba(79, 127, 99, 0.14);
+  --expense: #a65d4a;
+  --expense-soft: rgba(166, 93, 74, 0.12);
+  --warning: #b07a3c;
+  --shadow: 0 18px 40px rgba(122, 102, 72, 0.16);
+  --shadow-lg: 0 30px 70px rgba(90, 74, 52, 0.24);
+  --radius: 24px;
+  --radius-sm: 14px;
+
+  --glass: rgba(255, 255, 255, 0.6);
+  --glass-2: rgba(255, 255, 255, 0.42);
+  --glass-line: rgba(255, 255, 255, 0.74);
+  --glass-shadow: 0 18px 40px rgba(122, 102, 72, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --field-bg: rgba(255, 255, 255, 0.55);
+  --field-line: rgba(255, 255, 255, 0.72);
+  --modal-bg: rgba(252, 249, 243, 0.9);
+  --tab-bg: rgba(255, 255, 255, 0.55);
+  --top-bg: rgba(236, 227, 214, 0.62);
+  --side-bg: rgba(255, 255, 255, 0.42);
+
+  --forest: #163b32;
+  --forest-deep: #0b2b26;
+  --mint: #daf1de;
+  --sage: #8eb69b;
+  --camel: #b08d6a;
+  --sand: #ece3d6;
+  --serif: Georgia, "Times New Roman", "Iowan Old Style", serif;
+  --grain: 0.35;
+
+  --app-bg:
+    radial-gradient(900px 520px at 12% -6%, rgba(255, 252, 244, 0.92), transparent 62%),
+    radial-gradient(760px 460px at 92% 4%, rgba(142, 182, 155, 0.3), transparent 60%),
+    radial-gradient(700px 520px at 70% 100%, rgba(176, 141, 106, 0.22), transparent 62%),
+    linear-gradient(168deg, #efe7da 0%, #e6dccd 48%, #ded2c1 100%);
+
+  --dapple:
+    radial-gradient(280px 180px at 18% 22%, rgba(255, 253, 246, 0.55), transparent 70%),
+    radial-gradient(220px 150px at 78% 14%, rgba(255, 253, 246, 0.4), transparent 72%),
+    radial-gradient(320px 200px at 62% 62%, rgba(142, 182, 155, 0.18), transparent 72%),
+    radial-gradient(260px 170px at 28% 78%, rgba(176, 141, 106, 0.16), transparent 74%);
+
+  --hero-bg:
+    radial-gradient(520px 220px at 88% -18%, rgba(142, 182, 155, 0.32), transparent 62%),
+    linear-gradient(140deg, #163b32 0%, #0b2b26 58%, #08201e 100%);
+  --hero-text: #f4f7f3;
+  --hero-label: rgba(218, 241, 222, 0.72);
+  --hero-stat-bg: rgba(218, 241, 222, 0.1);
+  --hero-stat-line: rgba(218, 241, 222, 0.18);
+  --hero-glow: rgba(218, 241, 222, 0.08);
+
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------
+   2. Variables — modo oscuro (paleta de verdes)
+   ------------------------------------------------------------ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #051f20;
+    --bg-2: #0b2b26;
+    --surface: rgba(218, 241, 222, 0.08);
+    --surface-2: rgba(218, 241, 222, 0.05);
+    --text: #daf1de;
+    --muted: #8eb69b;
+    --line: rgba(142, 182, 155, 0.26);
+    --brand: #8eb69b;
+    --brand-2: #daf1de;
+    --brand-soft: rgba(142, 182, 155, 0.16);
+    --income: #8eb69b;
+    --income-soft: rgba(142, 182, 155, 0.14);
+    --expense: #d59a80;
+    --expense-soft: rgba(213, 154, 128, 0.14);
+    --warning: #e0b164;
+    --shadow: 0 18px 40px rgba(0, 0, 0, 0.36);
+    --shadow-lg: 0 30px 70px rgba(0, 0, 0, 0.5);
+
+    --glass: rgba(218, 241, 222, 0.08);
+    --glass-2: rgba(218, 241, 222, 0.05);
+    --glass-line: rgba(142, 182, 155, 0.3);
+    --glass-shadow: 0 18px 40px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(218, 241, 222, 0.08);
+    --field-bg: rgba(218, 241, 222, 0.07);
+    --field-line: rgba(142, 182, 155, 0.28);
+    --modal-bg: rgba(7, 28, 27, 0.92);
+    --tab-bg: rgba(7, 28, 27, 0.62);
+    --top-bg: rgba(5, 31, 32, 0.66);
+    --side-bg: rgba(11, 43, 38, 0.5);
+
+    --camel: #c8a179;
+    --grain: 0.2;
+
+    --app-bg:
+      radial-gradient(900px 520px at 12% -6%, rgba(142, 182, 155, 0.2), transparent 62%),
+      radial-gradient(760px 460px at 92% 4%, rgba(218, 241, 222, 0.1), transparent 60%),
+      linear-gradient(168deg, #051f20 0%, #0b2b26 55%, #103830 100%);
+
+    --dapple:
+      radial-gradient(280px 180px at 18% 22%, rgba(218, 241, 222, 0.1), transparent 70%),
+      radial-gradient(220px 150px at 78% 14%, rgba(142, 182, 155, 0.12), transparent 72%),
+      radial-gradient(320px 200px at 62% 62%, rgba(218, 241, 222, 0.06), transparent 72%);
+
+    --hero-bg:
+      radial-gradient(520px 220px at 88% -18%, rgba(142, 182, 155, 0.22), transparent 62%),
+      linear-gradient(140deg, #163b32 0%, #0b2b26 58%, #051f20 100%);
+    --hero-text: #eaf6ec;
+    --hero-label: rgba(218, 241, 222, 0.66);
+    --hero-stat-bg: rgba(218, 241, 222, 0.07);
+    --hero-stat-line: rgba(142, 182, 155, 0.26);
+    --hero-glow: rgba(218, 241, 222, 0.06);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #051f20;
+  --bg-2: #0b2b26;
+  --surface: rgba(218, 241, 222, 0.08);
+  --surface-2: rgba(218, 241, 222, 0.05);
+  --text: #daf1de;
+  --muted: #8eb69b;
+  --line: rgba(142, 182, 155, 0.26);
+  --brand: #8eb69b;
+  --brand-2: #daf1de;
+  --brand-soft: rgba(142, 182, 155, 0.16);
+  --income: #8eb69b;
+  --income-soft: rgba(142, 182, 155, 0.14);
+  --expense: #d59a80;
+  --expense-soft: rgba(213, 154, 128, 0.14);
+  --warning: #e0b164;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 30px 70px rgba(0, 0, 0, 0.5);
+
+  --glass: rgba(218, 241, 222, 0.08);
+  --glass-2: rgba(218, 241, 222, 0.05);
+  --glass-line: rgba(142, 182, 155, 0.3);
+  --glass-shadow: 0 18px 40px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(218, 241, 222, 0.08);
+  --field-bg: rgba(218, 241, 222, 0.07);
+  --field-line: rgba(142, 182, 155, 0.28);
+  --modal-bg: rgba(7, 28, 27, 0.92);
+  --tab-bg: rgba(7, 28, 27, 0.62);
+  --top-bg: rgba(5, 31, 32, 0.66);
+  --side-bg: rgba(11, 43, 38, 0.5);
+
+  --camel: #c8a179;
+  --grain: 0.2;
+
+  --app-bg:
+    radial-gradient(900px 520px at 12% -6%, rgba(142, 182, 155, 0.2), transparent 62%),
+    radial-gradient(760px 460px at 92% 4%, rgba(218, 241, 222, 0.1), transparent 60%),
+    linear-gradient(168deg, #051f20 0%, #0b2b26 55%, #103830 100%);
+
+  --dapple:
+    radial-gradient(280px 180px at 18% 22%, rgba(218, 241, 222, 0.1), transparent 70%),
+    radial-gradient(220px 150px at 78% 14%, rgba(142, 182, 155, 0.12), transparent 72%),
+    radial-gradient(320px 200px at 62% 62%, rgba(218, 241, 222, 0.06), transparent 72%);
+
+  --hero-bg:
+    radial-gradient(520px 220px at 88% -18%, rgba(142, 182, 155, 0.22), transparent 62%),
+    linear-gradient(140deg, #163b32 0%, #0b2b26 58%, #051f20 100%);
+  --hero-text: #eaf6ec;
+  --hero-label: rgba(218, 241, 222, 0.66);
+  --hero-stat-bg: rgba(218, 241, 222, 0.07);
+  --hero-stat-line: rgba(142, 182, 155, 0.26);
+  --hero-glow: rgba(218, 241, 222, 0.06);
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------
+   3. Fondo de la app: luz moteada + grano fino
+   ------------------------------------------------------------ */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--app-bg);
+  background-attachment: fixed;
+  color: var(--text);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--dapple);
+  mix-blend-mode: soft-light;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--grain);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.22'/%3E%3C/svg%3E");
+}
+
+.app,
+#modalRoot,
+#toast {
+  position: relative;
+  z-index: 1;
+}
+
+/* ------------------------------------------------------------
+   4. Tipografía editorial
+   ------------------------------------------------------------ */
+
+.topbar h1,
+.page-head h2,
+.hero-amount,
+.account-balance,
+.quick-card b,
+.stat-card b,
+.modal-head h2,
+.section-head h3,
+.settings-title,
+.empty h3,
+.amount-input,
+.brand-text {
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+.topbar h1 {
+  font-size: 22px;
+}
+
+.page-head h2 {
+  font-size: clamp(26px, 3vw, 34px);
+}
+
+/* Reglas finas camel: detalle editorial de la referencia */
+.page-head h2::after,
+.section-head h3::after {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 2px;
+  margin-top: 10px;
+  border-radius: 2px;
+  background: var(--camel);
+  opacity: 0.85;
+}
+
+.section-head h3::after {
+  width: 26px;
+  margin-top: 8px;
+}
+
+.eyebrow,
+.day-head,
+.filter-label,
+.field > label,
+.field-label,
+.hero-label,
+.hero-stat span,
+.quick-card span,
+.stat-card span {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.eyebrow {
+  color: var(--camel);
+}
+
+/* ------------------------------------------------------------
+   5. Superficies de vidrio
+   ------------------------------------------------------------ */
+
+.card,
+.quick-card,
+.stat-card,
+.account-card,
+.about-box,
+.category-card,
+.gmf-box,
+.modal {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(22px) saturate(115%);
+  -webkit-backdrop-filter: blur(22px) saturate(115%);
+}
+
+.quick-card,
+.stat-card {
+  border-radius: 20px;
+}
+
+.account-card {
+  border-radius: 22px;
+}
+
+.card + .card {
+  margin-top: 16px;
+}
+
+.topbar {
+  background: var(--top-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-line);
+}
+
+.tabbar {
+  background: var(--tab-bg);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  border-top: 1px solid var(--glass-line);
+  box-shadow: 0 -10px 30px rgba(122, 102, 72, 0.1);
+}
+
+.tab-item {
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.tab-item svg {
+  stroke-width: 1.6;
+}
+
+.tab-item.active {
+  color: var(--forest);
+}
+
+.tab-item.active svg {
+  stroke: var(--forest);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .tab-item.active {
+    color: var(--mint);
+  }
+
+  :root:not([data-theme="light"]) .tab-item.active svg {
+    stroke: var(--mint);
+  }
+}
+
+.sidebar {
+  background: var(--side-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-right: 1px solid var(--glass-line);
+}
+
+.nav-item.active {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.brand-mark {
+  background: linear-gradient(135deg, var(--forest), var(--forest-deep));
+  box-shadow: 0 10px 24px rgba(22, 59, 50, 0.28);
+}
+
+/* ------------------------------------------------------------
+   6. Tarjeta principal (Resumen)
+   ------------------------------------------------------------ */
+
+.hero {
+  border-radius: 28px;
+  background: var(--hero-bg);
+  color: var(--hero-text);
+  box-shadow: 0 26px 60px rgba(22, 59, 50, 0.32);
+  border: 1px solid rgba(218, 241, 222, 0.16);
+}
+
+.hero::after {
+  background: var(--hero-glow);
+}
+
+.hero-amount {
+  font-size: clamp(36px, 7.4vw, 54px);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.hero-label {
+  color: var(--hero-label);
+}
+
+.hero-stat {
+  background: var(--hero-stat-bg);
+  border: 1px solid var(--hero-stat-line);
+  border-radius: 16px;
+}
+
+.hero-stat span {
+  color: var(--hero-label);
+}
+
+.hero-stat b {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 18px;
+}
+
+.hero .in {
+  color: #cfe6cf;
+}
+
+.hero .out {
+  color: #e7c3ac;
+}
+
+/* ------------------------------------------------------------
+   7. Botones
+   ------------------------------------------------------------ */
+
+.btn {
+  background: var(--camel);
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 650;
+  box-shadow: 0 10px 24px rgba(176, 141, 106, 0.32);
+}
+
+.btn:hover {
+  filter: brightness(1.05);
+}
+
+.btn.soft {
+  background: var(--brand-soft);
+  color: var(--brand);
+  box-shadow: none;
+}
+
+.btn.ghost {
+  background: var(--glass-2);
+  border-color: var(--glass-line);
+  color: var(--text);
+  backdrop-filter: blur(14px);
+  box-shadow: none;
+}
+
+.btn.danger {
+  background: var(--expense);
+  box-shadow: 0 10px 24px rgba(166, 93, 74, 0.28);
+}
+
+.icon-btn {
+  background: var(--glass-2);
+  border-color: var(--glass-line);
+  backdrop-filter: blur(14px);
+  border-radius: 14px;
+}
+
+.fab {
+  background: var(--camel);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 16px 34px rgba(176, 141, 106, 0.42);
+}
+
+.fab svg {
+  stroke-width: 2;
+}
+
+/* ------------------------------------------------------------
+   8. Fichas, iconos y logos
+   ------------------------------------------------------------ */
+
+.cat-ic {
+  background: var(--brand-soft);
+  border: 1px solid var(--glass-line);
+  border-radius: 14px;
+}
+
+.acct-dot {
+  background: rgba(142, 182, 155, 0.2);
+  border: 1px solid var(--glass-line);
+  color: var(--forest);
+  border-radius: 14px;
+  font-family: var(--serif);
+  font-weight: 600;
+}
+
+.acct-logo {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 14px;
+  padding: 4px;
+}
+
+.acct-logo img {
+  border-radius: 10px;
+}
+
+.acct-letter {
+  background: rgba(142, 182, 155, 0.2);
+  color: var(--forest);
+}
+
+.profile-avatar {
+  background: rgba(142, 182, 155, 0.22);
+  color: var(--forest);
+  border: 1px solid var(--glass-line);
+  font-family: var(--serif);
+}
+
+.logo-chip {
+  background: var(--glass-2);
+  border-color: var(--glass-line);
+  border-radius: 14px;
+}
+
+.logo-chip .logo-letter {
+  background: rgba(142, 182, 155, 0.2);
+  color: var(--forest);
+}
+
+.logo-chip.active {
+  border-color: var(--camel);
+  box-shadow: 0 0 0 2px var(--brand-soft);
+}
+
+/* ------------------------------------------------------------
+   9. Filas, listas y gráficos
+   ------------------------------------------------------------ */
+
+.row + .row {
+  border-top-color: var(--line);
+}
+
+.row:hover {
+  background: var(--glass-2);
+}
+
+.row .title {
+  font-weight: 650;
+}
+
+.row .amt {
+  font-family: var(--serif);
+  font-weight: 600;
+}
+
+.cat-row + .cat-row {
+  border-top-color: var(--line);
+}
+
+.bar-fill {
+  background: var(--sage);
+}
+
+.bar.income {
+  background: var(--sage);
+}
+
+.bar.expense {
+  background: var(--camel);
+}
+
+/* ------------------------------------------------------------
+   10. Chips, filtros y campos
+   ------------------------------------------------------------ */
+
+.chip {
+  background: var(--glass-2);
+  border-color: var(--glass-line);
+  backdrop-filter: blur(14px);
+  font-weight: 650;
+}
+
+.chip.active {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--mint);
+}
+
+.segmented {
+  background: var(--glass-2);
+  border-color: var(--glass-line);
+  border-radius: 16px;
+  backdrop-filter: blur(14px);
+}
+
+.segmented button.active {
+  background: var(--surface);
+  color: var(--forest);
+  box-shadow: 0 4px 12px rgba(122, 102, 72, 0.12);
+}
+
+.input,
+.select,
+textarea,
+.date-shell {
+  background: var(--field-bg);
+  border-color: var(--field-line);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+}
+
+.input:focus,
+.select:focus,
+textarea:focus {
+  border-color: var(--camel);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.date-shell:focus-within {
+  border-color: var(--camel);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.theme-choice {
+  background: var(--glass-2);
+  border-color: var(--glass-line);
+  border-radius: 16px;
+}
+
+.theme-choice.active {
+  border-color: var(--camel);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+/* ------------------------------------------------------------
+   11. Modal
+   ------------------------------------------------------------ */
+
+.modal-backdrop {
+  background: rgba(40, 34, 26, 0.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.modal {
+  background: var(--modal-bg);
+  border: 1px solid var(--glass-line);
+  border-radius: 28px 28px 0 0;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(26px) saturate(120%);
+  -webkit-backdrop-filter: blur(26px) saturate(120%);
+}
+
+@media (min-width: 640px) {
+  .modal {
+    border-radius: 26px;
+  }
+}
+
+.amount-input {
+  background: var(--field-bg);
+  border: 1px solid var(--field-line);
+  border-radius: 18px;
+}
+
+/* ------------------------------------------------------------
+   12. Varios
+   ------------------------------------------------------------ */
+
+.toast {
+  background: var(--forest);
+  color: var(--mint);
+  box-shadow: 0 14px 34px rgba(22, 59, 50, 0.3);
+}
+
+.link {
+  color: var(--camel);
+}
+
+.empty .emoji {
+  opacity: 0.7;
+}
+
+.about-logo {
+  border-radius: 12px;
+}

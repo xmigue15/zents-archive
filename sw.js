@@ -3,12 +3,13 @@
    Guarda el shell de la app para que funcione sin conexión.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v17';
+const CACHE_NAME = 'zent-v18';
 const APP_SHELL = [
   './',
   './index.html',
   './login.html',
   './styles.css',
+  './theme-nayda.css',
   './app.js',
   './supabase-config.js',
   './sync.js',
