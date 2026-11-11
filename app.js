@@ -1012,13 +1012,17 @@
           themeChoice('dark', 'Oscuro', ICON.moon) +
         '</div>' +
         '<div class="field slider-field">' +
-          '<label for="barTransparency">Transparencia de la barra inferior</label>' +
+          '<label id="barTransparencyLabel">Transparencia de la barra inferior</label>' +
           '<div class="slider-row">' +
-            '<input type="range" class="range" id="barTransparency" min="0" max="100" step="1" ' +
-              'value="' + (Number(state.barTransparency) || 0) + '" style="--fill:' + (Number(state.barTransparency) || 0) + '%">' +
+            '<div class="range" id="barTransparency" role="slider" tabindex="0" ' +
+              'aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + (Number(state.barTransparency) || 0) + '" ' +
+              'aria-labelledby="barTransparencyLabel" ' +
+              'style="--fill:' + (Number(state.barTransparency) || 0) + '%; --pos:' + ((Number(state.barTransparency) || 0) / 100) + '">' +
+              '<span class="range-track"></span><span class="range-thumb"></span>' +
+            '</div>' +
             '<output class="slider-out" id="barTransparencyValue" for="barTransparency">' + (Number(state.barTransparency) || 0) + ' %</output>' +
           '</div>' +
-          '<p class="hint">0 % deja la barra opaca, 100 % la vuelve cristal. También puedes arrastrar la barra de abajo.</p>' +
+          '<p class="hint">0 % deja la barra opaca, 100 % la vuelve cristal. Arrastra la barra de abajo para ajustarlo también.</p>' +
         '</div>' +
       '</section>' +
       '<section class="card settings-block">' +
@@ -1106,13 +1110,91 @@
     applyBarTransparency();
     const slider = $('#barTransparency');
     if (slider) {
-      slider.value = String(safe);
       slider.style.setProperty('--fill', safe + '%');
+      slider.style.setProperty('--pos', String(safe / 100));
+      slider.setAttribute('aria-valuenow', String(safe));
     }
     const out = $('#barTransparencyValue');
     if (out) out.textContent = safe + ' %';
     if (mostrar !== false) showTabBadge(safe);
     return safe;
+  }
+
+  /* Deslizador propio: se arrastra en horizontal y deja scrollear en vertical. */
+  function setupSliders(scope) {
+    if (!scope) return;
+    $$('.range', scope).forEach((slider) => {
+      if (slider.dataset.ready === '1') return;
+      slider.dataset.ready = '1';
+      let drag = null;
+
+      const metrics = () => {
+        const rect = slider.getBoundingClientRect();
+        return { left: rect.left, travel: Math.max(1, rect.width - 22) };
+      };
+
+      const valueFromX = (clientX) => {
+        const m = metrics();
+        const ratio = (clientX - m.left - 11) / m.travel;
+        return Math.min(100, Math.max(0, Math.round(ratio * 100)));
+      };
+
+      slider.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        drag = {
+          id: event.pointerId,
+          x: event.clientX,
+          y: event.clientY,
+          start: Number(state.barTransparency) || 0,
+          moved: false
+        };
+        if (typeof slider.focus === 'function') slider.focus();
+      });
+
+      slider.addEventListener('pointermove', (event) => {
+        if (!drag || event.pointerId !== drag.id) return;
+        const dx = event.clientX - drag.x;
+        const dy = event.clientY - drag.y;
+        if (!drag.moved) {
+          if (Math.abs(dx) < 6) return;
+          // Gesto vertical: lo dejamos para el scroll de la página.
+          if (Math.abs(dx) <= Math.abs(dy)) {
+            drag = null;
+            return;
+          }
+          drag.moved = true;
+          try { slider.setPointerCapture(event.pointerId); } catch (error) { /* ignorar */ }
+        }
+        event.preventDefault();
+        const travel = metrics().travel;
+        setBarTransparency(drag.start + (dx / travel) * 100, false);
+      });
+
+      const stop = (event) => {
+        if (!drag || event.pointerId !== drag.id) return;
+        if (!drag.moved) {
+          // Toque simple: el valor salta a esa posición.
+          setBarTransparency(valueFromX(event.clientX));
+        }
+        drag = null;
+        scheduleSave();
+      };
+      slider.addEventListener('pointerup', stop);
+      slider.addEventListener('pointercancel', () => { drag = null; });
+
+      slider.addEventListener('keydown', (event) => {
+        const paso = event.shiftKey ? 10 : 1;
+        let nuevo = Number(state.barTransparency) || 0;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowUp') nuevo += paso;
+        else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') nuevo -= paso;
+        else if (event.key === 'Home') nuevo = 0;
+        else if (event.key === 'End') nuevo = 100;
+        else return;
+        event.preventDefault();
+        setBarTransparency(nuevo, false);
+        scheduleSave();
+      });
+    });
   }
 
   function showTabBadge(value) {
@@ -1202,6 +1284,7 @@
     const root = $('#view');
     if (!root) return;
     root.innerHTML = RENDERERS[view]();
+    setupSliders(root);
     // El contador animado solo se muestra al entrar al Inicio.
     if (view === 'resumen' && !ui.countersShown[view]) {
       ui.countersShown[view] = true;
@@ -2591,13 +2674,6 @@
     if (target.id === 'movSearch') {
       ui.movQuery = target.value;
       renderMovementResults();
-      return;
-    }
-
-    // Control de transparencia de la barra: se ve al instante.
-    if (target.id === 'barTransparency') {
-      setBarTransparency(target.value, false);
-      scheduleSave();
       return;
     }
 
