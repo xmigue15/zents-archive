@@ -670,7 +670,9 @@
                 '<label class="filter-label" for="movMonth">Mes</label>' +
                 (ui.movMonth ? '<button type="button" class="link" data-action="clear-month">Ver todo</button>' : '') +
               '</div>' +
-              '<input class="input" id="movMonth" type="month" value="' + esc(ui.movMonth) + '">' +
+              '<div class="date-shell">' +
+                '<input id="movMonth" type="month" value="' + esc(ui.movMonth) + '">' +
+              '</div>' +
             '</div>' +
             '<div class="filter-field">' +
               '<label class="filter-label" for="movAccount">Cuenta</label>' +
@@ -781,7 +783,9 @@
 
     return '<div class="page-head">' +
         '<div><p class="eyebrow">Análisis</p><h2>Estadísticas</h2></div>' +
-        '<input class="input" id="statsMonth" type="month" value="' + esc(ym) + '" aria-label="Mes de las estadísticas" style="max-width:190px">' +
+        '<div class="date-shell narrow">' +
+          '<input id="statsMonth" type="month" value="' + esc(ym) + '" aria-label="Mes de las estadísticas">' +
+        '</div>' +
       '</div>' +
       '<div class="stat-grid">' +
         '<div class="stat-card"><span>Ingresos · ' + esc(monthName(ym)) + '</span><b class="in">' + formatMoney(totals.income) + '</b></div>' +
@@ -1012,7 +1016,7 @@
           '<div class="field"><label for="formAccount">Cuenta</label><select class="select" id="formAccount">' + accountOptions + '</select></div>' +
         '</div>' +
         '<div class="grid-2">' +
-          '<div class="field"><label for="movDate">Fecha</label><input class="input" id="movDate" type="date" value="' + esc(draft.date) + '"></div>' +
+          '<div class="field"><label for="movDate">Fecha</label><div class="date-shell"><input id="movDate" type="date" value="' + esc(draft.date) + '"></div></div>' +
           '<div class="field"><label for="movNote">Nota (opcional)</label><input class="input" id="movNote" maxlength="140" autocomplete="off" placeholder="Detalle corto" value="' + esc(draft.note) + '"></div>' +
         '</div>' +
         (draft.id ? '<button type="button" class="btn danger block" data-action="delete-movement" data-id="' + esc(draft.id) + '">' + ICON.trash + ' Eliminar movimiento</button>' : '') +
@@ -1167,7 +1171,7 @@
           '<input class="input amount-input" id="transferAmount" inputmode="numeric" autocomplete="off" placeholder="$ 0" value="' + (draft.amount ? formatNumberInput(draft.amount) : '') + '" data-raw="' + (draft.amount || '') + '" data-amount-input data-autofocus>' +
         '</div>' +
         '<div class="grid-2">' +
-          '<div class="field"><label for="transferDate">Fecha</label><input class="input" id="transferDate" type="date" value="' + esc(draft.date) + '"></div>' +
+          '<div class="field"><label for="transferDate">Fecha</label><div class="date-shell"><input id="transferDate" type="date" value="' + esc(draft.date) + '"></div></div>' +
           '<div class="field"><label for="transferNote">Nota (opcional)</label><input class="input" id="transferNote" maxlength="140" autocomplete="off" placeholder="Detalle corto" value="' + esc(draft.note) + '"></div>' +
         '</div>' +
         (draft.id ? '<button type="button" class="btn danger block" data-action="delete-transfer" data-id="' + esc(draft.id) + '">' + ICON.trash + ' Eliminar transferencia</button>' : '') +

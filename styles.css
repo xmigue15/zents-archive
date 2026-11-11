@@ -1008,19 +1008,56 @@ textarea::placeholder {
   opacity: 0.8;
 }
 
-input[type="date"],
-input[type="month"] {
-  display: block;
+.date-shell {
+  position: relative;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  text-align: center;
+  height: 49px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-input[type="date"]::-webkit-date-and-time-value,
-input[type="date"]::-webkit-datetime-edit,
-input[type="month"]::-webkit-date-and-time-value,
-input[type="month"]::-webkit-datetime-edit {
+.date-shell.narrow {
+  max-width: 190px;
+}
+
+.date-shell:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.date-shell > input[type="date"],
+.date-shell > input[type="month"] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  text-align: center;
+  outline: none;
+  box-shadow: none;
+}
+
+.date-shell > input[type="date"]::-webkit-date-and-time-value,
+.date-shell > input[type="date"]::-webkit-datetime-edit,
+.date-shell > input[type="month"]::-webkit-date-and-time-value,
+.date-shell > input[type="month"]::-webkit-datetime-edit {
   text-align: center;
 }
 
