@@ -194,6 +194,49 @@
     return moneyFormatter.format(Number(value) || 0);
   }
 
+  /* ------------------------------------------------------------
+     Contador animado: los montos suben de 0 a su valor al entrar
+     ------------------------------------------------------------ */
+
+  const COUNT_DURATION = 1000;
+  const COUNT_STAGGER = 60;
+
+  function runCounters(scope) {
+    if (!scope) return;
+    const nodes = scope.querySelectorAll('[data-count]');
+    if (!nodes.length) return;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stagger = Math.min(COUNT_STAGGER, 320 / Math.max(1, nodes.length - 1));
+
+    nodes.forEach((node, index) => {
+      const target = Number(node.getAttribute('data-count')) || 0;
+      const final = node.textContent;
+      if (reduce) {
+        node.textContent = final;
+        return;
+      }
+      node.textContent = formatMoney(0);
+      const started = performance.now() + index * stagger;
+
+      function step(now) {
+        if (now < started) {
+          requestAnimationFrame(step);
+          return;
+        }
+        const t = Math.min(1, (now - started) / COUNT_DURATION);
+        const eased = 1 - Math.pow(1 - t, 3);
+        node.textContent = formatMoney(target * eased);
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          node.textContent = final;
+        }
+      }
+
+      requestAnimationFrame(step);
+    });
+  }
+
   function formatNumberInput(value) {
     return numberFormatter.format(Number(value) || 0);
   }
@@ -450,7 +493,8 @@
     categoryType: 'expense',
     confirmCallback: null,
     lastFocus: null,
-    renderedView: null
+    renderedView: null,
+    countersShown: {}
   };
 
   function save() {
@@ -691,7 +735,7 @@
               '<span class="title">' + esc(account.name) + '</span>' +
               '<span class="sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</span>' +
             '</span>' +
-            '<b class="amt' + (balance < 0 ? ' out' : '') + '">' + formatMoney(balance) + '</b>' +
+            '<b class="amt' + (balance < 0 ? ' out' : '') + '" data-count="' + balance + '">' + formatMoney(balance) + '</b>' +
           '</button>';
         }).join('')
       : '<p class="hint">Agrega una cuenta para empezar.</p>';
@@ -719,7 +763,7 @@
       '</div>' +
       '<section class="hero">' +
         '<p class="hero-label">Saldo total</p>' +
-        '<div class="hero-amount">' + formatMoney(totalBalance()) + '</div>' +
+        '<div class="hero-amount" data-count="' + totalBalance() + '">' + formatMoney(totalBalance()) + '</div>' +
         '<div class="hero-grid">' +
           '<div class="hero-stat"><span>Ingresos de ' + esc(monthName(ym)) + '</span><b class="in">+ ' + formatMoney(totals.income) + '</b></div>' +
           '<div class="hero-stat"><span>Gastos de ' + esc(monthName(ym)) + '</span><b class="out">− ' + formatMoney(totals.expense) + '</b></div>' +
@@ -848,7 +892,7 @@
               '<div><div class="account-name">' + esc(account.name) + '</div>' +
               '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div></div>' +
             '</div>' +
-            '<div class="account-balance' + (balance < 0 ? ' out' : '') + '">' + formatMoney(balance) + '</div>' +
+            '<div class="account-balance' + (balance < 0 ? ' out' : '') + '" data-count="' + balance + '">' + formatMoney(balance) + '</div>' +
             '<div class="account-actions">' +
               '<button class="btn ghost sm" data-action="edit-account" data-id="' + esc(account.id) + '">' + ICON.edit + ' Editar</button>' +
               '<button class="icon-btn sm danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
@@ -867,7 +911,7 @@
       '</div>' +
       '<section class="hero">' +
         '<p class="hero-label">Saldo total</p>' +
-        '<div class="hero-amount">' + formatMoney(total) + '</div>' +
+        '<div class="hero-amount" data-count="' + total + '">' + formatMoney(total) + '</div>' +
         '<div class="hero-grid">' +
           '<div class="hero-stat"><span>Cuentas</span><b>' + state.accounts.length + '</b></div>' +
           '<div class="hero-stat"><span>Movimientos</span><b>' + state.movements.length + '</b></div>' +
@@ -1008,7 +1052,7 @@
     if (themeBtn) themeBtn.innerHTML = effectiveTheme() === 'dark' ? ICON.sun : ICON.moon;
 
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', effectiveTheme() === 'dark' ? '#0b0f1a' : '#5b5bd6');
+    if (meta) meta.setAttribute('content', effectiveTheme() === 'dark' ? '#0b2b26' : '#b08d6a');
   }
 
   function effectiveTheme() {
@@ -1031,6 +1075,10 @@
     const root = $('#view');
     if (!root) return;
     root.innerHTML = RENDERERS[view]();
+    if (!ui.countersShown[view]) {
+      ui.countersShown[view] = true;
+      runCounters(root);
+    }
     if (ui.renderedView !== view) {
       ui.renderedView = view;
       window.scrollTo(0, 0);
