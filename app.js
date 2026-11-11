@@ -87,7 +87,7 @@
       version: 1,
       theme: 'system',
       defaultsVersion: 3,
-      profile: { phone: '', photoData: '' },
+      profile: { name: '', photoData: '' },
       accounts: DEFAULT_ACCOUNTS(),
       categories: DEFAULT_CATEGORIES(),
       movements: []
@@ -308,12 +308,12 @@
   }
 
   function sanitizeProfile(raw) {
-    if (!raw || typeof raw !== 'object') return { phone: '', photoData: '' };
+    if (!raw || typeof raw !== 'object') return { name: '', photoData: '' };
     const photoData = typeof raw.photoData === 'string' && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(raw.photoData) && raw.photoData.length <= 500000
       ? raw.photoData
       : '';
     return {
-      phone: String(raw.phone || '').trim().slice(0, 20),
+      name: String(raw.name || '').trim().slice(0, 40),
       photoData
     };
   }
@@ -876,7 +876,7 @@
   }
 
   function viewAjustes() {
-    const profile = state.profile || { phone: '', photoData: '' };
+    const profile = state.profile || { name: '', photoData: '' };
     return '<div class="page-head"><div><p class="eyebrow">Preferencias</p><h2>Ajustes</h2></div></div>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Perfil</h3>' +
@@ -887,8 +887,8 @@
               : '👤') +
           '</span>' +
           '<div class="profile-info">' +
-            '<b>' + (profile.phone ? esc(profile.phone) : 'Sin número') + '</b>' +
-            '<span>' + (profile.phone ? 'Tu número de celular' : 'Agrega tu número de celular') + '</span>' +
+            '<b>' + (profile.name ? esc(profile.name) : 'Sin nombre') + '</b>' +
+            '<span>' + (profile.name ? 'Tu perfil de Zent' : 'Agrega tu nombre y foto') + '</span>' +
           '</div>' +
           '<button class="btn ghost sm" data-action="edit-profile">' + ICON.edit + ' Editar</button>' +
         '</div>' +
@@ -1496,7 +1496,7 @@
   }
 
   function openProfileModal() {
-    const profile = state.profile || { phone: '', photoData: '' };
+    const profile = state.profile || { name: '', photoData: '' };
     openModal(
       '<div class="modal-head">' +
         '<h2>Mi perfil</h2>' +
@@ -1521,8 +1521,8 @@
           '<input type="hidden" id="profPhotoData" value="' + esc(profile.photoData || '') + '">' +
         '</div>' +
         '<div class="field">' +
-          '<label for="profPhone">Número de celular</label>' +
-          '<input class="input" id="profPhone" type="tel" maxlength="20" autocomplete="tel" placeholder="Ej. 300 123 4567" value="' + esc(profile.phone || '') + '">' +
+          '<label for="profName">Nombre</label>' +
+          '<input class="input" id="profName" maxlength="40" autocomplete="name" placeholder="Ej. Juan Pérez" value="' + esc(profile.name || '') + '" data-autofocus>' +
         '</div>' +
         '<div class="modal-actions">' +
           '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
@@ -1560,11 +1560,11 @@
   function saveProfile() {
     const form = $('#profileForm');
     if (!form) return;
-    const phoneInput = $('#profPhone');
+    const nameInput = $('#profName');
     const dataInput = $('#profPhotoData');
-    const phone = phoneInput ? phoneInput.value.trim().slice(0, 20) : '';
-    if (!state.profile) state.profile = { phone: '', photoData: '' };
-    state.profile.phone = phone;
+    const name = nameInput ? nameInput.value.trim().slice(0, 40) : '';
+    if (!state.profile) state.profile = { name: '', photoData: '' };
+    state.profile.name = name;
     state.profile.photoData = dataInput && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(dataInput.value) && dataInput.value.length <= 500000 ? dataInput.value : '';
     save();
     closeModal();
