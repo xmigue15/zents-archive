@@ -42,13 +42,17 @@
   --field-bg: rgba(255, 255, 255, 0.55);
   --field-line: rgba(255, 255, 255, 0.72);
   --modal-bg: rgba(252, 249, 243, 0.9);
-  --tab-bg: rgba(255, 255, 255, 0.5);
+  --tab-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.12) 58%, rgba(22, 59, 50, 0.07) 100%);
   --tab-line: rgba(255, 255, 255, 0.78);
-  --tab-shadow: 0 18px 44px rgba(122, 102, 72, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --tab-shadow: 0 18px 44px rgba(122, 102, 72, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --tab-active: rgba(255, 255, 255, 0.8);
   --tab-active-color: #163b32;
-  --tab-active-shadow: 0 6px 16px rgba(122, 102, 72, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  --tab-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 48%);
+  --tab-active-shadow: 0 8px 20px rgba(122, 102, 72, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --tab-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 46%);
+  --tab-rim: linear-gradient(150deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.3) 24%, rgba(122, 102, 72, 0.16) 52%, rgba(255, 255, 255, 0.85) 100%);
+  --tab-specular: rgba(255, 255, 255, 0.85);
+  --tab-disperse: conic-gradient(from 200deg, rgba(142, 182, 155, 0.62), rgba(176, 141, 106, 0.5), rgba(255, 255, 255, 0.35), rgba(142, 182, 155, 0.62));
+  --tab-bubble: radial-gradient(130% 140% at 28% 0%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 48%, rgba(255, 255, 255, 0.32) 100%);
   --top-bg: rgba(236, 227, 214, 0.62);
   --side-bg: rgba(255, 255, 255, 0.42);
 
@@ -116,13 +120,17 @@
     --field-bg: rgba(218, 241, 222, 0.07);
     --field-line: rgba(142, 182, 155, 0.28);
     --modal-bg: rgba(7, 28, 27, 0.92);
-    --tab-bg: rgba(9, 38, 34, 0.5);
+    --tab-bg: linear-gradient(180deg, rgba(218, 241, 222, 0.2) 0%, rgba(6, 28, 26, 0.46) 54%, rgba(4, 22, 21, 0.58) 100%);
     --tab-line: rgba(142, 182, 155, 0.32);
-    --tab-shadow: 0 18px 44px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(218, 241, 222, 0.14);
+    --tab-shadow: 0 18px 44px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(218, 241, 222, 0.18);
     --tab-active: rgba(218, 241, 222, 0.13);
     --tab-active-color: #daf1de;
-    --tab-active-shadow: 0 6px 18px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(218, 241, 222, 0.16);
-    --tab-sheen: linear-gradient(180deg, rgba(218, 241, 222, 0.16) 0%, rgba(218, 241, 222, 0) 48%);
+    --tab-active-shadow: 0 8px 22px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(218, 241, 222, 0.24);
+    --tab-sheen: linear-gradient(180deg, rgba(218, 241, 222, 0.18) 0%, rgba(218, 241, 222, 0) 46%);
+    --tab-rim: linear-gradient(150deg, rgba(218, 241, 222, 0.75) 0%, rgba(218, 241, 222, 0.16) 26%, rgba(0, 0, 0, 0.35) 54%, rgba(218, 241, 222, 0.42) 100%);
+    --tab-specular: rgba(218, 241, 222, 0.4);
+    --tab-disperse: conic-gradient(from 200deg, rgba(142, 182, 155, 0.55), rgba(200, 161, 121, 0.42), rgba(218, 241, 222, 0.28), rgba(142, 182, 155, 0.55));
+    --tab-bubble: radial-gradient(130% 140% at 28% 0%, rgba(218, 241, 222, 0.26) 0%, rgba(218, 241, 222, 0.13) 46%, rgba(218, 241, 222, 0.07) 100%);
     --top-bg: rgba(5, 31, 32, 0.66);
     --side-bg: rgba(11, 43, 38, 0.5);
 
@@ -178,13 +186,17 @@
   --field-bg: rgba(218, 241, 222, 0.07);
   --field-line: rgba(142, 182, 155, 0.28);
   --modal-bg: rgba(7, 28, 27, 0.92);
-  --tab-bg: rgba(9, 38, 34, 0.5);
+  --tab-bg: linear-gradient(180deg, rgba(218, 241, 222, 0.2) 0%, rgba(6, 28, 26, 0.46) 54%, rgba(4, 22, 21, 0.58) 100%);
   --tab-line: rgba(142, 182, 155, 0.32);
-  --tab-shadow: 0 18px 44px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(218, 241, 222, 0.14);
+  --tab-shadow: 0 18px 44px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(218, 241, 222, 0.18);
   --tab-active: rgba(218, 241, 222, 0.13);
   --tab-active-color: #daf1de;
-  --tab-active-shadow: 0 6px 18px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(218, 241, 222, 0.16);
-  --tab-sheen: linear-gradient(180deg, rgba(218, 241, 222, 0.16) 0%, rgba(218, 241, 222, 0) 48%);
+  --tab-active-shadow: 0 8px 22px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(218, 241, 222, 0.24);
+  --tab-sheen: linear-gradient(180deg, rgba(218, 241, 222, 0.18) 0%, rgba(218, 241, 222, 0) 46%);
+  --tab-rim: linear-gradient(150deg, rgba(218, 241, 222, 0.75) 0%, rgba(218, 241, 222, 0.16) 26%, rgba(0, 0, 0, 0.35) 54%, rgba(218, 241, 222, 0.42) 100%);
+  --tab-specular: rgba(218, 241, 222, 0.4);
+  --tab-disperse: conic-gradient(from 200deg, rgba(142, 182, 155, 0.55), rgba(200, 161, 121, 0.42), rgba(218, 241, 222, 0.28), rgba(142, 182, 155, 0.55));
+  --tab-bubble: radial-gradient(130% 140% at 28% 0%, rgba(218, 241, 222, 0.26) 0%, rgba(218, 241, 222, 0.13) 46%, rgba(218, 241, 222, 0.07) 100%);
   --top-bg: rgba(5, 31, 32, 0.66);
   --side-bg: rgba(11, 43, 38, 0.5);
 
@@ -374,21 +386,47 @@ body::after {
   border-radius: 999px;
   background: var(--tab-bg);
   box-shadow: var(--tab-shadow);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(200%) brightness(1.06) contrast(1.08);
+  -webkit-backdrop-filter: blur(14px) saturate(200%) brightness(1.06) contrast(1.08);
   transform: translateX(-50%);
   overflow: hidden;
   isolation: isolate;
 }
 
-/* Brillo superior: da el aspecto líquido del vidrio */
+/* Reflejo especular que recorre el vidrio */
 .tabbar::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -30% -50%;
   z-index: 0;
   pointer-events: none;
-  background: var(--tab-sheen);
+  background:
+    var(--tab-sheen),
+    linear-gradient(104deg, transparent 42%, var(--tab-specular) 50%, transparent 58%);
+  background-size: 100% 100%, 280% 100%;
+  background-repeat: no-repeat;
+  animation: tab-liquid 11s ease-in-out infinite;
+}
+
+@keyframes tab-liquid {
+  0%, 100% { background-position: 0 0, 130% 0; }
+  50% { background-position: 0 0, -30% 0; }
+}
+
+/* Borde de cristal: filo de luz de 1px */
+.tabbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  padding: 1.2px;
+  background: var(--tab-rim);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 .tab-item {
@@ -409,15 +447,51 @@ body::after {
   stroke-width: 1.7;
 }
 
+/* Burbuja activa: cristal con refracción */
 .tab-item.active {
-  background: var(--tab-active);
+  background: var(--tab-bubble);
   color: var(--tab-active-color);
   transform: translateY(-1px);
   box-shadow: var(--tab-active-shadow);
+  overflow: visible;
+}
+
+/* Dispersión cromática: halo de color alrededor de la burbuja */
+.tab-item.active::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--tab-disperse);
+  filter: blur(12px);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* Brillo interno que respira */
+.tab-item.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(112deg, transparent 34%, rgba(255, 255, 255, 0.75) 50%, transparent 66%);
+  background-size: 260% 100%;
+  opacity: 0.75;
+  animation: tab-bubble 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes tab-bubble {
+  0%, 100% { background-position: 150% 0; }
+  50% { background-position: -50% 0; }
 }
 
 .tab-item.active svg {
   stroke: var(--tab-active-color);
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar {
