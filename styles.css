@@ -742,7 +742,7 @@ body[data-view="ajustes"] .fab {
 }
 
 .acct-logo {
-  background: #ffffff;
+  background: var(--surface);
   padding: 2px;
 }
 
@@ -751,7 +751,12 @@ body[data-view="ajustes"] .fab {
   width: 100%;
   height: 100%;
   border-radius: 10px;
-  object-fit: cover;
+  object-fit: contain;
+}
+
+.acct-letter {
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 .logo-picker {
@@ -793,10 +798,19 @@ body[data-view="ajustes"] .fab {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  object-fit: cover;
-  color: #fff;
+  object-fit: contain;
+  background: var(--surface);
+  color: var(--brand);
   font-size: 13px;
   font-weight: 800;
+}
+
+.logo-chip img {
+  border: 1px solid var(--line);
+}
+
+.logo-chip .logo-letter {
+  background: var(--brand-soft);
 }
 
 .logo-chip.active {

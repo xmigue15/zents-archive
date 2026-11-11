@@ -35,8 +35,6 @@
     transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>'
   };
 
-  const PALETTE = ['#5b5bd6', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#64748b'];
-
   const ACCOUNT_LOGOS = [
     { id: 'nequi', name: 'Nequi' },
     { id: 'daviplata', name: 'Daviplata' },
@@ -53,34 +51,34 @@
   const ACCOUNT_LOGO_IDS = ACCOUNT_LOGOS.map((logo) => logo.id);
 
   const DEFAULT_ACCOUNTS = () => ([
-    { id: 'cash', name: 'Efectivo', color: '#10b981', initial: 0 },
-    { id: 'nequi', name: 'Nequi', color: '#2cb7c8', logo: 'nequi', initial: 0 },
-    { id: 'daviplata', name: 'Daviplata', color: '#e30613', logo: 'daviplata', initial: 0 },
-    { id: 'bancolombia', name: 'Bancolombia', color: '#1c1c1c', logo: 'bancolombia', initial: 0 },
-    { id: 'bogota', name: 'Banco de Bogotá', color: '#004595', logo: 'bogota', initial: 0 },
-    { id: 'bbva', name: 'BBVA', color: '#072146', logo: 'bbva', initial: 0 },
-    { id: 'davivienda', name: 'Davivienda', color: '#e30613', logo: 'davivienda', initial: 0 },
-    { id: 'itau', name: 'Itaú', color: '#2a63ae', logo: 'itau', initial: 0 },
-    { id: 'movii', name: 'Movii', color: '#e6007e', logo: 'movii', initial: 0 },
-    { id: 'rappipay', name: 'RappiPay', color: '#101010', logo: 'rappipay', initial: 0 },
-    { id: 'nu', name: 'Nu', color: '#820ad1', logo: 'nu', initial: 0 }
+    { id: 'cash', name: 'Efectivo', initial: 0 },
+    { id: 'nequi', name: 'Nequi', logo: 'nequi', initial: 0 },
+    { id: 'daviplata', name: 'Daviplata', logo: 'daviplata', initial: 0 },
+    { id: 'bancolombia', name: 'Bancolombia', logo: 'bancolombia', initial: 0 },
+    { id: 'bogota', name: 'Banco de Bogotá', logo: 'bogota', initial: 0 },
+    { id: 'bbva', name: 'BBVA', logo: 'bbva', initial: 0 },
+    { id: 'davivienda', name: 'Davivienda', logo: 'davivienda', initial: 0 },
+    { id: 'itau', name: 'Itaú', logo: 'itau', initial: 0 },
+    { id: 'movii', name: 'Movii', logo: 'movii', initial: 0 },
+    { id: 'rappipay', name: 'RappiPay', logo: 'rappipay', initial: 0 },
+    { id: 'nu', name: 'Nu', logo: 'nu', initial: 0 }
   ]);
 
   const DEFAULT_CATEGORIES = () => ([
-    { id: 'comida', name: 'Comida', type: 'expense', emoji: '🍽️', color: '#f59e0b' },
-    { id: 'mercado', name: 'Mercado', type: 'expense', emoji: '🛒', color: '#10b981' },
-    { id: 'transporte', name: 'Transporte', type: 'expense', emoji: '🚌', color: '#3b82f6' },
-    { id: 'servicios', name: 'Servicios', type: 'expense', emoji: '💡', color: '#f97316' },
-    { id: 'salud', name: 'Salud', type: 'expense', emoji: '💊', color: '#ef4444' },
-    { id: 'ropa', name: 'Ropa', type: 'expense', emoji: '👕', color: '#ec4899' },
-    { id: 'ocio', name: 'Ocio', type: 'expense', emoji: '🎬', color: '#8b5cf6' },
-    { id: 'hogar', name: 'Hogar', type: 'expense', emoji: '🏠', color: '#06b6d4' },
-    { id: 'educacion', name: 'Educación', type: 'expense', emoji: '📚', color: '#6366f1' },
-    { id: 'otros-gastos', name: 'Otros', type: 'expense', emoji: '📦', color: '#64748b' },
-    { id: 'salario', name: 'Salario', type: 'income', emoji: '💼', color: '#0f9d76' },
-    { id: 'ventas', name: 'Ventas', type: 'income', emoji: '🏷️', color: '#10b981' },
-    { id: 'transferencias', name: 'Transferencias', type: 'income', emoji: '🔁', color: '#06b6d4' },
-    { id: 'otros-ingresos', name: 'Otros ingresos', type: 'income', emoji: '💰', color: '#64748b' }
+    { id: 'comida', name: 'Comida', type: 'expense', emoji: '🍽️' },
+    { id: 'mercado', name: 'Mercado', type: 'expense', emoji: '🛒' },
+    { id: 'transporte', name: 'Transporte', type: 'expense', emoji: '🚌' },
+    { id: 'servicios', name: 'Servicios', type: 'expense', emoji: '💡' },
+    { id: 'salud', name: 'Salud', type: 'expense', emoji: '💊' },
+    { id: 'ropa', name: 'Ropa', type: 'expense', emoji: '👕' },
+    { id: 'ocio', name: 'Ocio', type: 'expense', emoji: '🎬' },
+    { id: 'hogar', name: 'Hogar', type: 'expense', emoji: '🏠' },
+    { id: 'educacion', name: 'Educación', type: 'expense', emoji: '📚' },
+    { id: 'otros-gastos', name: 'Otros', type: 'expense', emoji: '📦' },
+    { id: 'salario', name: 'Salario', type: 'income', emoji: '💼' },
+    { id: 'ventas', name: 'Ventas', type: 'income', emoji: '🏷️' },
+    { id: 'transferencias', name: 'Transferencias', type: 'income', emoji: '🔁' },
+    { id: 'otros-ingresos', name: 'Otros ingresos', type: 'income', emoji: '💰' }
   ]);
 
   function freshState() {
@@ -121,10 +119,6 @@
   function toAmount(value) {
     const n = Math.round(Number(value) || 0);
     return n > 0 ? n : 0;
-  }
-
-  function isColor(value) {
-    return /^#[0-9a-f]{6}$/i.test(String(value || ''));
   }
 
   function todayISO() {
@@ -224,13 +218,9 @@
       return '<span class="acct-dot acct-logo"><img src="' + esc(account.logoData) + '" alt="" aria-hidden="true"></span>';
     }
     if (account.logo && ACCOUNT_LOGO_IDS.indexOf(account.logo) !== -1) {
-      return '<span class="acct-dot acct-logo"><img src="logos/' + esc(account.logo) + '.svg" alt="" aria-hidden="true"></span>';
+      return '<span class="acct-dot acct-logo"><img src="logos/' + esc(account.logo) + '.jpg" alt="" aria-hidden="true"></span>';
     }
-    return '<span class="acct-dot" style="background:' + esc(account.color) + '">' + esc(initial(account.name)) + '</span>';
-  }
-
-  function catColor(category) {
-    return isColor(category && category.color) ? category.color : '#64748b';
+    return '<span class="acct-dot acct-letter">' + esc(initial(account.name)) + '</span>';
   }
 
   function dayHeading(dateStr) {
@@ -268,7 +258,6 @@
     return {
       id: String(raw.id || uid()),
       name,
-      color: isColor(raw.color) ? raw.color : PALETTE[0],
       logo: ACCOUNT_LOGO_IDS.indexOf(raw.logo) !== -1 ? raw.logo : '',
       logoData,
       initial: toAmount(raw.initial)
@@ -285,8 +274,7 @@
       id: String(raw.id || uid()),
       name,
       type,
-      emoji,
-      color: isColor(raw.color) ? raw.color : PALETTE[0]
+      emoji
     };
   }
 
@@ -469,7 +457,7 @@
       let row = byId.get(movement.categoryId);
       if (!row) {
         if (!unknown) {
-          unknown = { id: '__unknown', name: 'Sin categoría', type, emoji: '❔', color: '#64748b', total: 0, count: 0 };
+          unknown = { id: '__unknown', name: 'Sin categoría', type, emoji: '❔', total: 0, count: 0 };
           rows.push(unknown);
           byId.set(unknown.id, unknown);
         }
@@ -549,7 +537,7 @@
       ].filter(Boolean).join(' · ');
 
       return '<button class="row" data-action="edit-transfer" data-id="' + esc(movement.id) + '">' +
-        '<span class="cat-ic" style="background:#06b6d422;color:#06b6d4">🔁</span>' +
+        '<span class="cat-ic">🔁</span>' +
         '<span class="grow">' +
           '<span class="title">' + esc(title) + '</span>' +
           '<span class="sub">' + esc(sub) + '</span>' +
@@ -560,7 +548,6 @@
 
     const category = categoryById(movement.categoryId);
     const account = accountById(movement.accountId);
-    const color = catColor(category);
     const emoji = category ? category.emoji : (movement.type === 'income' ? '💰' : '💸');
     const title = movement.description || (category && category.name) || 'Movimiento';
     const tax = movementTax(movement);
@@ -573,7 +560,7 @@
     const sign = movement.type === 'income' ? '+' : '−';
 
     return '<button class="row" data-action="edit-movement" data-id="' + esc(movement.id) + '">' +
-      '<span class="cat-ic" style="background:' + color + '22;color:' + color + '">' + esc(emoji) + '</span>' +
+      '<span class="cat-ic">' + esc(emoji) + '</span>' +
       '<span class="grow">' +
         '<span class="title">' + esc(title) + '</span>' +
         '<span class="sub">' + esc(sub) + '</span>' +
@@ -588,13 +575,12 @@
     }
     const max = rows[0].total || 1;
     return rows.map((row) => {
-      const color = catColor(row);
       const width = Math.max(3, Math.round((row.total / max) * 100));
       return '<div class="cat-row">' +
-        '<span class="cat-ic" style="background:' + color + '22;color:' + color + '">' + esc(row.emoji) + '</span>' +
+        '<span class="cat-ic">' + esc(row.emoji) + '</span>' +
         '<div class="cat-info">' +
           '<div class="cat-top"><span>' + esc(row.name) + '</span><span class="muted">' + formatMoney(row.total) + '</span></div>' +
-          '<div class="bar-track"><div class="bar-fill" style="width:' + width + '%;background:' + color + '"></div></div>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + width + '%"></div></div>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -648,12 +634,11 @@
 
     const topHtml = topExpenses.length
       ? topExpenses.map((row) => {
-          const color = catColor(row);
           return '<div class="cat-row">' +
-            '<span class="cat-ic" style="background:' + color + '22;color:' + color + '">' + esc(row.emoji) + '</span>' +
+            '<span class="cat-ic">' + esc(row.emoji) + '</span>' +
             '<div class="cat-info">' +
               '<div class="cat-top"><span>' + esc(row.name) + '</span><span class="muted">' + formatMoney(row.total) + '</span></div>' +
-              '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(3, Math.round(row.total / (topExpenses[0].total || 1) * 100)) + '%;background:' + color + '"></div></div>' +
+              '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(3, Math.round(row.total / (topExpenses[0].total || 1) * 100)) + '%"></div></div>' +
             '</div>' +
           '</div>';
         }).join('')
@@ -1352,16 +1337,15 @@
 
   function openAccountModal(id) {
     const account = id ? accountById(id) : null;
-    const defaultColor = PALETTE[state.accounts.length % PALETTE.length];
     const currentLogo = account ? (account.logoData ? 'custom' : (account.logo || '')) : '';
     const letterChip =
       '<button type="button" class="logo-chip' + (currentLogo === '' ? ' active' : '') + '" data-action="acct-logo-pick" data-value="">' +
-        '<span class="logo-letter" style="background:' + esc(account ? account.color : defaultColor) + '">' + esc(initial(account ? account.name : '')) + '</span>' +
+        '<span class="logo-letter">' + esc(initial(account ? account.name : '')) + '</span>' +
         '<span>Letra</span>' +
       '</button>';
     const presetChips = ACCOUNT_LOGOS.map((logo) =>
       '<button type="button" class="logo-chip' + (currentLogo === logo.id ? ' active' : '') + '" data-action="acct-logo-pick" data-value="' + logo.id + '">' +
-        '<img src="logos/' + logo.id + '.svg" alt="">' +
+        '<img src="logos/' + logo.id + '.jpg" alt="">' +
         '<span>' + esc(logo.name) + '</span>' +
       '</button>'
     ).join('');
@@ -1397,10 +1381,6 @@
           '<label for="acctInitial">Saldo inicial (opcional)</label>' +
           '<input class="input" id="acctInitial" inputmode="numeric" autocomplete="off" placeholder="$ 0" value="' + (account && account.initial ? formatNumberInput(account.initial) : '') + '" data-raw="' + (account ? account.initial : '') + '" data-amount-input>' +
           '<p class="hint">Es el dinero que ya tenías en esta cuenta antes de empezar.</p>' +
-        '</div>' +
-        '<div class="field">' +
-          '<label for="acctColor">Color</label>' +
-          '<input id="acctColor" type="color" value="' + esc(account ? account.color : defaultColor) + '" style="width:100%;height:48px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)">' +
         '</div>' +
         '<div class="modal-actions">' +
           '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
@@ -1471,10 +1451,8 @@
     const id = form.dataset.id || '';
     const nameInput = $('#acctName');
     const initialInput = $('#acctInitial');
-    const colorInput = $('#acctColor');
     const name = nameInput ? nameInput.value.trim() : '';
     const initial = initialInput ? Number(initialInput.dataset.raw || 0) : 0;
-    const color = colorInput && isColor(colorInput.value) ? colorInput.value : PALETTE[0];
 
     if (!name) {
       toast('Escribe un nombre para la cuenta.');
@@ -1495,7 +1473,6 @@
       if (account) {
         account.name = name;
         account.initial = toAmount(initial);
-        account.color = color;
         const logoInput = $('#acctLogo');
         const dataInput = $('#acctLogoData');
         const logo = logoInput && ACCOUNT_LOGO_IDS.indexOf(logoInput.value) !== -1 ? logoInput.value : '';
@@ -1508,7 +1485,7 @@
       const dataInput = $('#acctLogoData');
       const logo = logoInput && ACCOUNT_LOGO_IDS.indexOf(logoInput.value) !== -1 ? logoInput.value : '';
       const logoData = dataInput && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(dataInput.value) && dataInput.value.length <= 500000 ? dataInput.value : '';
-      state.accounts.push({ id: uid(), name, initial: toAmount(initial), color, logo, logoData });
+      state.accounts.push({ id: uid(), name, initial: toAmount(initial), logo, logoData });
     }
 
     save();
@@ -1549,9 +1526,8 @@
     const categories = state.categories.filter((category) => category.type === kind);
     const cards = categories.map((category) => {
       const count = state.movements.filter((movement) => movement.categoryId === category.id).length;
-      const color = catColor(category);
       return '<button type="button" class="category-card" data-action="edit-category" data-id="' + esc(category.id) + '">' +
-        '<span class="cat-ic" style="background:' + color + '22;color:' + color + '">' + esc(category.emoji) + '</span>' +
+        '<span class="cat-ic">' + esc(category.emoji) + '</span>' +
         '<span class="name">' + esc(category.name) + '</span>' +
         '<span class="count">' + count + '</span>' +
       '</button>';
@@ -1651,13 +1627,11 @@
         category.emoji = emoji || category.emoji;
       }
     } else {
-      const sameType = state.categories.filter((category) => category.type === type).length;
       state.categories.push({
         id: uid(),
         name,
         type,
-        emoji: emoji || (type === 'income' ? '💰' : '📦'),
-        color: PALETTE[sameType % PALETTE.length]
+        emoji: emoji || (type === 'income' ? '💰' : '📦')
       });
     }
     save();
