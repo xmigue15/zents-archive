@@ -49,12 +49,16 @@
       rgba(255, 255, 255, calc(var(--tab-alpha) * 1.05)) 100%);
   --tab-line: rgba(255, 255, 255, 0.85);
   --tab-shadow: 0 16px 40px rgba(122, 102, 72, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  --tab-active: rgba(255, 255, 255, 0.72);
+  --tab-active: rgba(255, 255, 255, calc(0.2 + (1 - var(--tab-alpha)) * 0.55));
   --tab-active-color: #163b32;
   --tab-active-shadow: 0 8px 20px rgba(122, 102, 72, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  --tab-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 46%);
-  --tab-rim: linear-gradient(150deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.3) 24%, rgba(122, 102, 72, 0.16) 52%, rgba(255, 255, 255, 0.85) 100%);
-  --tab-specular: rgba(255, 255, 255, 0.85);
+  --tab-sheen: linear-gradient(180deg, rgba(255, 255, 255, calc(var(--tab-alpha) * 0.9)) 0%, rgba(255, 255, 255, 0) 46%);
+  --tab-rim: linear-gradient(150deg,
+      rgba(255, 255, 255, calc(var(--tab-alpha) * 0.95)) 0%,
+      rgba(255, 255, 255, calc(var(--tab-alpha) * 0.28)) 24%,
+      rgba(122, 102, 72, calc(var(--tab-alpha) * 0.16)) 52%,
+      rgba(255, 255, 255, calc(var(--tab-alpha) * 0.7)) 100%);
+  --tab-specular: rgba(255, 255, 255, calc(var(--tab-alpha) * 0.85));
   --tab-disperse: conic-gradient(from 200deg, rgba(142, 182, 155, 0.62), rgba(176, 141, 106, 0.5), rgba(255, 255, 255, 0.35), rgba(142, 182, 155, 0.62));
   --tab-bubble: radial-gradient(130% 140% at 28% 0%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 48%, rgba(255, 255, 255, 0.32) 100%);
   --top-bg: rgba(236, 227, 214, 0.62);
@@ -132,12 +136,16 @@
       rgba(4, 22, 21, min(1, calc(var(--tab-alpha) * 1.5))) 100%);
     --tab-line: rgba(142, 182, 155, 0.38);
     --tab-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(218, 241, 222, 0.2);
-    --tab-active: rgba(218, 241, 222, 0.1);
+    --tab-active: rgba(218, 241, 222, calc(0.06 + (1 - var(--tab-alpha)) * 0.1));
     --tab-active-color: #daf1de;
     --tab-active-shadow: 0 8px 22px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(218, 241, 222, 0.24);
-    --tab-sheen: linear-gradient(180deg, rgba(218, 241, 222, 0.18) 0%, rgba(218, 241, 222, 0) 46%);
-    --tab-rim: linear-gradient(150deg, rgba(218, 241, 222, 0.75) 0%, rgba(218, 241, 222, 0.16) 26%, rgba(0, 0, 0, 0.35) 54%, rgba(218, 241, 222, 0.42) 100%);
-    --tab-specular: rgba(218, 241, 222, 0.4);
+    --tab-sheen: linear-gradient(180deg, rgba(218, 241, 222, calc(var(--tab-alpha) * 0.35)) 0%, rgba(218, 241, 222, 0) 46%);
+    --tab-rim: linear-gradient(150deg,
+      rgba(218, 241, 222, calc(var(--tab-alpha) * 0.75)) 0%,
+      rgba(218, 241, 222, calc(var(--tab-alpha) * 0.2)) 28%,
+      rgba(0, 0, 0, calc(var(--tab-alpha) * 0.35)) 54%,
+      rgba(218, 241, 222, calc(var(--tab-alpha) * 0.4)) 100%);
+    --tab-specular: rgba(218, 241, 222, calc(var(--tab-alpha) * 0.5));
     --tab-disperse: conic-gradient(from 200deg, rgba(142, 182, 155, 0.55), rgba(200, 161, 121, 0.42), rgba(218, 241, 222, 0.28), rgba(142, 182, 155, 0.55));
     --tab-bubble: radial-gradient(130% 140% at 28% 0%, rgba(218, 241, 222, 0.26) 0%, rgba(218, 241, 222, 0.13) 46%, rgba(218, 241, 222, 0.07) 100%);
     --top-bg: rgba(5, 31, 32, 0.66);
@@ -202,12 +210,16 @@
     rgba(4, 22, 21, min(1, calc(var(--tab-alpha) * 1.5))) 100%);
   --tab-line: rgba(142, 182, 155, 0.38);
   --tab-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(218, 241, 222, 0.2);
-  --tab-active: rgba(218, 241, 222, 0.1);
+  --tab-active: rgba(218, 241, 222, calc(0.06 + (1 - var(--tab-alpha)) * 0.1));
   --tab-active-color: #daf1de;
   --tab-active-shadow: 0 8px 22px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(218, 241, 222, 0.24);
-  --tab-sheen: linear-gradient(180deg, rgba(218, 241, 222, 0.18) 0%, rgba(218, 241, 222, 0) 46%);
-  --tab-rim: linear-gradient(150deg, rgba(218, 241, 222, 0.75) 0%, rgba(218, 241, 222, 0.16) 26%, rgba(0, 0, 0, 0.35) 54%, rgba(218, 241, 222, 0.42) 100%);
-  --tab-specular: rgba(218, 241, 222, 0.4);
+  --tab-sheen: linear-gradient(180deg, rgba(218, 241, 222, calc(var(--tab-alpha) * 0.35)) 0%, rgba(218, 241, 222, 0) 46%);
+  --tab-rim: linear-gradient(150deg,
+    rgba(218, 241, 222, calc(var(--tab-alpha) * 0.75)) 0%,
+    rgba(218, 241, 222, calc(var(--tab-alpha) * 0.2)) 28%,
+    rgba(0, 0, 0, calc(var(--tab-alpha) * 0.35)) 54%,
+    rgba(218, 241, 222, calc(var(--tab-alpha) * 0.4)) 100%);
+  --tab-specular: rgba(218, 241, 222, calc(var(--tab-alpha) * 0.5));
   --tab-disperse: conic-gradient(from 200deg, rgba(142, 182, 155, 0.55), rgba(200, 161, 121, 0.42), rgba(218, 241, 222, 0.28), rgba(142, 182, 155, 0.55));
   --tab-bubble: radial-gradient(130% 140% at 28% 0%, rgba(218, 241, 222, 0.26) 0%, rgba(218, 241, 222, 0.13) 46%, rgba(218, 241, 222, 0.07) 100%);
   --top-bg: rgba(5, 31, 32, 0.66);
@@ -399,8 +411,9 @@ body::after {
   border-radius: 999px;
   background: var(--tab-bg);
   box-shadow: var(--tab-shadow);
-  backdrop-filter: blur(10px) saturate(260%) brightness(1.04) contrast(1.02);
-  -webkit-backdrop-filter: blur(10px) saturate(260%) brightness(1.04) contrast(1.02);
+  backdrop-filter: blur(calc(var(--tab-alpha) * 24px)) saturate(calc(100% + (1 - var(--tab-alpha)) * 150%)) brightness(1.04);
+  -webkit-backdrop-filter: blur(calc(var(--tab-alpha) * 24px)) saturate(calc(100% + (1 - var(--tab-alpha)) * 150%)) brightness(1.04);
+  touch-action: pan-y;
   transform: translateX(-50%);
   overflow: hidden;
   isolation: isolate;
@@ -877,6 +890,7 @@ textarea:focus {
   flex: 1;
   height: 6px;
   border-radius: 999px;
+  touch-action: none;
   background: linear-gradient(90deg,
       var(--brand) 0%,
       var(--brand) var(--fill, 80%),
@@ -916,6 +930,35 @@ textarea:focus {
   font-weight: 750;
   color: var(--brand);
   font-variant-numeric: tabular-nums;
+}
+
+/* Aviso flotante al arrastrar la barra inferior */
+.tab-badge {
+  position: fixed;
+  left: 50%;
+  bottom: calc(104px + env(safe-area-inset-bottom));
+  z-index: 60;
+  padding: 8px 16px;
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  background: var(--modal-bg);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: var(--shadow);
+  color: var(--brand);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  transform: translate(-50%, 8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.tab-badge.on {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 /* ------------------------------------------------------------

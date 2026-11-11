@@ -1014,11 +1014,11 @@
         '<div class="field slider-field">' +
           '<label for="barTransparency">Transparencia de la barra inferior</label>' +
           '<div class="slider-row">' +
-            '<input type="range" class="range" id="barTransparency" min="0" max="100" step="5" ' +
+            '<input type="range" class="range" id="barTransparency" min="0" max="100" step="1" ' +
               'value="' + (Number(state.barTransparency) || 0) + '" style="--fill:' + (Number(state.barTransparency) || 0) + '%">' +
             '<output class="slider-out" id="barTransparencyValue" for="barTransparency">' + (Number(state.barTransparency) || 0) + ' %</output>' +
           '</div>' +
-          '<p class="hint">0 % deja la barra opaca, 100 % la vuelve cristal (se ve el contenido detrás).</p>' +
+          '<p class="hint">0 % deja la barra opaca, 100 % la vuelve cristal. También puedes arrastrar la barra de abajo.</p>' +
         '</div>' +
       '</section>' +
       '<section class="card settings-block">' +
@@ -1098,6 +1098,88 @@
 
   function applyBarTransparency() {
     document.documentElement.style.setProperty('--tab-alpha', String(barAlpha()));
+  }
+
+  function setBarTransparency(value, mostrar) {
+    const safe = Math.min(100, Math.max(0, Math.round(Number(value) || 0)));
+    state.barTransparency = safe;
+    applyBarTransparency();
+    const slider = $('#barTransparency');
+    if (slider) {
+      slider.value = String(safe);
+      slider.style.setProperty('--fill', safe + '%');
+    }
+    const out = $('#barTransparencyValue');
+    if (out) out.textContent = safe + ' %';
+    if (mostrar !== false) showTabBadge(safe);
+    return safe;
+  }
+
+  function showTabBadge(value) {
+    let badge = document.getElementById('tabBadge');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'tabBadge';
+      badge.className = 'tab-badge';
+      badge.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(badge);
+    }
+    badge.textContent = value + ' %';
+    badge.classList.add('on');
+    if (badge._timer) clearTimeout(badge._timer);
+    badge._timer = setTimeout(() => badge.classList.remove('on'), 900);
+  }
+
+  /* Arrastrar la barra inferior para cambiar su transparencia. */
+  function setupBarDrag() {
+    const bar = document.querySelector('.tabbar');
+    if (!bar) return;
+    let drag = null;
+    let suppressClick = false;
+
+    bar.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      drag = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        start: Number(state.barTransparency) || 0,
+        moved: false
+      };
+    });
+
+    bar.addEventListener('pointermove', (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (!drag.moved) {
+        if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy)) return;
+        drag.moved = true;
+        try { bar.setPointerCapture(event.pointerId); } catch (error) { /* ignorar */ }
+      }
+      event.preventDefault();
+      setBarTransparency(drag.start + dx / 3);
+    });
+
+    const finish = (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      if (drag.moved) {
+        scheduleSave();
+        suppressClick = true;
+        setTimeout(() => { suppressClick = false; }, 400);
+      }
+      drag = null;
+    };
+
+    bar.addEventListener('pointerup', finish);
+    bar.addEventListener('pointercancel', finish);
+
+    // Tras arrastrar no debe interpretarse como toque en una pestaña.
+    bar.addEventListener('click', (event) => {
+      if (!suppressClick) return;
+      event.stopPropagation();
+      event.preventDefault();
+    }, true);
   }
 
   function effectiveTheme() {
@@ -2514,12 +2596,7 @@
 
     // Control de transparencia de la barra: se ve al instante.
     if (target.id === 'barTransparency') {
-      const value = Math.min(100, Math.max(0, Number(target.value) || 0));
-      state.barTransparency = value;
-      applyBarTransparency();
-      target.style.setProperty('--fill', value + '%');
-      const out = $('#barTransparencyValue');
-      if (out) out.textContent = value + ' %';
+      setBarTransparency(target.value, false);
       scheduleSave();
       return;
     }
@@ -2642,6 +2719,7 @@
 
   applyTheme();
   render();
+  setupBarDrag();
   registerServiceWorker();
 
   (async () => {
