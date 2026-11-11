@@ -898,7 +898,7 @@
               '<div><div class="account-name">' + esc(account.name) + '</div>' +
               '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div></div>' +
             '</div>' +
-            '<div class="account-balance' + (balance < 0 ? ' out' : '') + '" data-count="' + balance + '">' + formatMoney(balance) + '</div>' +
+            '<div class="account-balance' + (balance < 0 ? ' out' : '') + '">' + formatMoney(balance) + '</div>' +
             '<div class="account-actions">' +
               '<button class="btn ghost sm" data-action="edit-account" data-id="' + esc(account.id) + '">' + ICON.edit + ' Editar</button>' +
               '<button class="icon-btn sm danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
@@ -917,7 +917,7 @@
       '</div>' +
       '<section class="hero">' +
         '<p class="hero-label">Saldo total</p>' +
-        '<div class="hero-amount" data-count="' + total + '">' + formatMoney(total) + '</div>' +
+        '<div class="hero-amount">' + formatMoney(total) + '</div>' +
         '<div class="hero-grid">' +
           '<div class="hero-stat"><span>Cuentas</span><b>' + state.accounts.length + '</b></div>' +
           '<div class="hero-stat"><span>Movimientos</span><b>' + state.movements.length + '</b></div>' +
@@ -1081,7 +1081,8 @@
     const root = $('#view');
     if (!root) return;
     root.innerHTML = RENDERERS[view]();
-    if (!ui.countersShown[view]) {
+    // El contador animado solo se muestra al entrar al Inicio.
+    if (view === 'resumen' && !ui.countersShown[view]) {
       ui.countersShown[view] = true;
       runCounters(root);
     }
