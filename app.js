@@ -37,11 +37,33 @@
 
   const PALETTE = ['#5b5bd6', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#64748b'];
 
+  const ACCOUNT_LOGOS = [
+    { id: 'nequi', name: 'Nequi' },
+    { id: 'daviplata', name: 'Daviplata' },
+    { id: 'bancolombia', name: 'Bancolombia' },
+    { id: 'bogota', name: 'Banco de Bogotá' },
+    { id: 'bbva', name: 'BBVA' },
+    { id: 'davivienda', name: 'Davivienda' },
+    { id: 'itau', name: 'Itaú' },
+    { id: 'movii', name: 'Movii' },
+    { id: 'rappipay', name: 'RappiPay' },
+    { id: 'nu', name: 'Nu' }
+  ];
+
+  const ACCOUNT_LOGO_IDS = ACCOUNT_LOGOS.map((logo) => logo.id);
+
   const DEFAULT_ACCOUNTS = () => ([
     { id: 'cash', name: 'Efectivo', color: '#10b981', initial: 0 },
-    { id: 'nequi', name: 'Nequi', color: '#8b5cf6', initial: 0 },
-    { id: 'daviplata', name: 'Daviplata', color: '#ef4444', initial: 0 },
-    { id: 'bancolombia', name: 'Bancolombia', color: '#f59e0b', initial: 0 }
+    { id: 'nequi', name: 'Nequi', color: '#2cb7c8', logo: 'nequi', initial: 0 },
+    { id: 'daviplata', name: 'Daviplata', color: '#e30613', logo: 'daviplata', initial: 0 },
+    { id: 'bancolombia', name: 'Bancolombia', color: '#1c1c1c', logo: 'bancolombia', initial: 0 },
+    { id: 'bogota', name: 'Banco de Bogotá', color: '#004595', logo: 'bogota', initial: 0 },
+    { id: 'bbva', name: 'BBVA', color: '#072146', logo: 'bbva', initial: 0 },
+    { id: 'davivienda', name: 'Davivienda', color: '#e30613', logo: 'davivienda', initial: 0 },
+    { id: 'itau', name: 'Itaú', color: '#2a63ae', logo: 'itau', initial: 0 },
+    { id: 'movii', name: 'Movii', color: '#e6007e', logo: 'movii', initial: 0 },
+    { id: 'rappipay', name: 'RappiPay', color: '#101010', logo: 'rappipay', initial: 0 },
+    { id: 'nu', name: 'Nu', color: '#820ad1', logo: 'nu', initial: 0 }
   ]);
 
   const DEFAULT_CATEGORIES = () => ([
@@ -65,6 +87,7 @@
     return {
       version: 1,
       theme: 'system',
+      defaultsVersion: 2,
       accounts: DEFAULT_ACCOUNTS(),
       categories: DEFAULT_CATEGORIES(),
       movements: []
@@ -196,6 +219,16 @@
     return text ? text.charAt(0).toUpperCase() : '?';
   }
 
+  function accountAvatar(account) {
+    if (account.logoData) {
+      return '<span class="acct-dot acct-logo"><img src="' + esc(account.logoData) + '" alt="" aria-hidden="true"></span>';
+    }
+    if (account.logo && ACCOUNT_LOGO_IDS.indexOf(account.logo) !== -1) {
+      return '<span class="acct-dot acct-logo"><img src="logos/' + esc(account.logo) + '.svg" alt="" aria-hidden="true"></span>';
+    }
+    return '<span class="acct-dot" style="background:' + esc(account.color) + '">' + esc(initial(account.name)) + '</span>';
+  }
+
   function catColor(category) {
     return isColor(category && category.color) ? category.color : '#64748b';
   }
@@ -229,10 +262,15 @@
     if (!raw || typeof raw !== 'object') return null;
     const name = String(raw.name || '').trim().slice(0, 40);
     if (!name) return null;
+    const logoData = typeof raw.logoData === 'string' && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(raw.logoData) && raw.logoData.length <= 500000
+      ? raw.logoData
+      : '';
     return {
       id: String(raw.id || uid()),
       name,
       color: isColor(raw.color) ? raw.color : PALETTE[0],
+      logo: ACCOUNT_LOGO_IDS.indexOf(raw.logo) !== -1 ? raw.logo : '',
+      logoData,
       initial: toAmount(raw.initial)
     };
   }
@@ -284,6 +322,19 @@
 
     const accounts = Array.isArray(raw.accounts) ? raw.accounts.map(sanitizeAccount).filter(Boolean) : [];
     out.accounts = accounts.length ? accounts : DEFAULT_ACCOUNTS();
+    // Migración: sumar las cuentas predeterminadas nuevas a estados creados antes
+    // y ponerles logo a las que ya existían, sin re-agregarlas si el usuario las eliminó.
+    if (Number(raw.defaultsVersion) !== 2) {
+      DEFAULT_ACCOUNTS().forEach((def) => {
+        const existing = out.accounts.find((a) => a.id === def.id);
+        if (!existing) {
+          out.accounts.push(def);
+        } else if (!existing.logo && !existing.logoData && def.logo) {
+          existing.logo = def.logo;
+        }
+      });
+      out.defaultsVersion = 2;
+    }
 
     const categories = Array.isArray(raw.categories) ? raw.categories.map(sanitizeCategory).filter(Boolean) : [];
     if (!categories.some((c) => c.type === 'expense')) {
@@ -580,7 +631,7 @@
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
           return '<button class="row" data-action="nav" data-view="cuentas">' +
-            '<span class="acct-dot" style="background:' + esc(account.color) + '">' + esc(initial(account.name)) + '</span>' +
+            accountAvatar(account) +
             '<span class="grow">' +
               '<span class="title">' + esc(account.name) + '</span>' +
               '<span class="sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</span>' +
@@ -739,7 +790,7 @@
           const count = movementCountForAccount(account.id);
           return '<article class="account-card">' +
             '<div class="account-top">' +
-              '<span class="acct-dot" style="background:' + esc(account.color) + '">' + esc(initial(account.name)) + '</span>' +
+              accountAvatar(account) +
               '<div><div class="account-name">' + esc(account.name) + '</div>' +
               '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div></div>' +
             '</div>' +
@@ -1302,6 +1353,24 @@
   function openAccountModal(id) {
     const account = id ? accountById(id) : null;
     const defaultColor = PALETTE[state.accounts.length % PALETTE.length];
+    const currentLogo = account ? (account.logoData ? 'custom' : (account.logo || '')) : '';
+    const letterChip =
+      '<button type="button" class="logo-chip' + (currentLogo === '' ? ' active' : '') + '" data-action="acct-logo-pick" data-value="">' +
+        '<span class="logo-letter" style="background:' + esc(account ? account.color : defaultColor) + '">' + esc(initial(account ? account.name : '')) + '</span>' +
+        '<span>Letra</span>' +
+      '</button>';
+    const presetChips = ACCOUNT_LOGOS.map((logo) =>
+      '<button type="button" class="logo-chip' + (currentLogo === logo.id ? ' active' : '') + '" data-action="acct-logo-pick" data-value="' + logo.id + '">' +
+        '<img src="logos/' + logo.id + '.svg" alt="">' +
+        '<span>' + esc(logo.name) + '</span>' +
+      '</button>'
+    ).join('');
+    const customChip =
+      '<button type="button" class="logo-chip' + (currentLogo === 'custom' ? ' active' : '') + '" id="acctLogoCustom" data-action="acct-logo-pick" data-value="custom"' + (account && account.logoData ? '' : ' hidden') + '>' +
+        '<img alt="">' +
+        '<span>Mi logo</span>' +
+      '</button>';
+
     openModal(
       '<div class="modal-head">' +
         '<h2>' + (account ? 'Editar cuenta' : 'Nueva cuenta') + '</h2>' +
@@ -1311,6 +1380,18 @@
         '<div class="field">' +
           '<label for="acctName">Nombre</label>' +
           '<input class="input" id="acctName" maxlength="40" autocomplete="off" placeholder="Ej. Nequi, Efectivo, Banco..." value="' + esc(account ? account.name : '') + '" data-autofocus>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Logo</label>' +
+          '<div class="logo-picker" id="acctLogoPicker">' + letterChip + presetChips + customChip + '</div>' +
+          '<div class="logo-picker-actions">' +
+            '<button type="button" class="btn ghost sm" data-action="acct-logo-upload">' + ICON.upload + ' Subir imagen</button>' +
+            '<button type="button" class="btn ghost sm" data-action="acct-logo-clear">Quitar logo</button>' +
+          '</div>' +
+          '<p class="hint">Elige uno de la lista o sube tu propia imagen. Se recorta cuadrado automáticamente.</p>' +
+          '<input type="file" id="acctLogoFile" accept="image/*" hidden>' +
+          '<input type="hidden" id="acctLogo" value="' + esc(account && !account.logoData ? account.logo || '' : '') + '">' +
+          '<input type="hidden" id="acctLogoData" value="' + esc(account ? account.logoData || '' : '') + '">' +
         '</div>' +
         '<div class="field">' +
           '<label for="acctInitial">Saldo inicial (opcional)</label>' +
@@ -1327,6 +1408,61 @@
         '</div>' +
       '</form>'
     );
+    updateAcctLogoPicker();
+  }
+
+  function updateAcctLogoPicker() {
+    const picker = $('#acctLogoPicker');
+    if (!picker) return;
+    const logoInput = $('#acctLogo');
+    const dataInput = $('#acctLogoData');
+    const logo = logoInput ? logoInput.value : '';
+    const data = dataInput ? dataInput.value : '';
+    $$('.logo-chip', picker).forEach((chip) => {
+      chip.classList.toggle('active', data ? chip.dataset.value === 'custom' : chip.dataset.value === logo);
+    });
+    const custom = $('#acctLogoCustom');
+    if (custom) {
+      custom.hidden = !data;
+      const img = custom.querySelector('img');
+      if (img && data) img.src = data;
+    }
+  }
+
+  function handleAcctLogoFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 128;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+        const scale = Math.min(size / img.width, size / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        const url = canvas.toDataURL('image/png');
+        if (url.length > 400000) {
+          toast('La imagen es muy grande. Prueba con una más pequeña.');
+          return;
+        }
+        const dataInput = $('#acctLogoData');
+        const logoInput = $('#acctLogo');
+        if (dataInput) dataInput.value = url;
+        if (logoInput) logoInput.value = '';
+        updateAcctLogoPicker();
+        toast('Logo listo. Guarda los cambios.');
+      };
+      img.onerror = () => toast('No se pudo leer la imagen.');
+      img.src = String(reader.result || '');
+    };
+    reader.onerror = () => toast('No se pudo leer el archivo.');
+    reader.readAsDataURL(file);
   }
 
   function saveAccount() {
@@ -1360,9 +1496,19 @@
         account.name = name;
         account.initial = toAmount(initial);
         account.color = color;
+        const logoInput = $('#acctLogo');
+        const dataInput = $('#acctLogoData');
+        const logo = logoInput && ACCOUNT_LOGO_IDS.indexOf(logoInput.value) !== -1 ? logoInput.value : '';
+        const logoData = dataInput && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(dataInput.value) && dataInput.value.length <= 500000 ? dataInput.value : '';
+        account.logo = logo;
+        account.logoData = logoData;
       }
     } else {
-      state.accounts.push({ id: uid(), name, initial: toAmount(initial), color });
+      const logoInput = $('#acctLogo');
+      const dataInput = $('#acctLogoData');
+      const logo = logoInput && ACCOUNT_LOGO_IDS.indexOf(logoInput.value) !== -1 ? logoInput.value : '';
+      const logoData = dataInput && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(dataInput.value) && dataInput.value.length <= 500000 ? dataInput.value : '';
+      state.accounts.push({ id: uid(), name, initial: toAmount(initial), color, logo, logoData });
     }
 
     save();
@@ -1978,6 +2124,30 @@
         deleteAccount(id);
         break;
 
+      case 'acct-logo-pick': {
+        const logoInput = $('#acctLogo');
+        const dataInput = $('#acctLogoData');
+        if (logoInput) logoInput.value = button.dataset.value === 'custom' ? '' : (button.dataset.value || '');
+        if (dataInput) dataInput.value = '';
+        updateAcctLogoPicker();
+        break;
+      }
+
+      case 'acct-logo-upload': {
+        const input = $('#acctLogoFile');
+        if (input) input.click();
+        break;
+      }
+
+      case 'acct-logo-clear': {
+        const logoInput = $('#acctLogo');
+        const dataInput = $('#acctLogoData');
+        if (logoInput) logoInput.value = '';
+        if (dataInput) dataInput.value = '';
+        updateAcctLogoPicker();
+        break;
+      }
+
       case 'manage-categories':
         openCategoriesModal(ui.categoryType);
         break;
@@ -2098,6 +2268,12 @@
     if (target.id === 'movAccount') {
       ui.movAccount = target.value;
       renderMovementResults();
+      return;
+    }
+
+    if (target.id === 'acctLogoFile') {
+      handleAcctLogoFile(target.files && target.files[0]);
+      target.value = '';
       return;
     }
 
