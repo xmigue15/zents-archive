@@ -62,7 +62,7 @@
   --sage: #8eb69b;
   --camel: #b08d6a;
   --sand: #ece3d6;
-  --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --serif: "Redaction", Georgia, "Times New Roman", serif;
   --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --grain: 0.35;
 
@@ -827,25 +827,21 @@ textarea:focus {
 }
 
 /* ------------------------------------------------------------
-   13. Los montos: Instrument Serif es de contraste alto y muy
-   fina, así que engrosamos un punto las cifras grandes para
-   que se lean firmes sin perder el aire editorial.
+   13. Los montos: Redaction 10 tiene negrita real, así que las
+   cifras grandes se apoyan en ella para leerse firmes sin
+   perder el aire editorial.
    ------------------------------------------------------------ */
 
 .hero-amount {
-  -webkit-text-stroke: 0.6px currentColor;
+  font-weight: 700;
 }
 
-.account-balance,
-.quick-card b,
-.stat-card b,
-.hero-stat b,
-.amount-input {
-  -webkit-text-stroke: 0.4px currentColor;
+.account-balance {
+  font-weight: 700;
 }
 
 .row .amt {
-  -webkit-text-stroke: 0.3px currentColor;
+  font-weight: 700;
 }
 
 /* ------------------------------------------------------------
