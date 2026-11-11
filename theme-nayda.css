@@ -42,7 +42,11 @@
   --field-bg: rgba(255, 255, 255, 0.55);
   --field-line: rgba(255, 255, 255, 0.72);
   --modal-bg: rgba(252, 249, 243, 0.9);
-  --tab-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 55%, rgba(255, 255, 255, 0.24) 100%);
+  --tab-alpha: 0.2;
+  --tab-bg: linear-gradient(180deg,
+      rgba(255, 255, 255, min(1, calc(var(--tab-alpha) * 1.5))) 0%,
+      rgba(255, 255, 255, calc(var(--tab-alpha) * 0.4)) 52%,
+      rgba(255, 255, 255, calc(var(--tab-alpha) * 1.05)) 100%);
   --tab-line: rgba(255, 255, 255, 0.85);
   --tab-shadow: 0 16px 40px rgba(122, 102, 72, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --tab-active: rgba(255, 255, 255, 0.72);
@@ -121,7 +125,11 @@
     --field-bg: rgba(218, 241, 222, 0.07);
     --field-line: rgba(142, 182, 155, 0.28);
     --modal-bg: rgba(7, 28, 27, 0.92);
-    --tab-bg: linear-gradient(180deg, rgba(218, 241, 222, 0.14) 0%, rgba(6, 28, 26, 0.3) 55%, rgba(4, 22, 21, 0.4) 100%);
+    --tab-alpha: 0.2;
+    --tab-bg: linear-gradient(180deg,
+      rgba(218, 241, 222, min(1, calc(var(--tab-alpha) * 0.6))) 0%,
+      rgba(6, 28, 26, min(1, calc(var(--tab-alpha) * 1.2))) 52%,
+      rgba(4, 22, 21, min(1, calc(var(--tab-alpha) * 1.5))) 100%);
     --tab-line: rgba(142, 182, 155, 0.38);
     --tab-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(218, 241, 222, 0.2);
     --tab-active: rgba(218, 241, 222, 0.1);
@@ -187,7 +195,11 @@
   --field-bg: rgba(218, 241, 222, 0.07);
   --field-line: rgba(142, 182, 155, 0.28);
   --modal-bg: rgba(7, 28, 27, 0.92);
-  --tab-bg: linear-gradient(180deg, rgba(218, 241, 222, 0.14) 0%, rgba(6, 28, 26, 0.3) 55%, rgba(4, 22, 21, 0.4) 100%);
+  --tab-alpha: 0.2;
+  --tab-bg: linear-gradient(180deg,
+    rgba(218, 241, 222, min(1, calc(var(--tab-alpha) * 0.6))) 0%,
+    rgba(6, 28, 26, min(1, calc(var(--tab-alpha) * 1.2))) 52%,
+    rgba(4, 22, 21, min(1, calc(var(--tab-alpha) * 1.5))) 100%);
   --tab-line: rgba(142, 182, 155, 0.38);
   --tab-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(218, 241, 222, 0.2);
   --tab-active: rgba(218, 241, 222, 0.1);
@@ -387,8 +399,8 @@ body::after {
   border-radius: 999px;
   background: var(--tab-bg);
   box-shadow: var(--tab-shadow);
-  backdrop-filter: blur(16px) saturate(240%) brightness(1.05) contrast(1.02);
-  -webkit-backdrop-filter: blur(16px) saturate(240%) brightness(1.05) contrast(1.02);
+  backdrop-filter: blur(10px) saturate(260%) brightness(1.04) contrast(1.02);
+  -webkit-backdrop-filter: blur(10px) saturate(260%) brightness(1.04) contrast(1.02);
   transform: translateX(-50%);
   overflow: hidden;
   isolation: isolate;
@@ -845,9 +857,70 @@ textarea:focus {
 }
 
 /* ------------------------------------------------------------
-   12. Varios
+   12. Control de transparencia (Ajustes)
    ------------------------------------------------------------ */
 
+.slider-field {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+      var(--brand) 0%,
+      var(--brand) var(--fill, 80%),
+      rgba(122, 110, 88, 0.18) var(--fill, 80%),
+      rgba(122, 110, 88, 0.18) 100%);
+  outline: none;
+  cursor: pointer;
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: var(--brand);
+  box-shadow: 0 4px 12px rgba(122, 102, 72, 0.35);
+  cursor: pointer;
+}
+
+.range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: var(--brand);
+  box-shadow: 0 4px 12px rgba(122, 102, 72, 0.35);
+  cursor: pointer;
+}
+
+.slider-out {
+  flex: none;
+  min-width: 52px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--brand);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------
+   13. Varios
+   ------------------------------------------------------------ */
 .toast {
   background: var(--forest);
   color: var(--mint);

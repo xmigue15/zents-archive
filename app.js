@@ -129,6 +129,7 @@
       version: 1,
       theme: 'system',
       defaultsVersion: 3,
+      barTransparency: 80,
       profile: { name: '', photoData: '' },
       accounts: DEFAULT_ACCOUNTS(),
       categories: DEFAULT_CATEGORIES(),
@@ -416,6 +417,12 @@
 
     out.theme = ['system', 'light', 'dark'].indexOf(raw.theme) !== -1 ? raw.theme : 'system';
 
+    // Transparencia de la barra inferior (0 = opaca, 100 = cristal).
+    const rawTransparency = Number(raw.barTransparency);
+    out.barTransparency = isFinite(rawTransparency)
+      ? Math.min(100, Math.max(0, Math.round(rawTransparency)))
+      : 80;
+
     const accounts = Array.isArray(raw.accounts) ? raw.accounts.map(sanitizeAccount).filter(Boolean) : [];
     out.accounts = accounts.length ? accounts : DEFAULT_ACCOUNTS();
     // Migración: sumar las cuentas predeterminadas nuevas a estados creados antes
@@ -502,6 +509,16 @@
     renderedView: null,
     countersShown: {}
   };
+
+  let saveTimer = null;
+
+  function scheduleSave() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      saveTimer = null;
+      save();
+    }, 400);
+  }
 
   function save() {
     try {
@@ -994,6 +1011,15 @@
           themeChoice('light', 'Claro', ICON.sun) +
           themeChoice('dark', 'Oscuro', ICON.moon) +
         '</div>' +
+        '<div class="field slider-field">' +
+          '<label for="barTransparency">Transparencia de la barra inferior</label>' +
+          '<div class="slider-row">' +
+            '<input type="range" class="range" id="barTransparency" min="0" max="100" step="5" ' +
+              'value="' + (Number(state.barTransparency) || 0) + '" style="--fill:' + (Number(state.barTransparency) || 0) + '%">' +
+            '<output class="slider-out" id="barTransparencyValue" for="barTransparency">' + (Number(state.barTransparency) || 0) + ' %</output>' +
+          '</div>' +
+          '<p class="hint">0 % deja la barra opaca, 100 % la vuelve cristal (se ve el contenido detrás).</p>' +
+        '</div>' +
       '</section>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Categorías</h3>' +
@@ -1054,11 +1080,24 @@
     if (state.theme === 'system') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', state.theme);
 
+    applyBarTransparency();
+
     const themeBtn = $('#themeBtn');
     if (themeBtn) themeBtn.innerHTML = effectiveTheme() === 'dark' ? ICON.sun : ICON.moon;
 
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', effectiveTheme() === 'dark' ? '#0b2b26' : '#b08d6a');
+  }
+
+  /* Transparencia de la barra inferior: 0 = opaca, 100 = cristal total. */
+  function barAlpha() {
+    const value = Number(state.barTransparency);
+    const safe = isFinite(value) ? Math.min(100, Math.max(0, value)) : 80;
+    return (100 - safe) / 100;
+  }
+
+  function applyBarTransparency() {
+    document.documentElement.style.setProperty('--tab-alpha', String(barAlpha()));
   }
 
   function effectiveTheme() {
@@ -2470,6 +2509,18 @@
     if (target.id === 'movSearch') {
       ui.movQuery = target.value;
       renderMovementResults();
+      return;
+    }
+
+    // Control de transparencia de la barra: se ve al instante.
+    if (target.id === 'barTransparency') {
+      const value = Math.min(100, Math.max(0, Number(target.value) || 0));
+      state.barTransparency = value;
+      applyBarTransparency();
+      target.style.setProperty('--fill', value + '%');
+      const out = $('#barTransparencyValue');
+      if (out) out.textContent = value + ' %';
+      scheduleSave();
       return;
     }
 
