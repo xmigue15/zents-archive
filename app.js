@@ -36,6 +36,7 @@
   };
 
   const ACCOUNT_LOGOS = [
+    { id: 'cash', name: 'Efectivo' },
     { id: 'nequi', name: 'Nequi' },
     { id: 'daviplata', name: 'Daviplata' },
     { id: 'bancolombia', name: 'Bancolombia' },
@@ -51,7 +52,7 @@
   const ACCOUNT_LOGO_IDS = ACCOUNT_LOGOS.map((logo) => logo.id);
 
   const DEFAULT_ACCOUNTS = () => ([
-    { id: 'cash', name: 'Efectivo', initial: 0 },
+    { id: 'cash', name: 'Efectivo', logo: 'cash', initial: 0 },
     { id: 'nequi', name: 'Nequi', logo: 'nequi', initial: 0 },
     { id: 'daviplata', name: 'Daviplata', logo: 'daviplata', initial: 0 },
     { id: 'bancolombia', name: 'Bancolombia', logo: 'bancolombia', initial: 0 },
@@ -85,7 +86,8 @@
     return {
       version: 1,
       theme: 'system',
-      defaultsVersion: 2,
+      defaultsVersion: 3,
+      profile: { phone: '', photoData: '' },
       accounts: DEFAULT_ACCOUNTS(),
       categories: DEFAULT_CATEGORIES(),
       movements: []
@@ -217,6 +219,9 @@
     if (account.logoData) {
       return '<span class="acct-dot acct-logo"><img src="' + esc(account.logoData) + '" alt="" aria-hidden="true"></span>';
     }
+    if (account.logo === 'cash') {
+      return '<span class="acct-dot acct-letter">💵</span>';
+    }
     if (account.logo && ACCOUNT_LOGO_IDS.indexOf(account.logo) !== -1) {
       return '<span class="acct-dot acct-logo"><img src="logos/' + esc(account.logo) + '.jpg" alt="" aria-hidden="true"></span>';
     }
@@ -302,6 +307,17 @@
     };
   }
 
+  function sanitizeProfile(raw) {
+    if (!raw || typeof raw !== 'object') return { phone: '', photoData: '' };
+    const photoData = typeof raw.photoData === 'string' && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(raw.photoData) && raw.photoData.length <= 500000
+      ? raw.photoData
+      : '';
+    return {
+      phone: String(raw.phone || '').trim().slice(0, 20),
+      photoData
+    };
+  }
+
   function normalizeState(raw) {
     const out = freshState();
     if (!raw || typeof raw !== 'object') return out;
@@ -312,17 +328,24 @@
     out.accounts = accounts.length ? accounts : DEFAULT_ACCOUNTS();
     // Migración: sumar las cuentas predeterminadas nuevas a estados creados antes
     // y ponerles logo a las que ya existían, sin re-agregarlas si el usuario las eliminó.
-    if (Number(raw.defaultsVersion) !== 2) {
-      DEFAULT_ACCOUNTS().forEach((def) => {
-        const existing = out.accounts.find((a) => a.id === def.id);
-        if (!existing) {
-          out.accounts.push(def);
-        } else if (!existing.logo && !existing.logoData && def.logo) {
-          existing.logo = def.logo;
-        }
-      });
-      out.defaultsVersion = 2;
+    if (Number(raw.defaultsVersion) !== 3) {
+      if (Number(raw.defaultsVersion) !== 2) {
+        DEFAULT_ACCOUNTS().forEach((def) => {
+          const existing = out.accounts.find((a) => a.id === def.id);
+          if (!existing) {
+            out.accounts.push(def);
+          } else if (!existing.logo && !existing.logoData && def.logo) {
+            existing.logo = def.logo;
+          }
+        });
+      }
+      // v3: logo de billete para la cuenta de Efectivo.
+      const cash = out.accounts.find((a) => a.id === 'cash');
+      if (cash && !cash.logo && !cash.logoData) cash.logo = 'cash';
+      out.defaultsVersion = 3;
     }
+
+    out.profile = sanitizeProfile(raw.profile);
 
     const categories = Array.isArray(raw.categories) ? raw.categories.map(sanitizeCategory).filter(Boolean) : [];
     if (!categories.some((c) => c.type === 'expense')) {
@@ -612,8 +635,11 @@
     const topExpenses = categoryBreakdown('expense', ym).slice(0, 3);
     const average = Math.round(totals.expense / Math.max(1, daysElapsedInMonth(ym)));
 
-    const accountsHtml = state.accounts.length
-      ? state.accounts.map((account) => {
+    const accountsSorted = state.accounts
+      .slice()
+      .sort((a, b) => accountBalance(b.id) - accountBalance(a.id));
+    const accountsHtml = accountsSorted.length
+      ? accountsSorted.map((account) => {
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
           return '<button class="row" data-action="nav" data-view="cuentas">' +
@@ -850,7 +876,23 @@
   }
 
   function viewAjustes() {
+    const profile = state.profile || { phone: '', photoData: '' };
     return '<div class="page-head"><div><p class="eyebrow">Preferencias</p><h2>Ajustes</h2></div></div>' +
+      '<section class="card settings-block">' +
+        '<h3 class="settings-title">Perfil</h3>' +
+        '<div class="profile-row">' +
+          '<span class="profile-avatar">' +
+            (profile.photoData
+              ? '<img src="' + esc(profile.photoData) + '" alt="">'
+              : '👤') +
+          '</span>' +
+          '<div class="profile-info">' +
+            '<b>' + (profile.phone ? esc(profile.phone) : 'Sin número') + '</b>' +
+            '<span>' + (profile.phone ? 'Tu número de celular' : 'Agrega tu número de celular') + '</span>' +
+          '</div>' +
+          '<button class="btn ghost sm" data-action="edit-profile">' + ICON.edit + ' Editar</button>' +
+        '</div>' +
+      '</section>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Apariencia</h3>' +
         '<p class="settings-desc">Elige cómo se ve Zent en este dispositivo.</p>' +
@@ -1343,12 +1385,15 @@
         '<span class="logo-letter">' + esc(initial(account ? account.name : '')) + '</span>' +
         '<span>Letra</span>' +
       '</button>';
-    const presetChips = ACCOUNT_LOGOS.map((logo) =>
-      '<button type="button" class="logo-chip' + (currentLogo === logo.id ? ' active' : '') + '" data-action="acct-logo-pick" data-value="' + logo.id + '">' +
-        '<img src="logos/' + logo.id + '.jpg" alt="">' +
+    const presetChips = ACCOUNT_LOGOS.map((logo) => {
+      const visual = logo.id === 'cash'
+        ? '<span class="logo-letter">💵</span>'
+        : '<img src="logos/' + logo.id + '.jpg" alt="">';
+      return '<button type="button" class="logo-chip' + (currentLogo === logo.id ? ' active' : '') + '" data-action="acct-logo-pick" data-value="' + logo.id + '">' +
+        visual +
         '<span>' + esc(logo.name) + '</span>' +
-      '</button>'
-    ).join('');
+      '</button>';
+    }).join('');
     const customChip =
       '<button type="button" class="logo-chip' + (currentLogo === 'custom' ? ' active' : '') + '" id="acctLogoCustom" data-action="acct-logo-pick" data-value="custom"' + (account && account.logoData ? '' : ' hidden') + '>' +
         '<img alt="">' +
@@ -1409,7 +1454,7 @@
     }
   }
 
-  function handleAcctLogoFile(file) {
+  function readSquareImage(file, onReady) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
@@ -1426,23 +1471,105 @@
         const w = img.width * scale;
         const h = img.height * scale;
         ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-        const url = canvas.toDataURL('image/png');
-        if (url.length > 400000) {
-          toast('La imagen es muy grande. Prueba con una más pequeña.');
-          return;
-        }
-        const dataInput = $('#acctLogoData');
-        const logoInput = $('#acctLogo');
-        if (dataInput) dataInput.value = url;
-        if (logoInput) logoInput.value = '';
-        updateAcctLogoPicker();
-        toast('Logo listo. Guarda los cambios.');
+        onReady(canvas.toDataURL('image/png'));
       };
       img.onerror = () => toast('No se pudo leer la imagen.');
       img.src = String(reader.result || '');
     };
     reader.onerror = () => toast('No se pudo leer el archivo.');
     reader.readAsDataURL(file);
+  }
+
+  function handleAcctLogoFile(file) {
+    readSquareImage(file, (url) => {
+      if (url.length > 400000) {
+        toast('La imagen es muy grande. Prueba con una más pequeña.');
+        return;
+      }
+      const dataInput = $('#acctLogoData');
+      const logoInput = $('#acctLogo');
+      if (dataInput) dataInput.value = url;
+      if (logoInput) logoInput.value = '';
+      updateAcctLogoPicker();
+      toast('Logo listo. Guarda los cambios.');
+    });
+  }
+
+  function openProfileModal() {
+    const profile = state.profile || { phone: '', photoData: '' };
+    openModal(
+      '<div class="modal-head">' +
+        '<h2>Mi perfil</h2>' +
+        '<button class="icon-btn sm" data-action="close-modal" aria-label="Cerrar">' + ICON.close + '</button>' +
+      '</div>' +
+      '<form id="profileForm" novalidate>' +
+        '<div class="field">' +
+          '<label>Foto de perfil</label>' +
+          '<div class="profile-editor">' +
+            '<span class="profile-avatar" id="profPhotoPreview">' +
+              (profile.photoData
+                ? '<img src="' + esc(profile.photoData) + '" alt="">'
+                : '👤') +
+            '</span>' +
+            '<div class="profile-editor-actions">' +
+              '<button type="button" class="btn ghost sm" data-action="prof-photo-upload">' + ICON.upload + ' Subir foto</button>' +
+              '<button type="button" class="btn ghost sm" data-action="prof-photo-clear">Quitar foto</button>' +
+            '</div>' +
+          '</div>' +
+          '<p class="hint">Tu foto se recorta en círculo automáticamente.</p>' +
+          '<input type="file" id="profPhotoFile" accept="image/*" hidden>' +
+          '<input type="hidden" id="profPhotoData" value="' + esc(profile.photoData || '') + '">' +
+        '</div>' +
+        '<div class="field">' +
+          '<label for="profPhone">Número de celular</label>' +
+          '<input class="input" id="profPhone" type="tel" maxlength="20" autocomplete="tel" placeholder="Ej. 300 123 4567" value="' + esc(profile.phone || '') + '">' +
+        '</div>' +
+        '<div class="modal-actions">' +
+          '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
+          '<button type="submit" class="btn">Guardar cambios</button>' +
+        '</div>' +
+      '</form>'
+    );
+  }
+
+  function updateProfilePhotoPreview() {
+    const preview = $('#profPhotoPreview');
+    const dataInput = $('#profPhotoData');
+    if (!preview || !dataInput) return;
+    const data = dataInput.value;
+    if (data) {
+      preview.innerHTML = '<img src="' + esc(data) + '" alt="">';
+    } else {
+      preview.innerHTML = '👤';
+    }
+  }
+
+  function handleProfileFile(file) {
+    readSquareImage(file, (url) => {
+      if (url.length > 400000) {
+        toast('La imagen es muy grande. Prueba con una más pequeña.');
+        return;
+      }
+      const dataInput = $('#profPhotoData');
+      if (dataInput) dataInput.value = url;
+      updateProfilePhotoPreview();
+      toast('Foto lista. Guarda los cambios.');
+    });
+  }
+
+  function saveProfile() {
+    const form = $('#profileForm');
+    if (!form) return;
+    const phoneInput = $('#profPhone');
+    const dataInput = $('#profPhotoData');
+    const phone = phoneInput ? phoneInput.value.trim().slice(0, 20) : '';
+    if (!state.profile) state.profile = { phone: '', photoData: '' };
+    state.profile.phone = phone;
+    state.profile.photoData = dataInput && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(dataInput.value) && dataInput.value.length <= 500000 ? dataInput.value : '';
+    save();
+    closeModal();
+    render();
+    toast('Perfil actualizado.');
   }
 
   function saveAccount() {
@@ -2113,6 +2240,23 @@
         break;
       }
 
+      case 'edit-profile':
+        openProfileModal();
+        break;
+
+      case 'prof-photo-upload': {
+        const input = $('#profPhotoFile');
+        if (input) input.click();
+        break;
+      }
+
+      case 'prof-photo-clear': {
+        const dataInput = $('#profPhotoData');
+        if (dataInput) dataInput.value = '';
+        updateProfilePhotoPreview();
+        break;
+      }
+
       case 'acct-logo-clear': {
         const logoInput = $('#acctLogo');
         const dataInput = $('#acctLogoData');
@@ -2251,6 +2395,12 @@
       return;
     }
 
+    if (target.id === 'profPhotoFile') {
+      handleProfileFile(target.files && target.files[0]);
+      target.value = '';
+      return;
+    }
+
     if (target.id === 'statsMonth') {
       ui.statsMonth = target.value || currentMonth();
       render();
@@ -2285,6 +2435,9 @@
     } else if (form.id === 'categoryForm') {
       event.preventDefault();
       saveCategory();
+    } else if (form.id === 'profileForm') {
+      event.preventDefault();
+      saveProfile();
     }
   });
 
