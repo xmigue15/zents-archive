@@ -62,7 +62,8 @@
   --sage: #8eb69b;
   --camel: #b08d6a;
   --sand: #ece3d6;
-  --serif: Georgia, "Times New Roman", "Iowan Old Style", serif;
+  --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --grain: 0.35;
 
   --app-bg:
@@ -230,7 +231,7 @@
    ------------------------------------------------------------ */
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--sans);
   background: var(--app-bg);
   background-attachment: fixed;
   color: var(--text);
@@ -319,7 +320,7 @@ body::after {
 .hero-stat span,
 .quick-card span,
 .stat-card span {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--sans);
   font-weight: 650;
   letter-spacing: 0.13em;
   text-transform: uppercase;
