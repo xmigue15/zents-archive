@@ -827,6 +827,28 @@ textarea:focus {
 }
 
 /* ------------------------------------------------------------
+   13. Los montos: Instrument Serif es de contraste alto y muy
+   fina, así que engrosamos un punto las cifras grandes para
+   que se lean firmes sin perder el aire editorial.
+   ------------------------------------------------------------ */
+
+.hero-amount {
+  -webkit-text-stroke: 0.6px currentColor;
+}
+
+.account-balance,
+.quick-card b,
+.stat-card b,
+.hero-stat b,
+.amount-input {
+  -webkit-text-stroke: 0.4px currentColor;
+}
+
+.row .amt {
+  -webkit-text-stroke: 0.3px currentColor;
+}
+
+/* ------------------------------------------------------------
    12. Varios
    ------------------------------------------------------------ */
 
