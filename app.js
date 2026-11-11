@@ -35,6 +35,48 @@
     transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>'
   };
 
+  /* Iconos propios de Zent (reemplazan a los emojis) */
+  const CATEGORY_ICONS = {
+    comida: 'comida',
+    mercado: 'supermercado',
+    transporte: 'bus',
+    servicios: 'servicios',
+    salud: 'salud',
+    ropa: 'ropa',
+    ocio: 'ocio',
+    hogar: 'hogar',
+    educacion: 'universidad',
+    'otros-gastos': 'mas',
+    salario: 'trabajo',
+    ventas: 'etiqueta',
+    transferencias: 'transferencia',
+    'otros-ingresos': 'dinero'
+  };
+
+  function iconSVG(id, clase) {
+    if (typeof window.zentIcono !== 'function') return '';
+    const icon = (window.ZENT_ICONOS && window.ZENT_ICONOS[id]) ? id : 'mas';
+    return window.zentIcono(icon, clase || '');
+  }
+
+  function iconPickerHTML(actual) {
+    if (!window.ZENT_ICONOS) return '';
+    const selected = (window.ZENT_ICONOS[actual] ? actual : 'mas');
+    const ids = Object.keys(window.ZENT_ICONOS);
+    return '<div class="field icon-picker">' +
+      '<label>Icono</label>' +
+      '<div class="icon-grid" data-selected="' + esc(selected) + '">' +
+        ids.map((id) =>
+          '<button type="button" class="icon-opt' + (id === selected ? ' active' : '') + '" ' +
+            'data-action="pick-icon" data-icon="' + esc(id) + '" title="' + esc(id) + '" aria-label="' + esc(id) + '">' +
+            iconSVG(id) +
+          '</button>'
+        ).join('') +
+      '</div>' +
+      '<input type="hidden" id="catIcon" value="' + esc(selected) + '">' +
+    '</div>';
+  }
+
   const ACCOUNT_LOGOS = [
     { id: 'cash', name: 'Efectivo' },
     { id: 'nequi', name: 'Nequi' },
@@ -66,20 +108,20 @@
   ]);
 
   const DEFAULT_CATEGORIES = () => ([
-    { id: 'comida', name: 'Comida', type: 'expense', emoji: '🍽️' },
-    { id: 'mercado', name: 'Mercado', type: 'expense', emoji: '🛒' },
-    { id: 'transporte', name: 'Transporte', type: 'expense', emoji: '🚌' },
-    { id: 'servicios', name: 'Servicios', type: 'expense', emoji: '💡' },
-    { id: 'salud', name: 'Salud', type: 'expense', emoji: '💊' },
-    { id: 'ropa', name: 'Ropa', type: 'expense', emoji: '👕' },
-    { id: 'ocio', name: 'Ocio', type: 'expense', emoji: '🎬' },
-    { id: 'hogar', name: 'Hogar', type: 'expense', emoji: '🏠' },
-    { id: 'educacion', name: 'Educación', type: 'expense', emoji: '📚' },
-    { id: 'otros-gastos', name: 'Otros', type: 'expense', emoji: '📦' },
-    { id: 'salario', name: 'Salario', type: 'income', emoji: '💼' },
-    { id: 'ventas', name: 'Ventas', type: 'income', emoji: '🏷️' },
-    { id: 'transferencias', name: 'Transferencias', type: 'income', emoji: '🔁' },
-    { id: 'otros-ingresos', name: 'Otros ingresos', type: 'income', emoji: '💰' }
+    { id: 'comida', name: 'Comida', type: 'expense', icon: 'comida' },
+    { id: 'mercado', name: 'Mercado', type: 'expense', icon: 'supermercado' },
+    { id: 'transporte', name: 'Transporte', type: 'expense', icon: 'bus' },
+    { id: 'servicios', name: 'Servicios', type: 'expense', icon: 'servicios' },
+    { id: 'salud', name: 'Salud', type: 'expense', icon: 'salud' },
+    { id: 'ropa', name: 'Ropa', type: 'expense', icon: 'ropa' },
+    { id: 'ocio', name: 'Ocio', type: 'expense', icon: 'ocio' },
+    { id: 'hogar', name: 'Hogar', type: 'expense', icon: 'hogar' },
+    { id: 'educacion', name: 'Educación', type: 'expense', icon: 'universidad' },
+    { id: 'otros-gastos', name: 'Otros', type: 'expense', icon: 'mas' },
+    { id: 'salario', name: 'Salario', type: 'income', icon: 'trabajo' },
+    { id: 'ventas', name: 'Ventas', type: 'income', icon: 'etiqueta' },
+    { id: 'transferencias', name: 'Transferencias', type: 'income', icon: 'transferencia' },
+    { id: 'otros-ingresos', name: 'Otros ingresos', type: 'income', icon: 'dinero' }
   ]);
 
   function freshState() {
@@ -220,7 +262,7 @@
       return '<span class="acct-dot acct-logo"><img src="' + esc(account.logoData) + '" alt="" aria-hidden="true"></span>';
     }
     if (account.logo === 'cash') {
-      return '<span class="acct-dot acct-letter">💵</span>';
+      return '<span class="acct-dot acct-letter">' + iconSVG('dinero') + '</span>';
     }
     if (account.logo && ACCOUNT_LOGO_IDS.indexOf(account.logo) !== -1) {
       return '<span class="acct-dot acct-logo"><img src="logos/' + esc(account.logo) + '.jpg" alt="" aria-hidden="true"></span>';
@@ -274,12 +316,13 @@
     const name = String(raw.name || '').trim().slice(0, 40);
     const type = raw.type === 'income' ? 'income' : (raw.type === 'expense' ? 'expense' : '');
     if (!name || !type) return null;
-    const emoji = String(raw.emoji || '').trim().slice(0, 4) || (type === 'income' ? '💰' : '📦');
+    const id = String(raw.id || uid());
+    const icon = String(raw.icon || '').trim() || CATEGORY_ICONS[id] || (type === 'income' ? 'dinero' : 'mas');
     return {
-      id: String(raw.id || uid()),
+      id,
       name,
       type,
-      emoji
+      icon
     };
   }
 
@@ -480,7 +523,7 @@
       let row = byId.get(movement.categoryId);
       if (!row) {
         if (!unknown) {
-          unknown = { id: '__unknown', name: 'Sin categoría', type, emoji: '❔', total: 0, count: 0 };
+          unknown = { id: '__unknown', name: 'Sin categoría', type, icon: 'mas', total: 0, count: 0 };
           rows.push(unknown);
           byId.set(unknown.id, unknown);
         }
@@ -540,9 +583,9 @@
      Componentes de interfaz
      ------------------------------------------------------------ */
 
-  function emptyState(emoji, title, text, actionHtml) {
+  function emptyState(icon, title, text, actionHtml) {
     return '<div class="empty">' +
-      '<span class="emoji">' + esc(emoji) + '</span>' +
+      '<span class="empty-ic">' + iconSVG(icon) + '</span>' +
       '<h3>' + esc(title) + '</h3>' +
       '<p>' + esc(text) + '</p>' +
       (actionHtml || '') +
@@ -571,7 +614,7 @@
 
     const category = categoryById(movement.categoryId);
     const account = accountById(movement.accountId);
-    const emoji = category ? category.emoji : (movement.type === 'income' ? '💰' : '💸');
+    const catIcono = category ? category.icon : (movement.type === 'income' ? 'dinero' : 'mas');
     const title = movement.description || (category && category.name) || 'Movimiento';
     const tax = movementTax(movement);
     const sub = [
@@ -583,7 +626,7 @@
     const sign = movement.type === 'income' ? '+' : '−';
 
     return '<button class="row" data-action="edit-movement" data-id="' + esc(movement.id) + '">' +
-      '<span class="cat-ic">' + esc(emoji) + '</span>' +
+      '<span class="cat-ic">' + iconSVG(catIcono) + '</span>' +
       '<span class="grow">' +
         '<span class="title">' + esc(title) + '</span>' +
         '<span class="sub">' + esc(sub) + '</span>' +
@@ -600,7 +643,7 @@
     return rows.map((row) => {
       const width = Math.max(3, Math.round((row.total / max) * 100));
       return '<div class="cat-row">' +
-        '<span class="cat-ic">' + esc(row.emoji) + '</span>' +
+        '<span class="cat-ic">' + iconSVG(row.icon) + '</span>' +
         '<div class="cat-info">' +
           '<div class="cat-top"><span>' + esc(row.name) + '</span><span class="muted">' + formatMoney(row.total) + '</span></div>' +
           '<div class="bar-track"><div class="bar-fill" style="width:' + width + '%"></div></div>' +
@@ -655,13 +698,13 @@
 
     const recentHtml = recent.length
       ? '<div class="row-list">' + recent.map(movementRow).join('') + '</div>'
-      : emptyState('🌱', 'Aún no hay movimientos', 'Registra tu primer ingreso o gasto para ver tu resumen aquí.',
+      : emptyState('creciente', 'Aún no hay movimientos', 'Registra tu primer ingreso o gasto para ver tu resumen aquí.',
           '<button class="btn soft sm" data-action="add-movement">Agregar el primero</button>');
 
     const topHtml = topExpenses.length
       ? topExpenses.map((row) => {
           return '<div class="cat-row">' +
-            '<span class="cat-ic">' + esc(row.emoji) + '</span>' +
+            '<span class="cat-ic">' + iconSVG(row.icon) + '</span>' +
             '<div class="cat-info">' +
               '<div class="cat-top"><span>' + esc(row.name) + '</span><span class="muted">' + formatMoney(row.total) + '</span></div>' +
               '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(3, Math.round(row.total / (topExpenses[0].total || 1) * 100)) + '%"></div></div>' +
@@ -756,7 +799,7 @@
 
     if (!state.movements.length) {
       return '<section class="card mt-16">' + emptyState(
-        '🌱',
+        'creciente',
         'Aún no hay movimientos',
         'Registra tu primer ingreso o gasto y aparecerá aquí.',
         '<button class="btn sm" data-action="add-movement">Agregar movimiento</button>'
@@ -765,7 +808,7 @@
 
     if (!list.length) {
       return '<section class="card mt-16">' + emptyState(
-        '🔎',
+        'filtro',
         'Sin resultados',
         'No encontramos movimientos con estos filtros. Prueba con otro mes, otra cuenta o borra la búsqueda.',
         '<button class="btn ghost sm" data-action="clear-filters">Limpiar filtros</button>'
@@ -812,7 +855,7 @@
             '</div>' +
           '</article>';
         }).join('')
-      : emptyState('🏦', 'Sin cuentas', 'Crea una cuenta para separar tu dinero por banco, billetera o efectivo.',
+      : emptyState('carpeta', 'Sin cuentas', 'Crea una cuenta para separar tu dinero por banco, billetera o efectivo.',
           '<button class="btn sm" data-action="add-account">Crear cuenta</button>');
 
     return '<div class="page-head">' +
@@ -904,7 +947,7 @@
       '</section>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Categorías</h3>' +
-        '<p class="settings-desc">Personaliza el nombre y el emoji de tus categorías, o crea nuevas.</p>' +
+        '<p class="settings-desc">Personaliza el nombre y el icono de tus categorías, o crea nuevas.</p>' +
         '<button class="btn ghost" data-action="manage-categories">' + ICON.edit + ' Administrar categorías</button>' +
       '</section>' +
       '<section class="card settings-block">' +
@@ -1061,7 +1104,7 @@
     const categories = state.categories.filter((category) => category.type === draft.type);
     const categoryOptions = categories.map((category) =>
       '<option value="' + esc(category.id) + '"' + (category.id === draft.categoryId ? ' selected' : '') + '>' +
-        esc(category.emoji + ' ' + category.name) +
+        esc(category.name) +
       '</option>'
     ).join('');
     const accountOptions = state.accounts.map((account) =>
@@ -1654,7 +1697,7 @@
     const cards = categories.map((category) => {
       const count = state.movements.filter((movement) => movement.categoryId === category.id).length;
       return '<button type="button" class="category-card" data-action="edit-category" data-id="' + esc(category.id) + '">' +
-        '<span class="cat-ic">' + esc(category.emoji) + '</span>' +
+        '<span class="cat-ic">' + iconSVG(category.icon) + '</span>' +
         '<span class="name">' + esc(category.name) + '</span>' +
         '<span class="count">' + count + '</span>' +
       '</button>';
@@ -1668,7 +1711,7 @@
         '<button type="button" class="' + (kind === 'expense' ? 'active expense' : '') + '" data-action="category-tab" data-type="expense">Gastos</button>' +
         '<button type="button" class="' + (kind === 'income' ? 'active income' : '') + '" data-action="category-tab" data-type="income">Ingresos</button>' +
       '</div>' +
-      '<p class="hint category-hint">Toca una categoría para cambiar su nombre o emoji.</p>' +
+      '<p class="hint category-hint">Toca una categoría para cambiar su nombre o icono.</p>' +
       '<div class="category-grid">' + (cards || '<p class="hint">Sin categorías.</p>') + '</div>' +
       '<button type="button" class="btn ghost block mt-16" data-action="add-category" data-type="' + kind + '">' + ICON.plus + ' Nueva categoría</button>';
   }
@@ -1705,14 +1748,11 @@
         '</div>' +
         '<div class="grid-2">' +
           '<div class="field">' +
-            '<label for="catEmoji">Emoji</label>' +
-            '<input class="input" id="catEmoji" maxlength="4" autocomplete="off" value="' + esc(existing ? existing.emoji : (kind === 'income' ? '💰' : '📦')) + '">' +
-          '</div>' +
-          '<div class="field">' +
             '<label>Tipo</label>' +
             '<div class="input static-field">' + (kind === 'income' ? 'Ingreso' : 'Gasto') + '</div>' +
           '</div>' +
         '</div>' +
+        iconPickerHTML(existing ? existing.icon : (kind === 'income' ? 'dinero' : 'mas')) +
         (existing && count > 0 ? '<p class="hint">Esta categoría tiene ' + count + ' movimiento' + (count === 1 ? '' : 's') + ' y no se puede eliminar.</p>' : '') +
         (canDelete ? '<button type="button" class="btn danger block" data-action="delete-category" data-id="' + esc(existing.id) + '">' + ICON.trash + ' Eliminar categoría</button>' : '') +
         '<div class="modal-actions">' +
@@ -1729,9 +1769,9 @@
     const id = form.dataset.id || '';
     const type = form.dataset.type === 'income' ? 'income' : 'expense';
     const nameInput = $('#catName');
-    const emojiInput = $('#catEmoji');
+    const iconInput = $('#catIcon');
     const name = nameInput ? nameInput.value.trim() : '';
-    const emoji = emojiInput ? emojiInput.value.trim().slice(0, 4) : '';
+    const icon = iconInput ? iconInput.value.trim() : '';
 
     if (!name) {
       toast('Escribe un nombre para la categoría.');
@@ -1751,14 +1791,14 @@
       const category = categoryById(id);
       if (category) {
         category.name = name;
-        category.emoji = emoji || category.emoji;
+        category.icon = icon || category.icon;
       }
     } else {
       state.categories.push({
         id: uid(),
         name,
         type,
-        emoji: emoji || (type === 'income' ? '💰' : '📦')
+        icon: icon || (type === 'income' ? 'dinero' : 'mas')
       });
     }
     save();
@@ -1973,11 +2013,11 @@
     );
 
     const categoriesSheet = xlsxSheetXML(
-      ['Categoría', 'Tipo', 'Emoji'],
+      ['Categoría', 'Tipo', 'Icono'],
       state.categories.map((category) => [
         category.name,
         category.type === 'income' ? 'Ingreso' : 'Gasto',
-        category.emoji
+        category.icon
       ])
     );
 
@@ -2199,6 +2239,19 @@
           draft.categoryId = fallback ? fallback.id : '';
         }
         refreshMovementForm();
+        break;
+      }
+
+      case 'pick-icon': {
+        const grid = event.target.closest('.icon-grid');
+        const button = event.target.closest('.icon-opt');
+        if (grid && button) {
+          grid.querySelectorAll('.icon-opt').forEach((item) => item.classList.remove('active'));
+          button.classList.add('active');
+          grid.dataset.selected = button.dataset.icon;
+          const hidden = $('#catIcon');
+          if (hidden) hidden.value = grid.dataset.selected;
+        }
         break;
       }
 
