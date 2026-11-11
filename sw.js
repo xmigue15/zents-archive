@@ -1,9 +1,9 @@
-/* ============================================================
-   Zent — service worker
-   Guarda el shell de la app para que funcione sin conexión.
+﻿/* ============================================================
+   Zent â€” service worker
+   Guarda el shell de la app para que funcione sin conexiÃ³n.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v18';
+const CACHE_NAME = 'zent-v19';
 const APP_SHELL = [
   './',
   './index.html',
@@ -65,7 +65,7 @@ self.addEventListener('fetch', (event) => {
     request.destination === 'worker' ||
     url.pathname.endsWith('.webmanifest');
 
-  // Navegación y código: red primero para recibir las actualizaciones al instante.
+  // NavegaciÃ³n y cÃ³digo: red primero para recibir las actualizaciones al instante.
   if (isDocument || isCode) {
     event.respondWith(
       fetch(request, { cache: 'no-cache' })
@@ -88,7 +88,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Imágenes e iconos: caché primero, actualizando en segundo plano.
+  // ImÃ¡genes e iconos: cachÃ© primero, actualizando en segundo plano.
   event.respondWith(
     caches.match(request).then((cached) => {
       const network = fetch(request)
