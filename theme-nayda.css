@@ -396,15 +396,27 @@ body::after {
 
 .wallet-stack {
   position: relative;
-  transition: height .34s cubic-bezier(.22, .61, .36, 1);
 }
 
+/* La seccion que contiene el grupo se pinta por encima del contenido
+   que se desliza al desplegar una tarjeta. */
+section.wallet-sec {
+  position: relative;
+  z-index: 3;
+}
+
+/* Las tarjetas se mueven con transform (compositor) y no con top,
+   para que la animacion no recalcule la pagina en cada cuadro. */
 .wallet-card {
   position: absolute;
   left: 0;
   right: 0;
+  top: 0;
   height: 180px;
-  transition: top .34s cubic-bezier(.22, .61, .36, 1), box-shadow .24s ease, transform .24s ease;
+  will-change: transform;
+  transition:
+    transform .34s cubic-bezier(.22, .61, .36, 1),
+    scale .28s cubic-bezier(.2, .9, .25, 1.18);
 }
 
 /* Al agrupar solo se ve el saldo y la ficha con el nombre */
@@ -481,17 +493,21 @@ body::after {
 
 /* Tarjeta desplegada: se ve completa y del mismo tamaño que en Cuentas */
 .wallet-card.expanded {
-  animation: wallet-pop .42s cubic-bezier(.2, .9, .25, 1.18);
+  animation: wallet-pop .4s cubic-bezier(.2, .9, .25, 1.18);
+  /* El relieve aparece de golpe (sin transición) para no repintar
+     la sombra difusa en cada cuadro de la animación. */
   box-shadow:
     0 0 0 3px rgba(255, 255, 255, 0.7),
     0 24px 44px color-mix(in srgb, var(--acct-color, #b08d6a) 40%, rgba(90, 74, 52, 0.2)),
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
+/* El pop usa la propiedad scale (independiente) para no pisar el
+   translateY que posiciona cada tarjeta. */
 @keyframes wallet-pop {
-  0% { transform: scale(0.955); }
-  55% { transform: scale(1.014); }
-  100% { transform: scale(1); }
+  0% { scale: 0.955; }
+  55% { scale: 1.014; }
+  100% { scale: 1; }
 }
 
 .wallet-card.full .account-name,

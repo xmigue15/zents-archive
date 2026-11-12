@@ -68,17 +68,63 @@
     const shift = focusIndex >= 0 ? CARD_H - STRIP : 0;
     let bottom = 0;
 
+    /* Antes de tocar la altura se mide donde termina la seccion, para
+       saber cuanto se desplaza el contenido de abajo. */
+    const section = stack.closest('section.card');
+    const antes = section ? section.getBoundingClientRect().bottom : 0;
+
     cards.forEach((card, index) => {
       const top = index * STRIP + (focusIndex >= 0 && index >= focusIndex ? shift : 0);
       bottom = Math.max(bottom, top + CARD_H);
-      card.style.top = top + 'px';
+      card.style.transform = 'translateY(' + top + 'px)';
       card.style.zIndex = String(total - index);
       card.classList.toggle('expanded', index === focusIndex);
       card.classList.toggle('full', index === 0 && index !== focusIndex);
       card.classList.toggle('peek', index !== focusIndex && index !== 0);
     });
 
+    /* La altura cambia de golpe: asi la pagina no se recalcula en cada
+       cuadro. El hueco que queda abajo se anima con transform (FLIP). */
     stack.style.height = bottom + 'px';
+
+    if (section) {
+      const despues = section.getBoundingClientRect().bottom;
+      const delta = despues - antes;
+      if (Math.abs(delta) > 0.5) desplazarDebajo(section, delta);
+    }
+  }
+
+  /* Desliza hacia abajo lo que queda despues del grupo de tarjetas,
+     animando solo con transform (sin recalcular la pagina). */
+  function desplazarDebajo(section, delta) {
+    const parent = section.parentElement;
+    if (!parent) return;
+    let nodo = section.nextElementSibling;
+    while (nodo) {
+      const el = nodo;
+      nodo = nodo.nextElementSibling;
+      /* Si ya habia un deslizamiento en curso, se parte desde donde
+         estaba para que no de un salto. */
+      let actual = 0;
+      const cs = getComputedStyle(el).transform;
+      if (cs && cs !== 'none') {
+        try { actual = new DOMMatrixReadOnly(cs).m42; } catch (e) { actual = 0; }
+      }
+      (el.getAnimations() || []).forEach((a) => {
+        if (a.id === 'zent-flip') a.cancel();
+      });
+      el.animate(
+        [
+          { transform: 'translateY(' + (actual - delta) + 'px)' },
+          { transform: 'translateY(0)' }
+        ],
+        {
+          duration: 340,
+          easing: 'cubic-bezier(.22, .61, .36, 1)',
+          id: 'zent-flip'
+        }
+      );
+    }
   }
 
   function iconSVG(id, clase) {
@@ -882,7 +928,7 @@
             const style = (palette
               ? ' --acct-color:' + palette.color + '; --acct-ink:' + (esEfectivo ? '#163b32' : palette.ink) + ';'
               : '') + ' --i:' + index +
-              '; top:' + top + 'px' +
+              '; transform: translateY(' + top + 'px)' +
               '; z-index:' + (total - index);
             if (esEfectivo) {
               return '<article class="wallet-card nota nota-papel' + (expanded ? ' expanded' : '') + '" style="' + style + '" ' +
@@ -951,7 +997,7 @@
         '<div class="quick-card"><span>Gasto promedio / día</span><b>' + formatMoney(average) + '</b></div>' +
         '<div class="quick-card"><span>Donde más gastas</span><b style="font-size:15px">' + esc(topExpenses[0] ? topExpenses[0].name : '—') + '</b></div>' +
       '</div>' +
-      '<section class="card mt-16">' +
+      '<section class="card mt-16 wallet-sec">' +
         '<div class="section-head"><h3>Cuentas</h3>' +
           '<button class="link" data-action="nav" data-view="cuentas">Ver todas</button>' +
         '</div>' +
