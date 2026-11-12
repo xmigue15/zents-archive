@@ -1276,6 +1276,30 @@ section.wallet-sec {
   border-radius: 14px;
 }
 
+/* La categoría que más se gastó, con su icono */
+.quick-card b.top-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.quick-card b.top-cat > span {
+  display: inline;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.quick-card b.top-cat .icono {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.7;
+}
+
 .acct-dot {
   background: rgba(142, 182, 155, 0.2);
   border: 1px solid var(--glass-line);

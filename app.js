@@ -1008,7 +1008,9 @@
         '<div class="quick-card"><span>Balance del mes</span><b class="' + (net < 0 ? 'out' : 'in') + '">' + formatMoney(net) + '</b></div>' +
         '<div class="quick-card"><span>Movimientos</span><b>' + totals.count + '</b></div>' +
         '<div class="quick-card"><span>Gasto promedio / día</span><b>' + formatMoney(average) + '</b></div>' +
-        '<div class="quick-card"><span>Donde más gastas</span><b style="font-size:15px">' + esc(topExpenses[0] ? topExpenses[0].name : '—') + '</b></div>' +
+        '<div class="quick-card"><span>Donde más gastas</span><b class="top-cat">' +
+          (topExpenses[0] ? iconSVG(topExpenses[0].icon) + '<span>' + esc(topExpenses[0].name) + '</span>' : '—') +
+        '</b></div>' +
       '</div>' +
       '<section class="card mt-16 wallet-sec">' +
         '<div class="section-head"><h3>Cuentas</h3>' +
