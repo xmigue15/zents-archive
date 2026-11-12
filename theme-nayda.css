@@ -382,6 +382,84 @@ body::after {
 
 .account-card {
   border-radius: 22px;
+  position: relative;
+  /* Cristal con el color de marca y un brillo platinado por encima */
+  background:
+    linear-gradient(118deg,
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(255, 255, 255, 0.06) 22%,
+      rgba(255, 255, 255, 0.62) 38%,
+      rgba(255, 255, 255, 0.03) 55%,
+      rgba(255, 255, 255, 0.42) 72%,
+      rgba(255, 255, 255, 0.08) 100%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--acct-color, #b08d6a) 17%, transparent) 0%,
+      color-mix(in srgb, var(--acct-color, #b08d6a) 6%, transparent) 100%),
+    var(--glass);
+  border-color: color-mix(in srgb, var(--acct-color, #b08d6a) 30%, rgba(255, 255, 255, 0.74));
+  box-shadow: 0 18px 40px rgba(122, 102, 72, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px color-mix(in srgb, var(--acct-color, #b08d6a) 12%, transparent);
+}
+
+/* Filo de plata en el borde superior */
+.account-card::before {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 0;
+  height: 2px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--acct-color, #b08d6a) 55%, rgba(255, 255, 255, 0.9)) 45%,
+    transparent 100%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.account-card .acct-logo {
+  background: color-mix(in srgb, var(--acct-color, #b08d6a) 10%, rgba(255, 255, 255, 0.82));
+  border-color: color-mix(in srgb, var(--acct-color, #b08d6a) 22%, rgba(255, 255, 255, 0.9));
+}
+
+.account-card .acct-letter {
+  background: color-mix(in srgb, var(--acct-color, #b08d6a) 18%, rgba(255, 255, 255, 0.8));
+  color: color-mix(in srgb, var(--acct-color, #163b32) 70%, #163b32);
+}
+
+/* En oscuro el brillo es mucho mas sutil para no comer el texto */
+:root[data-theme="dark"] .account-card {
+  background:
+    linear-gradient(118deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.02) 24%,
+      rgba(255, 255, 255, 0.1) 40%,
+      rgba(255, 255, 255, 0.02) 58%,
+      rgba(255, 255, 255, 0.07) 76%,
+      rgba(255, 255, 255, 0.02) 100%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--acct-color, #8eb69b) 20%, transparent) 0%,
+      color-mix(in srgb, var(--acct-color, #8eb69b) 7%, transparent) 100%),
+    var(--glass);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .account-card {
+    background:
+      linear-gradient(118deg,
+        rgba(255, 255, 255, 0.14) 0%,
+        rgba(255, 255, 255, 0.02) 24%,
+        rgba(255, 255, 255, 0.1) 40%,
+        rgba(255, 255, 255, 0.02) 58%,
+        rgba(255, 255, 255, 0.07) 76%,
+        rgba(255, 255, 255, 0.02) 100%),
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--acct-color, #8eb69b) 20%, transparent) 0%,
+        color-mix(in srgb, var(--acct-color, #8eb69b) 7%, transparent) 100%),
+      var(--glass);
+  }
 }
 
 .card + .card {

@@ -93,6 +93,21 @@
 
   const ACCOUNT_LOGO_IDS = ACCOUNT_LOGOS.map((logo) => logo.id);
 
+  /* Color de marca de cada cuenta (para el acabado platinado de las tarjetas) */
+  const ACCOUNT_COLORS = {
+    cash: '#2e7d5b',
+    nequi: '#6c1bd1',
+    daviplata: '#e4002b',
+    bancolombia: '#e8b400',
+    bogota: '#0a4a9b',
+    bbva: '#12305e',
+    davivienda: '#d5192b',
+    itau: '#ec7000',
+    movii: '#00a0d8',
+    rappipay: '#f0441f',
+    nu: '#4f0d92'
+  };
+
   const DEFAULT_ACCOUNTS = () => ([
     { id: 'cash', name: 'Efectivo', logo: 'cash', initial: 0 },
     { id: 'nequi', name: 'Nequi', logo: 'nequi', initial: 0 },
@@ -909,7 +924,8 @@
       ? state.accounts.map((account) => {
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
-          return '<article class="account-card">' +
+          const color = ACCOUNT_COLORS[account.logo] || '';
+          return '<article class="account-card"' + (color ? ' style="--acct-color:' + color + '"' : '') + '>' +
             '<div class="account-top">' +
               accountAvatar(account) +
               '<div><div class="account-name">' + esc(account.name) + '</div>' +
