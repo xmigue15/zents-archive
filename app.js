@@ -237,10 +237,6 @@
       '<span class="nota-placa nota-placa-bl">' + esc(cifra) + '</span>' +
       '<span class="nota-placa nota-placa-br">' + esc(cifra) + '</span>' +
       '<span class="nota-banda nota-banda-inf">Efectivo</span>' +
-      '<span class="card-actions nota-acciones">' +
-        '<button class="card-btn" data-action="edit-account" data-id="' + esc(account.id) + '" aria-label="Editar ' + esc(account.name) + '">' + ICON.edit + '</button>' +
-        '<button class="card-btn danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
-      '</span>' +
     '</div>';
   }
 
@@ -1123,7 +1119,12 @@
           const style = palette
             ? ' style="--acct-color:' + palette.color + '; --acct-ink:' + palette.ink + '"'
             : '';
-          return '<article class="account-card debit-card' + (account.logo === 'cash' ? ' nota' : '') + '"' + style + '>' +
+          const esEfectivo = account.logo === 'cash';
+          return '<article class="account-card debit-card' + (esEfectivo ? ' nota' : '') + '"' + style +
+            /* El billete no lleva botones: se toca para editar la cuenta. */
+            (esEfectivo
+              ? ' data-action="edit-account" data-id="' + esc(account.id) + '" role="button" tabindex="0" aria-label="Editar ' + esc(account.name) + '"'
+              : '') + '>' +
             (account.logo === 'cash'
               ? notaEfectivoHTML(account, balance)
               : '<div class="card-head">' +
@@ -1959,6 +1960,12 @@
           '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
           '<button type="submit" class="btn">' + (account ? 'Guardar cambios' : 'Crear cuenta') + '</button>' +
         '</div>' +
+        (account
+          ? '<div class="modal-actions modal-actions-danger">' +
+            '<button type="button" class="btn danger sm" data-action="delete-account" data-id="' + esc(account.id) + '">' +
+              ICON.trash + ' Eliminar cuenta</button>' +
+          '</div>'
+          : '') +
       '</form>'
     );
     updateAcctLogoPicker();
@@ -2995,6 +3002,16 @@
     if (event.key === 'Escape') {
       const root = $('#modalRoot');
       if (root && root.firstElementChild) closeModal();
+      return;
+    }
+    /* Los elementos que hacen de boton (como el billete) se activan
+       con Enter o con la barra espaciadora. */
+    const el = event.target && event.target.closest
+      ? event.target.closest('[role="button"][data-action]')
+      : null;
+    if (el && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      el.click();
     }
   });
 

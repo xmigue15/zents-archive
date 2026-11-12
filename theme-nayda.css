@@ -1700,27 +1700,28 @@ textarea:focus {
 
 .nota-serie-sup { top: 75px; right: 17px; }
 
-/* Botones de editar y eliminar */
-.nota-acciones {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 3;
-  display: flex;
-  gap: 5px;
+/* Botones de editar y eliminar: ahora viven en el modal de la cuenta */
+.debit-card.nota {
+  cursor: pointer;
 }
 
-.nota-acciones .card-btn {
-  width: 22px;
-  height: 22px;
-  background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(29, 58, 44, 0.2);
-  color: var(--verde);
+.modal-actions-danger {
+  justify-content: flex-start;
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
 }
 
-.nota-acciones .card-btn:hover {
-  background: #fff;
-  color: var(--verde);
+.modal-actions-danger .btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.modal-actions-danger .btn svg {
+  width: 15px;
+  height: 15px;
 }
 
 /* El sello Zent */
