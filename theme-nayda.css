@@ -393,13 +393,13 @@ body::after {
       rgba(255, 255, 255, 0.42) 72%,
       rgba(255, 255, 255, 0.08) 100%),
     linear-gradient(180deg,
-      color-mix(in srgb, var(--acct-color, #b08d6a) 17%, transparent) 0%,
-      color-mix(in srgb, var(--acct-color, #b08d6a) 6%, transparent) 100%),
+      color-mix(in srgb, var(--acct-color, #b08d6a) 32%, transparent) 0%,
+      color-mix(in srgb, var(--acct-color, #b08d6a) 13%, transparent) 100%),
     var(--glass);
-  border-color: color-mix(in srgb, var(--acct-color, #b08d6a) 30%, rgba(255, 255, 255, 0.74));
+  border-color: color-mix(in srgb, var(--acct-color, #b08d6a) 48%, rgba(255, 255, 255, 0.74));
   box-shadow: 0 18px 40px rgba(122, 102, 72, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 0 0 0 1px color-mix(in srgb, var(--acct-color, #b08d6a) 12%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--acct-color, #b08d6a) 20%, transparent);
 }
 
 /* Filo de plata en el borde superior */
@@ -420,13 +420,42 @@ body::after {
 }
 
 .account-card .acct-logo {
-  background: color-mix(in srgb, var(--acct-color, #b08d6a) 10%, rgba(255, 255, 255, 0.82));
-  border-color: color-mix(in srgb, var(--acct-color, #b08d6a) 22%, rgba(255, 255, 255, 0.9));
+  background: color-mix(in srgb, var(--acct-color, #b08d6a) 16%, rgba(255, 255, 255, 0.86));
+  border-color: color-mix(in srgb, var(--acct-color, #b08d6a) 38%, rgba(255, 255, 255, 0.9));
 }
 
 .account-card .acct-letter {
-  background: color-mix(in srgb, var(--acct-color, #b08d6a) 18%, rgba(255, 255, 255, 0.8));
+  background: color-mix(in srgb, var(--acct-color, #b08d6a) 26%, rgba(255, 255, 255, 0.82));
   color: color-mix(in srgb, var(--acct-color, #163b32) 70%, #163b32);
+}
+
+/* Filas de cuenta del Resumen: mismo color de marca */
+.acct-row {
+  position: relative;
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--acct-color, #b08d6a) 26%, transparent) 0%,
+      color-mix(in srgb, var(--acct-color, #b08d6a) 9%, transparent) 30%,
+      transparent 62%);
+}
+
+.acct-row:hover {
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--acct-color, #b08d6a) 34%, transparent) 0%,
+      color-mix(in srgb, var(--acct-color, #b08d6a) 14%, transparent) 34%,
+      rgba(255, 255, 255, 0.4) 100%);
+}
+
+.acct-row .acct-logo {
+  background: color-mix(in srgb, var(--acct-color, #b08d6a) 16%, rgba(255, 255, 255, 0.88));
+  border-color: color-mix(in srgb, var(--acct-color, #b08d6a) 40%, rgba(255, 255, 255, 0.92));
+}
+
+.acct-row .acct-dot.acct-letter {
+  background: color-mix(in srgb, var(--acct-color, #b08d6a) 24%, rgba(255, 255, 255, 0.85));
+  color: color-mix(in srgb, var(--acct-color, #163b32) 72%, #163b32);
 }
 
 /* En oscuro el brillo es mucho mas sutil para no comer el texto */
@@ -456,9 +485,40 @@ body::after {
         rgba(255, 255, 255, 0.07) 76%,
         rgba(255, 255, 255, 0.02) 100%),
       linear-gradient(180deg,
-        color-mix(in srgb, var(--acct-color, #8eb69b) 20%, transparent) 0%,
-        color-mix(in srgb, var(--acct-color, #8eb69b) 7%, transparent) 100%),
+        color-mix(in srgb, var(--acct-color, #8eb69b) 30%, transparent) 0%,
+        color-mix(in srgb, var(--acct-color, #8eb69b) 11%, transparent) 100%),
       var(--glass);
+  }
+}
+
+/* Filas de cuenta del Resumen en oscuro */
+:root[data-theme="dark"] .acct-row,
+:root[data-theme="dark"] .acct-row:hover {
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--acct-color, #8eb69b) 32%, transparent) 0%,
+      color-mix(in srgb, var(--acct-color, #8eb69b) 11%, transparent) 32%,
+      transparent 64%);
+}
+
+:root[data-theme="dark"] .acct-row .acct-logo {
+  background: color-mix(in srgb, var(--acct-color, #8eb69b) 22%, rgba(218, 241, 222, 0.1));
+  border-color: color-mix(in srgb, var(--acct-color, #8eb69b) 38%, rgba(218, 241, 222, 0.2));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .acct-row,
+  :root:not([data-theme="light"]) .acct-row:hover {
+    background:
+      linear-gradient(90deg,
+        color-mix(in srgb, var(--acct-color, #8eb69b) 32%, transparent) 0%,
+        color-mix(in srgb, var(--acct-color, #8eb69b) 11%, transparent) 32%,
+        transparent 64%);
+  }
+
+  :root:not([data-theme="light"]) .acct-row .acct-logo {
+    background: color-mix(in srgb, var(--acct-color, #8eb69b) 22%, rgba(218, 241, 222, 0.1));
+    border-color: color-mix(in srgb, var(--acct-color, #8eb69b) 38%, rgba(218, 241, 222, 0.2));
   }
 }
 

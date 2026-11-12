@@ -767,7 +767,9 @@
       ? accountsSorted.map((account) => {
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
-          return '<button class="row" data-action="nav" data-view="cuentas">' +
+          const color = ACCOUNT_COLORS[account.logo] || '';
+          return '<button class="row acct-row" data-action="nav" data-view="cuentas"' +
+            (color ? ' style="--acct-color:' + color + '"' : '') + '>' +
             accountAvatar(account) +
             '<span class="grow">' +
               '<span class="title">' + esc(account.name) + '</span>' +
