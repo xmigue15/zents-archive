@@ -54,6 +54,31 @@
     'otros-ingresos': 'dinero'
   };
 
+  /* Reacomoda el grupo de tarjetas sin repintar la vista, para que
+     el despliegue se vea animado. */
+  function applyWalletLayout() {
+    const stack = document.querySelector('.wallet-stack');
+    if (!stack) return;
+    const cards = $$('.wallet-card', stack);
+    if (!cards.length) return;
+    const total = cards.length;
+    const CARD_H = 180;
+    const STRIP = 44;
+    const focusIndex = cards.findIndex((card) => card.dataset.cardId === ui.walletFocus);
+    const shift = focusIndex >= 0 ? CARD_H - STRIP : 0;
+    let bottom = 0;
+
+    cards.forEach((card, index) => {
+      const top = index * STRIP + (focusIndex >= 0 && index >= focusIndex ? shift : 0);
+      bottom = Math.max(bottom, top + CARD_H);
+      card.style.top = top + 'px';
+      card.style.zIndex = String(total - index);
+      card.classList.toggle('expanded', index === focusIndex);
+    });
+
+    stack.style.height = bottom + 'px';
+  }
+
   function iconSVG(id, clase) {
     if (typeof window.zentIcono !== 'function') return '';
     const icon = (window.ZENT_ICONOS && window.ZENT_ICONOS[id]) ? id : 'mas';
@@ -2545,7 +2570,7 @@
         const cardId = button.dataset.cardId || '';
         // Tocar una tarjeta la despliega; tocar otra la recoge.
         ui.walletFocus = cardId && cardId !== ui.walletFocus ? cardId : '';
-        render();
+        applyWalletLayout();
         break;
       }
 

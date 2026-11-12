@@ -404,29 +404,47 @@ body::after {
   left: 0;
   right: 0;
   height: 180px;
-  transition: top .34s cubic-bezier(.22, .61, .36, 1), box-shadow .2s ease, transform .2s ease;
+  transition: top .34s cubic-bezier(.22, .61, .36, 1), box-shadow .24s ease, transform .24s ease;
 }
 
 /* Al agrupar solo se ve el saldo y la ficha con el nombre */
 .wallet-card {
-  justify-content: space-between;
-}
-
-.wallet-card .wallet-foot {
-  display: none;
+  justify-content: flex-start;
 }
 
 .wallet-card .wallet-head {
-  order: 3;
-  margin-top: 0;
+  transition: transform .34s cubic-bezier(.22, .61, .36, 1);
+}
+
+.wallet-card .wallet-body {
+  transition: transform .34s cubic-bezier(.22, .61, .36, 1);
+}
+
+.wallet-card .wallet-foot {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .26s ease .04s, transform .3s cubic-bezier(.22, .61, .36, 1);
+}
+
+.wallet-card:not(.expanded) .wallet-head {
+  transform: translateY(124px);
+}
+
+.wallet-card:not(.expanded) .wallet-body {
+  transform: translateY(-52px);
+}
+
+.wallet-card:not(.expanded) .account-name {
+  font-size: 15px;
+}
+
+.wallet-card:not(.expanded) .account-sub {
+  opacity: 0;
+  transition: opacity .2s ease;
 }
 
 .wallet-card .account-sub {
-  display: none;
-}
-
-.wallet-card .account-name {
-  font-size: 15px;
+  transition: opacity .22s ease .06s;
 }
 
 /* Tarjeta desplegada: se ve completa y del mismo tamaño que en Cuentas */
@@ -435,6 +453,7 @@ body::after {
   gap: 16px;
   padding: 16px;
   border-radius: 20px;
+  animation: wallet-pop .42s cubic-bezier(.2, .9, .25, 1.18);
   box-shadow:
     0 0 0 3px rgba(255, 255, 255, 0.7),
     0 24px 44px color-mix(in srgb, var(--acct-color, #b08d6a) 40%, rgba(90, 74, 52, 0.2)),
@@ -442,17 +461,27 @@ body::after {
 }
 
 .wallet-card.expanded .wallet-head {
-  order: 0;
-  margin-top: 0;
+  transform: translateY(0);
+}
+
+.wallet-card.expanded .wallet-body {
+  transform: translateY(0);
 }
 
 .wallet-card.expanded .wallet-foot {
-  display: flex;
+  opacity: 1;
+  transform: translateY(0);
   margin-top: auto;
 }
 
 .wallet-card.expanded .account-sub {
-  display: block;
+  opacity: 1;
+}
+
+@keyframes wallet-pop {
+  0% { transform: scale(0.955); }
+  55% { transform: scale(1.014); }
+  100% { transform: scale(1); }
 }
 
 .wallet-card.expanded .account-name {
