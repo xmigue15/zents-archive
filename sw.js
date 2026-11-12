@@ -3,7 +3,7 @@
    Guarda el shell de la app para que funcione sin conexiÃ³n.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v41';
+const CACHE_NAME = 'zent-v42';
 const APP_SHELL = [
   './',
   './index.html',
@@ -26,16 +26,18 @@ const APP_SHELL = [
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png',
-  './logos/nequi.jpg',
-  './logos/daviplata.jpg',
-  './logos/bancolombia.jpg',
-  './logos/bogota.jpg',
-  './logos/bbva.jpg',
-  './logos/davivienda.jpg',
-  './logos/itau.jpg',
-  './logos/movii.jpg',
-  './logos/rappipay.jpg',
-  './logos/nu.jpg'
+  './logos/nequi.png',
+  './logos/daviplata.png',
+  './logos/bancolombia.png',
+  './logos/bogota.png',
+  './logos/bbva.png',
+  './logos/davivienda.png',
+  './logos/itau.png',
+  './logos/movii.png',
+  './logos/rappipay.png',
+  './logos/nu.png',
+  './logos/daviplata-blanco.png',
+  './logos/bbva-blanco.png'
 ];
 
 self.addEventListener('install', (event) => {

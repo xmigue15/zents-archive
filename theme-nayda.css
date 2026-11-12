@@ -625,14 +625,14 @@ body::after {
 }
 
 .wallet-card .acct-logo {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(255, 255, 255, 0.55);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .wallet-card .acct-letter {
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--acct-color, #163b32);
+  background: transparent;
+  color: var(--acct-ink, #fff);
 }
 
 .wallet-body {
@@ -756,15 +756,28 @@ body::after {
   background: rgba(120, 90, 20, 0.4);
 }
 
-.debit-card .acct-logo {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(255, 255, 255, 0.55);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+/* Los logos van sin cuadro: se incrustan en la tarjeta */
+.acct-logo {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 2px;
+}
+
+.acct-logo img {
+  border-radius: 9px;
+  object-fit: contain;
+  /* halo claro: el logo se lee sobre cualquier color de tarjeta */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 7px rgba(255, 255, 255, 0.7));
+}
+
+.acct-logo img.blanco {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
 }
 
 .debit-card .acct-letter {
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--acct-color, #163b32);
+  background: transparent;
+  color: var(--acct-ink, #fff);
 }
 
 .debit-card .card-mid {
@@ -893,8 +906,8 @@ body::after {
 }
 
 .acct-row .acct-logo {
-  background: color-mix(in srgb, var(--acct-color, #b08d6a) 16%, rgba(255, 255, 255, 0.88));
-  border-color: color-mix(in srgb, var(--acct-color, #b08d6a) 40%, rgba(255, 255, 255, 0.92));
+  background: transparent;
+  border-color: transparent;
 }
 
 .acct-row .acct-dot.acct-letter {
@@ -932,8 +945,8 @@ body::after {
 }
 
 :root[data-theme="dark"] .acct-row .acct-logo {
-  background: color-mix(in srgb, var(--acct-color, #8eb69b) 22%, rgba(218, 241, 222, 0.1));
-  border-color: color-mix(in srgb, var(--acct-color, #8eb69b) 38%, rgba(218, 241, 222, 0.2));
+  background: transparent;
+  border-color: transparent;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -947,8 +960,8 @@ body::after {
   }
 
   :root:not([data-theme="light"]) .acct-row .acct-logo {
-    background: color-mix(in srgb, var(--acct-color, #8eb69b) 22%, rgba(218, 241, 222, 0.1));
-    border-color: color-mix(in srgb, var(--acct-color, #8eb69b) 38%, rgba(218, 241, 222, 0.2));
+    background: transparent;
+    border-color: transparent;
   }
 }
 
@@ -1249,10 +1262,10 @@ body::after {
 }
 
 .acct-logo {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: transparent;
+  border: 0;
   border-radius: 14px;
-  padding: 4px;
+  padding: 3px;
 }
 
 .acct-logo img {
