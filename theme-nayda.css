@@ -401,7 +401,7 @@ body::after {
   position: fixed;
   left: 50%;
   right: auto;
-  bottom: calc(12px + env(safe-area-inset-bottom));
+  bottom: calc(5px + env(safe-area-inset-bottom));
   z-index: 30;
   width: calc(100% - 28px);
   max-width: 440px;
@@ -638,7 +638,7 @@ body::after {
 
 /* La barra flota: el botón sube para no chocar con la píldora */
 .fab {
-  bottom: calc(104px + env(safe-area-inset-bottom));
+  bottom: calc(84px + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 960px) {
@@ -648,7 +648,7 @@ body::after {
 }
 
 .main {
-  padding-bottom: calc(102px + env(safe-area-inset-bottom));
+  padding-bottom: calc(94px + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 960px) {
@@ -945,7 +945,7 @@ textarea:focus {
 .tab-badge {
   position: fixed;
   left: 50%;
-  bottom: calc(104px + env(safe-area-inset-bottom));
+  bottom: calc(88px + env(safe-area-inset-bottom));
   z-index: 60;
   padding: 8px 16px;
   border: 1px solid var(--glass-line);
@@ -977,7 +977,7 @@ textarea:focus {
   background: var(--forest);
   color: var(--mint);
   box-shadow: 0 14px 34px rgba(22, 59, 50, 0.3);
-  bottom: calc(126px + env(safe-area-inset-bottom));
+  bottom: calc(108px + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 960px) {
