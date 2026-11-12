@@ -142,6 +142,36 @@
     bbva: true
   };
 
+  /* Logos que son un cuadro de color: se usa solo la marca, sin el cuadro */
+  const LOGO_SOLO_MARCA = {
+    itau: true,
+    movii: true,
+    rappipay: true,
+    bogota: true,
+    nu: true
+  };
+
+  /* Logos anchos: se muestran mas grandes para que no se vean pequenos */
+  const LOGO_ANCHO = {
+    davivienda: true,
+    bbva: true,
+    rappipay: true
+  };
+
+  function logoArchivo(logo) {
+    let archivo = logo;
+    let clase = '';
+    if (LOGO_EN_BLANCO[logo]) {
+      archivo = logo + '-blanco';
+      clase = 'blanco';
+    } else if (LOGO_SOLO_MARCA[logo]) {
+      archivo = logo + '-marca';
+      clase = 'marca';
+    }
+    if (LOGO_ANCHO[archivo]) clase += ' ancho';
+    return { src: 'logos/' + archivo + '.png', clase: clase };
+  }
+
   /* Número de tarjeta enmascarado, estable por cuenta */
   function accountCardNumber(account) {
     const base = String(account.id || account.name || '');
@@ -372,9 +402,9 @@
       return '<span class="acct-dot acct-letter">' + iconSVG('dinero') + '</span>';
     }
     if (account.logo && ACCOUNT_LOGO_IDS.indexOf(account.logo) !== -1) {
-      return '<span class="acct-dot acct-logo"><img class="' + (LOGO_EN_BLANCO[account.logo] ? 'blanco' : '') +
-      '" src="logos/' + esc(account.logo) + (LOGO_EN_BLANCO[account.logo] ? '-blanco' : '') +
-      '.png" alt="" aria-hidden="true"></span>';
+      const info = logoArchivo(account.logo);
+    return '<span class="acct-dot acct-logo"><img class="' + info.clase + '" src="' +
+      esc(info.src) + '" alt="" aria-hidden="true"></span>';
     }
     return '<span class="acct-dot acct-letter">' + esc(initial(account.name)) + '</span>';
   }
