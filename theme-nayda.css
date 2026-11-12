@@ -388,6 +388,68 @@ body::after {
 
 /* Grupo de tarjetas en el Resumen (deslizable, tipo cartera) */
 
+/* Grupo de tarjetas apiladas en el Resumen (se abre y se cierra) */
+
+.wallet {
+  position: relative;
+}
+
+.wallet-stack {
+  position: relative;
+  height: calc((var(--n) - 1) * 44px + 140px);
+  transition: height .34s cubic-bezier(.22, .61, .36, 1);
+}
+
+.wallet-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 140px;
+  top: calc(var(--i) * 44px);
+  z-index: calc(var(--n) - var(--i));
+  transition: top .34s cubic-bezier(.22, .61, .36, 1), box-shadow .2s ease, transform .2s ease;
+}
+
+.wallet.open .wallet-stack {
+  height: calc(var(--n) * 152px - 12px);
+}
+
+.wallet.open .wallet-card {
+  top: calc(var(--i) * 152px);
+}
+
+/* Al agrupar solo se ve el saldo y la ficha con el nombre */
+.wallet:not(.open) .wallet-card {
+  justify-content: space-between;
+}
+
+.wallet:not(.open) .wallet-card .wallet-foot {
+  display: none;
+}
+
+.wallet:not(.open) .wallet-card .wallet-head {
+  order: 3;
+  margin-top: 0;
+}
+
+.wallet:not(.open) .wallet-card .account-sub {
+  display: none;
+}
+
+.wallet:not(.open) .wallet-card .account-name {
+  font-size: 15px;
+}
+
+.wallet-card:hover {
+  transform: translateY(-2px);
+}
+
+.head-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .wallet-row {
   display: flex;
   gap: 12px;
@@ -404,9 +466,6 @@ body::after {
 }
 
 .wallet-card {
-  position: relative;
-  flex: 0 0 234px;
-  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   gap: 12px;

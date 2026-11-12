@@ -531,7 +531,8 @@
     confirmCallback: null,
     lastFocus: null,
     renderedView: null,
-    countersShown: {}
+    countersShown: {},
+    walletOpen: false
   };
 
   let saveTimer = null;
@@ -773,15 +774,16 @@
       .slice()
       .sort((a, b) => accountBalance(b.id) - accountBalance(a.id));
     const accountsHtml = accountsSorted.length
-      ? '<div class="wallet-row">' +
-        accountsSorted.map((account) => {
+      ? '<div class="wallet' + (ui.walletOpen ? ' open' : '') + '">' +
+        '<div class="wallet-stack" style="--n:' + accountsSorted.length + '">' +
+        accountsSorted.map((account, index) => {
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
           const palette = ACCOUNT_COLORS[account.logo];
-          const style = palette
-            ? ' style="--acct-color:' + palette.color + '; --acct-ink:' + palette.ink + '"'
-            : '';
-          return '<article class="wallet-card"' + style + ' data-action="nav" data-view="cuentas">' +
+          const style = (palette
+            ? ' --acct-color:' + palette.color + '; --acct-ink:' + palette.ink + ';'
+            : '') + ' --i:' + index;
+          return '<article class="wallet-card" style="' + style + '" data-action="nav" data-view="cuentas">' +
             '<div class="wallet-head">' +
               accountAvatar(account) +
               '<div class="card-id">' +
@@ -799,7 +801,8 @@
             '</div>' +
           '</article>';
         }).join('') +
-      '</div>'
+      '</div>' +
+    '</div>'
       : '<p class="hint">Agrega una cuenta para empezar.</p>';
 
     const recentHtml = recent.length
@@ -838,7 +841,13 @@
         '<div class="quick-card"><span>Donde más gastas</span><b style="font-size:15px">' + esc(topExpenses[0] ? topExpenses[0].name : '—') + '</b></div>' +
       '</div>' +
       '<section class="card mt-16">' +
-        '<div class="section-head"><h3>Cuentas</h3><button class="link" data-action="nav" data-view="cuentas">Ver todas</button></div>' +
+        '<div class="section-head"><h3>Cuentas</h3>' +
+          '<span class="head-links">' +
+            '<button class="link" data-action="toggle-wallet" aria-expanded="' + (ui.walletOpen ? 'true' : 'false') + '">' +
+              (ui.walletOpen ? 'Agrupar' : 'Ver todas') + '</button>' +
+            '<button class="link" data-action="nav" data-view="cuentas">Ir a Cuentas</button>' +
+          '</span>' +
+        '</div>' +
         accountsHtml +
       '</section>' +
       '<section class="card">' +
@@ -2514,6 +2523,11 @@
     switch (action) {
       case 'nav':
         navigate(button.dataset.view);
+        break;
+
+      case 'toggle-wallet':
+        ui.walletOpen = !ui.walletOpen;
+        render();
         break;
 
       case 'add-movement':
