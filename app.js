@@ -780,18 +780,24 @@
           // y las de abajo se desplazan para hacerle sitio.
           const total = accountsSorted.length;
           const focusIndex = accountsSorted.findIndex((a) => a.id === ui.walletFocus);
-          const stackHeight = (total - 1) * 44 + 140 + (focusIndex >= 0 ? 96 : 0);
+          const CARD_H = 180;
+          const STRIP = 44;
+          // La tarjeta desplegada abre hacia abajo y deja el hueco justo:
+          // las de abajo se corren lo mismo y siguen viéndose como franjas.
+          const shift = focusIndex >= 0 ? CARD_H - STRIP : 0;
 
+          let bottom = 0;
           const cards = accountsSorted.map((account, index) => {
             const balance = accountBalance(account.id);
             const count = movementCountForAccount(account.id);
             const palette = ACCOUNT_COLORS[account.logo];
             const expanded = index === focusIndex;
-            const shift = focusIndex >= 0 && index >= focusIndex ? 96 : 0;
+            const top = index * STRIP + (focusIndex >= 0 && index >= focusIndex ? shift : 0);
+            bottom = Math.max(bottom, top + CARD_H);
             const style = (palette
               ? ' --acct-color:' + palette.color + '; --acct-ink:' + palette.ink + ';'
               : '') + ' --i:' + index +
-              '; top:' + (index * 44 + shift) + 'px' +
+              '; top:' + top + 'px' +
               '; z-index:' + (total - index);
             return '<article class="wallet-card' + (expanded ? ' expanded' : '') + '" style="' + style + '" ' +
               'data-action="toggle-wallet" data-card-id="' + esc(account.id) + '">' +
@@ -814,7 +820,7 @@
           }).join('');
 
           return '<div class="wallet">' +
-            '<div class="wallet-stack" style="height:' + stackHeight + 'px">' + cards + '</div>' +
+            '<div class="wallet-stack" style="height:' + bottom + 'px">' + cards + '</div>' +
           '</div>';
         })()
       : '<p class="hint">Agrega una cuenta para empezar.</p>';
