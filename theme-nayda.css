@@ -855,21 +855,6 @@ section.wallet-sec {
   gap: 10px;
 }
 
-.debit-card .card-contacto {
-  display: grid;
-  place-items: center;
-  opacity: 0.85;
-}
-
-.debit-card .card-contacto svg {
-  width: 21px;
-  height: 21px;
-  fill: none;
-  stroke: var(--acct-ink, #fff);
-  stroke-width: 1.7;
-  stroke-linecap: round;
-}
-
 .debit-card .card-actions {
   display: flex;
   gap: 6px;
