@@ -532,7 +532,8 @@
     lastFocus: null,
     renderedView: null,
     countersShown: {},
-    walletOpen: false
+    walletOpen: false,
+    walletFocus: ''
   };
 
   let saveTimer = null;
@@ -774,35 +775,48 @@
       .slice()
       .sort((a, b) => accountBalance(b.id) - accountBalance(a.id));
     const accountsHtml = accountsSorted.length
-      ? '<div class="wallet' + (ui.walletOpen ? ' open' : '') + '">' +
-        '<div class="wallet-stack" style="--n:' + accountsSorted.length + '">' +
-        accountsSorted.map((account, index) => {
-          const balance = accountBalance(account.id);
-          const count = movementCountForAccount(account.id);
-          const palette = ACCOUNT_COLORS[account.logo];
-          const style = (palette
-            ? ' --acct-color:' + palette.color + '; --acct-ink:' + palette.ink + ';'
-            : '') + ' --i:' + index;
-          return '<article class="wallet-card" style="' + style + '" data-action="nav" data-view="cuentas">' +
-            '<div class="wallet-head">' +
-              accountAvatar(account) +
-              '<div class="card-id">' +
-                '<div class="account-name">' + esc(account.name) + '</div>' +
-                '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div>' +
+      ? (() => {
+          // La tarjeta pulsada sale del grupo y se despliega arriba del todo.
+          const order = accountsSorted.slice();
+          const focusIndex = order.findIndex((a) => a.id === ui.walletFocus);
+          if (focusIndex > 0) order.unshift(order.splice(focusIndex, 1)[0]);
+          const total = order.length;
+          const stackHeight = (total - 1) * 44 + 140;
+
+          const cards = order.map((account, pos) => {
+            const balance = accountBalance(account.id);
+            const count = movementCountForAccount(account.id);
+            const palette = ACCOUNT_COLORS[account.logo];
+            const expanded = pos === 0 && focusIndex >= 0;
+            const style = (palette
+              ? ' --acct-color:' + palette.color + '; --acct-ink:' + palette.ink + ';'
+              : '') + ' --i:' + pos +
+              '; top:' + (pos * 44) + 'px' +
+              '; z-index:' + (expanded ? total + 1 : total - pos);
+            return '<article class="wallet-card' + (expanded ? ' expanded' : '') + '" style="' + style + '" ' +
+              'data-action="toggle-wallet" data-card-id="' + esc(account.id) + '">' +
+              '<div class="wallet-head">' +
+                accountAvatar(account) +
+                '<div class="card-id">' +
+                  '<div class="account-name">' + esc(account.name) + '</div>' +
+                  '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div>' +
+                '</div>' +
               '</div>' +
-            '</div>' +
-            '<div class="wallet-body">' +
-              '<span class="card-label">Saldo disponible</span>' +
-              '<b class="card-amount" data-count="' + balance + '">' + formatMoney(balance) + '</b>' +
-            '</div>' +
-            '<div class="wallet-foot">' +
-              '<span class="card-number">' + esc(accountCardNumber(account)) + '</span>' +
-              '<span class="card-chip" aria-hidden="true"></span>' +
-            '</div>' +
-          '</article>';
-        }).join('') +
-      '</div>' +
-    '</div>'
+              '<div class="wallet-body">' +
+                '<span class="card-label">Saldo disponible</span>' +
+                '<b class="card-amount" data-count="' + balance + '">' + formatMoney(balance) + '</b>' +
+              '</div>' +
+              '<div class="wallet-foot">' +
+                '<span class="card-number">' + esc(accountCardNumber(account)) + '</span>' +
+                '<span class="card-chip" aria-hidden="true"></span>' +
+              '</div>' +
+            '</article>';
+          }).join('');
+
+          return '<div class="wallet">' +
+            '<div class="wallet-stack" style="height:' + stackHeight + 'px">' + cards + '</div>' +
+          '</div>';
+        })()
       : '<p class="hint">Agrega una cuenta para empezar.</p>';
 
     const recentHtml = recent.length
@@ -842,11 +856,7 @@
       '</div>' +
       '<section class="card mt-16">' +
         '<div class="section-head"><h3>Cuentas</h3>' +
-          '<span class="head-links">' +
-            '<button class="link" data-action="toggle-wallet" aria-expanded="' + (ui.walletOpen ? 'true' : 'false') + '">' +
-              (ui.walletOpen ? 'Agrupar' : 'Ver todas') + '</button>' +
-            '<button class="link" data-action="nav" data-view="cuentas">Ir a Cuentas</button>' +
-          '</span>' +
+          '<button class="link" data-action="nav" data-view="cuentas">Ver todas</button>' +
         '</div>' +
         accountsHtml +
       '</section>' +
@@ -2525,10 +2535,13 @@
         navigate(button.dataset.view);
         break;
 
-      case 'toggle-wallet':
-        ui.walletOpen = !ui.walletOpen;
+      case 'toggle-wallet': {
+        const cardId = button.dataset.cardId || '';
+        // Tocar una tarjeta la despliega; tocar otra la recoge.
+        ui.walletFocus = cardId && cardId !== ui.walletFocus ? cardId : '';
         render();
         break;
+      }
 
       case 'add-movement':
         openMovementModal();
