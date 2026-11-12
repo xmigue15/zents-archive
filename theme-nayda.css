@@ -855,15 +855,15 @@ section.wallet-sec {
   gap: 10px;
 }
 
-.debit-card .card-wave {
+.debit-card .card-contacto {
   display: grid;
   place-items: center;
   opacity: 0.85;
 }
 
-.debit-card .card-wave svg {
-  width: 19px;
-  height: 19px;
+.debit-card .card-contacto svg {
+  width: 21px;
+  height: 21px;
   fill: none;
   stroke: var(--acct-ink, #fff);
   stroke-width: 1.7;

@@ -33,7 +33,7 @@
     download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 4 5-4M5 20h14"/></svg>',
     upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>',
     transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>',
-    wave: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7.5a8 8 0 0 1 0 9"/><path d="M11.5 9.5a4.5 4.5 0 0 1 0 5"/><path d="M16 11.5a.6.6 0 0 1 0 1"/></svg>'
+    contacto: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 9.5a2.6 2.6 0 0 1 0 5"/><path d="M8 6.5a6 6 0 0 1 0 11"/><path d="M11.5 3.5a9.5 9.5 0 0 1 0 17"/><path d="M14.5 1.5a12 12 0 0 1 0 21"/></svg>'
   };
 
   /* Iconos propios de Zent (reemplazan a los emojis) */
@@ -1159,7 +1159,7 @@
                 '</div>' +
                 '<div class="card-foot">' +
                   '<span class="card-number">' + esc(accountCardNumber(account)) + '</span>' +
-                  '<span class="card-wave" aria-hidden="true">' + ICON.wave + '</span>' +
+                  '<span class="card-contacto" aria-hidden="true">' + ICON.contacto + '</span>' +
                   '<span class="card-actions">' +
                     '<button class="card-btn" data-action="edit-account" data-id="' + esc(account.id) + '" aria-label="Editar ' + esc(account.name) + '">' + ICON.edit + '</button>' +
                     '<button class="card-btn danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
