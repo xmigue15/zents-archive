@@ -172,6 +172,18 @@
     return { src: 'logos/' + archivo + '.png', clase: clase };
   }
 
+  /* El efectivo se ve como un billete de la marca Zent */
+  function notaEfectivoHTML(account, balance) {
+    const serie = (accountCardNumber(account).match(/\d{4}$/) || ['0000'])[0];
+    return '<div class="nota-marco">' +
+      '<span class="nota-sello" aria-hidden="true">Z</span>' +
+      '<span class="nota-marca">Zent</span>' +
+      '<span class="nota-serie">ZNT · ' + serie + '</span>' +
+      '<span class="nota-valor"><b class="card-amount" data-count="' + balance + '">' +
+        formatMoney(balance) + '</b><small>Efectivo disponible</small></span>' +
+    '</div>';
+  }
+
   /* Número de tarjeta enmascarado, estable por cuenta */
   function accountCardNumber(account) {
     const base = String(account.id || account.name || '');
@@ -399,7 +411,7 @@
       return '<span class="acct-dot acct-logo"><img src="' + esc(account.logoData) + '" alt="" aria-hidden="true"></span>';
     }
     if (account.logo === 'cash') {
-      return '<span class="acct-dot acct-letter">' + iconSVG('dinero') + '</span>';
+      return '<span class="acct-dot acct-letter zent-seal">Z</span>';
     }
     if (account.logo && ACCOUNT_LOGO_IDS.indexOf(account.logo) !== -1) {
       const info = logoArchivo(account.logo);
@@ -858,11 +870,12 @@
             const palette = ACCOUNT_COLORS[account.logo];
             const expanded = index === focusIndex;
             const isFirst = index === 0;
-            const cardClass = expanded ? ' expanded' : (isFirst ? ' full' : ' peek');
+            const esEfectivo = account.logo === 'cash';
+            const cardClass = (expanded ? ' expanded' : (isFirst ? ' full' : ' peek')) + (esEfectivo ? ' nota-papel' : '');
             const top = index * STRIP + (focusIndex >= 0 && index >= focusIndex ? shift : 0);
             bottom = Math.max(bottom, top + CARD_H);
             const style = (palette
-              ? ' --acct-color:' + palette.color + '; --acct-ink:' + palette.ink + ';'
+              ? ' --acct-color:' + palette.color + '; --acct-ink:' + (esEfectivo ? '#163b32' : palette.ink) + ';'
               : '') + ' --i:' + index +
               '; top:' + top + 'px' +
               '; z-index:' + (total - index);
@@ -1044,27 +1057,29 @@
           const style = palette
             ? ' style="--acct-color:' + palette.color + '; --acct-ink:' + palette.ink + '"'
             : '';
-          return '<article class="account-card debit-card"' + style + '>' +
-            '<div class="card-head">' +
-              accountAvatar(account) +
-              '<div class="card-id">' +
-                '<div class="account-name">' + esc(account.name) + '</div>' +
-                '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div>' +
-              '</div>' +
-              '<span class="card-chip" aria-hidden="true"></span>' +
-            '</div>' +
-            '<div class="card-mid">' +
-              '<span class="card-label">Saldo disponible</span>' +
-              '<b class="card-amount">' + formatMoney(balance) + '</b>' +
-            '</div>' +
-            '<div class="card-foot">' +
-              '<span class="card-number">' + esc(accountCardNumber(account)) + '</span>' +
-              '<span class="card-wave" aria-hidden="true">' + ICON.wave + '</span>' +
-              '<span class="card-actions">' +
-                '<button class="card-btn" data-action="edit-account" data-id="' + esc(account.id) + '" aria-label="Editar ' + esc(account.name) + '">' + ICON.edit + '</button>' +
-                '<button class="card-btn danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
-              '</span>' +
-            '</div>' +
+          return '<article class="account-card debit-card' + (account.logo === 'cash' ? ' nota' : '') + '"' + style + '>' +
+            (account.logo === 'cash'
+              ? notaEfectivoHTML(account, balance)
+              : '<div class="card-head">' +
+                  accountAvatar(account) +
+                  '<div class="card-id">' +
+                    '<div class="account-name">' + esc(account.name) + '</div>' +
+                    '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div>' +
+                  '</div>' +
+                  '<span class="card-chip" aria-hidden="true"></span>' +
+                '</div>' +
+                '<div class="card-mid">' +
+                  '<span class="card-label">Saldo disponible</span>' +
+                  '<b class="card-amount">' + formatMoney(balance) + '</b>' +
+                '</div>' +
+                '<div class="card-foot">' +
+                  '<span class="card-number">' + esc(accountCardNumber(account)) + '</span>' +
+                  '<span class="card-wave" aria-hidden="true">' + ICON.wave + '</span>' +
+                  '<span class="card-actions">' +
+                    '<button class="card-btn" data-action="edit-account" data-id="' + esc(account.id) + '" aria-label="Editar ' + esc(account.name) + '">' + ICON.edit + '</button>' +
+                    '<button class="card-btn danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
+                  '</span>' +
+                '</div>') +
           '</article>';
         }).join('')
       : emptyState('carpeta', 'Sin cuentas', 'Crea una cuenta para separar tu dinero por banco, billetera o efectivo.',
