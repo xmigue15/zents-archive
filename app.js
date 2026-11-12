@@ -33,7 +33,7 @@
     download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 4 5-4M5 20h14"/></svg>',
     upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>',
     transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>',
-    contacto: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 9.5a2.6 2.6 0 0 1 0 5"/><path d="M8 6.5a6 6 0 0 1 0 11"/><path d="M11.5 3.5a9.5 9.5 0 0 1 0 17"/><path d="M14.5 1.5a12 12 0 0 1 0 21"/></svg>'
+    contacto: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.6 8.5a4.49 4.49 0 0 1 0 7"/><path d="M6.08 6.5a7.05 7.05 0 0 1 0 11"/><path d="M10.52 4.5a9.61 9.61 0 0 1 0 15"/><path d="M15.92 2.5a12.18 12.18 0 0 1 0 19"/></svg>'
   };
 
   /* Iconos propios de Zent (reemplazan a los emojis) */
