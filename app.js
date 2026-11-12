@@ -506,20 +506,12 @@
     return new Date().getDate();
   }
 
-  /* Gasto promedio por dia: lo gastado hasta hoy dividido por los dias
-     que ya pasaron del mes. Los gastos con fecha futura no cuentan,
-     porque ese dia todavia no ha ocurrido. */
+  /* Gasto promedio por dia: todo lo gastado en el mes dividido por los dias
+     que ya pasaron. Asi el numero es el ritmo de gasto diario del mes:
+     si registras el mes completo por adelantado, sale tu gasto real por dia. */
   function averageDailyExpense(ym) {
-    const hoy = todayISO();
-    const esMesActual = !ym || ym === currentMonth();
-    let suma = 0;
-    state.movements.forEach((movement) => {
-      if (movement.type !== 'expense') return;
-      if (ym && movement.date.slice(0, 7) !== ym) return;
-      if (esMesActual && movement.date > hoy) return;
-      suma += movementTotal(movement);
-    });
-    return Math.round(suma / Math.max(1, daysElapsedInMonth(ym)));
+    const totals = monthTotals(ym);
+    return Math.round(totals.expense / Math.max(1, daysElapsedInMonth(ym)));
   }
 
   /* ------------------------------------------------------------
