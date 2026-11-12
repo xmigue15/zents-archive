@@ -426,56 +426,66 @@ body::after {
   transition: opacity .26s ease .04s, transform .3s cubic-bezier(.22, .61, .36, 1);
 }
 
-.wallet-card:not(.expanded) .wallet-head {
-  transform: translateY(124px);
-}
-
-.wallet-card:not(.expanded) .wallet-body {
-  transform: translateY(-52px);
-}
-
-.wallet-card:not(.expanded) .account-name {
-  font-size: 15px;
-}
-
-.wallet-card:not(.expanded) .account-sub {
-  opacity: 0;
-  transition: opacity .2s ease;
-}
-
 .wallet-card .account-sub {
+  opacity: 0;
   transition: opacity .22s ease .06s;
 }
 
-/* Tarjeta desplegada: se ve completa y del mismo tamaño que en Cuentas */
+/* Tarjeta en franja: se ve el logo y el nombre abajo */
+.wallet-card.peek .wallet-head {
+  transform: translateY(124px);
+}
+
+.wallet-card.peek .wallet-body {
+  transform: translateY(-52px);
+}
+
+.wallet-card.peek .wallet-foot {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.wallet-card.peek .account-sub {
+  opacity: 0;
+}
+
+/* Tarjeta completa (la primera) y tarjeta desplegada */
+.wallet-card.full,
 .wallet-card.expanded {
-  justify-content: flex-start;
   gap: 16px;
   padding: 16px;
   border-radius: 20px;
-  animation: wallet-pop .42s cubic-bezier(.2, .9, .25, 1.18);
-  box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.7),
-    0 24px 44px color-mix(in srgb, var(--acct-color, #b08d6a) 40%, rgba(90, 74, 52, 0.2)),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
+.wallet-card.full .wallet-head,
 .wallet-card.expanded .wallet-head {
   transform: translateY(0);
 }
 
+.wallet-card.full .wallet-body,
 .wallet-card.expanded .wallet-body {
   transform: translateY(0);
 }
 
+.wallet-card.full .wallet-foot,
 .wallet-card.expanded .wallet-foot {
   opacity: 1;
   transform: translateY(0);
   margin-top: auto;
 }
 
+.wallet-card.full .account-sub,
 .wallet-card.expanded .account-sub {
   opacity: 1;
+}
+
+/* Tarjeta desplegada: se ve completa y del mismo tamaño que en Cuentas */
+.wallet-card.expanded {
+  animation: wallet-pop .42s cubic-bezier(.2, .9, .25, 1.18);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.7),
+    0 24px 44px color-mix(in srgb, var(--acct-color, #b08d6a) 40%, rgba(90, 74, 52, 0.2)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 @keyframes wallet-pop {
@@ -484,29 +494,35 @@ body::after {
   100% { transform: scale(1); }
 }
 
+.wallet-card.full .account-name,
 .wallet-card.expanded .account-name {
   font-size: 14.5px;
 }
 
+.wallet-card.full .card-amount,
 .wallet-card.expanded .card-amount {
   font-size: 28px;
 }
 
+.wallet-card.full .card-label,
 .wallet-card.expanded .card-label {
   font-size: 10px;
 }
 
+.wallet-card.full .card-number,
 .wallet-card.expanded .card-number {
   font-size: 12.5px;
   letter-spacing: 0.14em;
 }
 
+.wallet-card.full .card-chip,
 .wallet-card.expanded .card-chip {
   width: 38px;
   height: 28px;
   border-radius: 6px;
 }
 
+.wallet-card.full .card-chip::before,
 .wallet-card.expanded .card-chip::before {
   left: 34%;
   top: 5%;
@@ -516,6 +532,7 @@ body::after {
   box-shadow: 8px 0 0 rgba(120, 90, 20, 0.4);
 }
 
+.wallet-card.full .card-chip::after,
 .wallet-card.expanded .card-chip::after {
   content: "";
   position: absolute;

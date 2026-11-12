@@ -74,6 +74,8 @@
       card.style.top = top + 'px';
       card.style.zIndex = String(total - index);
       card.classList.toggle('expanded', index === focusIndex);
+      card.classList.toggle('full', index === 0 && index !== focusIndex);
+      card.classList.toggle('peek', index !== focusIndex && index !== 0);
     });
 
     stack.style.height = bottom + 'px';
@@ -817,6 +819,8 @@
             const count = movementCountForAccount(account.id);
             const palette = ACCOUNT_COLORS[account.logo];
             const expanded = index === focusIndex;
+            const isFirst = index === 0;
+            const cardClass = expanded ? ' expanded' : (isFirst ? ' full' : ' peek');
             const top = index * STRIP + (focusIndex >= 0 && index >= focusIndex ? shift : 0);
             bottom = Math.max(bottom, top + CARD_H);
             const style = (palette
@@ -824,7 +828,7 @@
               : '') + ' --i:' + index +
               '; top:' + top + 'px' +
               '; z-index:' + (total - index);
-            return '<article class="wallet-card' + (expanded ? ' expanded' : '') + '" style="' + style + '" ' +
+            return '<article class="wallet-card' + cardClass + '" style="' + style + '" ' +
               'data-action="toggle-wallet" data-card-id="' + esc(account.id) + '">' +
               '<div class="wallet-head">' +
                 accountAvatar(account) +
@@ -2568,6 +2572,10 @@
 
       case 'toggle-wallet': {
         const cardId = button.dataset.cardId || '';
+        const cards = $$('.wallet-card');
+        const index = cards.findIndex((card) => card.dataset.cardId === cardId);
+        // La primera tarjeta ya está siempre visible: nunca se despliega.
+        if (index === 0) break;
         // Tocar una tarjeta la despliega; tocar otra la recoge.
         ui.walletFocus = cardId && cardId !== ui.walletFocus ? cardId : '';
         applyWalletLayout();
