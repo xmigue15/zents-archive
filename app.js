@@ -218,16 +218,25 @@
     return { src: 'logos/' + archivo + '.png', clase: clase };
   }
 
-  /* El efectivo se ve como un billete: en vez del signo $, la Z de Zent */
+  /* El efectivo se ve como un billete al estilo del dolar: la Z de Zent
+     en el retrato y la cantidad de dinero en vez del numero 1. */
   function notaEfectivoHTML(account, balance) {
     const serie = (accountCardNumber(account).match(/\d{4}$/) || ['0000'])[0];
-    return '<div class="nota-marco">' +
-      '<span class="nota-esquina nota-esq-izq">1</span>' +
-      '<span class="nota-titulo">Banco de Zent</span>' +
-      '<span class="nota-medallon"><span class="nota-z">Z</span></span>' +
-      '<span class="nota-pie">Un Zent</span>' +
-      '<span class="nota-serie">ZNT · ' + serie + '</span>' +
-      '<span class="nota-valor">' + formatMoney(balance) + '</span>' +
+    const cifra = formatMoney(balance).replace(/[\s\u00a0]+/g, '');
+    const tam = cifra.length <= 5 ? 15 : (cifra.length <= 8 ? 12 : 9.5);
+    return '<div class="nota-marco" style="--cifra:' + tam + 'px">' +
+      '<span class="nota-emisor">Banco de Zent</span>' +
+      '<span class="nota-banda nota-banda-sup">Rep&uacute;blica de Zent</span>' +
+      '<span class="nota-placa nota-placa-tl">' + esc(cifra) + '</span>' +
+      '<span class="nota-placa nota-placa-tr">' + esc(cifra) + '</span>' +
+      '<span class="nota-serie nota-serie-sup">ZNT &middot; ' + serie + '</span>' +
+      '<span class="nota-sello nota-sello-oscuro"><span>Z</span></span>' +
+      '<span class="nota-retrato"><span class="nota-z">Z</span></span>' +
+      '<span class="nota-sello nota-sello-verde"><span>Z</span></span>' +
+      '<span class="nota-legal">Esta nota es legal<br>para todas las deudas,<br>p&uacute;blicas y privadas</span>' +
+      '<span class="nota-placa nota-placa-bl">' + esc(cifra) + '</span>' +
+      '<span class="nota-placa nota-placa-br">' + esc(cifra) + '</span>' +
+      '<span class="nota-banda nota-banda-inf">Efectivo</span>' +
       '<span class="card-actions nota-acciones">' +
         '<button class="card-btn" data-action="edit-account" data-id="' + esc(account.id) + '" aria-label="Editar ' + esc(account.name) + '">' + ICON.edit + '</button>' +
         '<button class="card-btn danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +

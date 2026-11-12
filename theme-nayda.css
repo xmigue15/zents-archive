@@ -1479,39 +1479,55 @@ textarea:focus {
   font-weight: 700;
 }
 
-/* ---------- Billete de efectivo (estilo dólar, con la Z de Zent) ---------- */
+/* ---------- Billete de efectivo (al estilo del dólar, con la Z de Zent) ---------- */
 
 .nota {
+  --verde: #1d3a2c;
+  --papel-nota:
+    repeating-linear-gradient(45deg, rgba(29, 58, 44, 0.05) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-45deg, rgba(29, 58, 44, 0.04) 0 1px, transparent 1px 5px),
+    radial-gradient(130% 150% at 50% 32%, #f4f6e7 0%, #e6ebd3 55%, #d2dcbe 100%);
   padding: 0;
   height: auto;
   min-height: 178px;
-  border-radius: 10px;
-  color: #163b32;
-  background:
-    repeating-linear-gradient(45deg, rgba(22, 59, 50, 0.055) 0 1px, transparent 1px 5px),
-    repeating-linear-gradient(-45deg, rgba(22, 59, 50, 0.045) 0 1px, transparent 1px 6px),
-    radial-gradient(130% 150% at 50% 45%, #eef2df 0%, #dbe6c9 52%, #c6d9b6 100%);
-  border: 1px solid rgba(22, 59, 50, 0.4);
-  box-shadow: 0 16px 32px rgba(90, 74, 52, 0.16), inset 0 0 0 3px rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  color: var(--verde);
+  background: var(--papel-nota);
+  border: 1px solid rgba(29, 58, 44, 0.45);
+  box-shadow: 0 16px 32px rgba(90, 74, 52, 0.16), inset 0 0 0 2px rgba(255, 255, 255, 0.35);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
-/* Marco doble, como el de un billete */
+/* El billete es de papel: en modo oscuro sigue siendo de papel */
+:root[data-theme="dark"] .debit-card.nota,
+:root:not([data-theme="light"]) .debit-card.nota {
+  background: var(--papel-nota);
+  border-color: rgba(29, 58, 44, 0.45);
+}
+
+/* Marco grabado del billete */
 .nota::before {
   content: "";
   position: absolute;
-  inset: 6px;
-  border: 1px solid rgba(22, 59, 50, 0.3);
-  border-radius: 5px;
+  inset: 5px;
+  border: 1px solid rgba(29, 58, 44, 0.5);
+  border-radius: 4px;
   pointer-events: none;
 }
 
 .nota-marco {
   position: absolute;
-  inset: 13px;
-  border: 1px solid rgba(22, 59, 50, 0.16);
-  border-radius: 3px;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nota-marco::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(29, 58, 44, 0.26);
+  border-radius: 2px;
   pointer-events: none;
 }
 
@@ -1519,113 +1535,192 @@ textarea:focus {
   pointer-events: auto;
 }
 
-/* Denominación en la esquina */
-.nota-esquina {
+/* Emisor, en el borde superior */
+.nota-emisor {
   position: absolute;
-  top: 18px;
-  left: 20px;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid rgba(22, 59, 50, 0.45);
-  background: rgba(255, 255, 255, 0.32);
-  font-family: var(--serif);
-  font-size: 18px;
-  color: #163b32;
-}
-
-.nota-titulo {
-  position: absolute;
-  top: 22px;
+  top: 11px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
+  font-size: 7px;
   font-weight: 700;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.34em;
   text-transform: uppercase;
-  color: rgba(22, 59, 50, 0.62);
+  color: rgba(29, 58, 44, 0.62);
   white-space: nowrap;
 }
 
-/* Ovalo central con la Z (donde va el retrato del billete) */
-.nota-medallon {
+/* Bandas oscuras con el nombre */
+.nota-banda {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #2b5543, #1a382b);
+  color: #eff4e1;
+  font-family: var(--serif);
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(239, 244, 225, 0.32);
+  white-space: nowrap;
+}
+
+.nota-banda-sup {
+  top: 22px;
+  height: 21px;
+  font-size: 12.5px;
+  letter-spacing: 0.15em;
+}
+
+.nota-banda-inf {
+  bottom: 16px;
+  height: 23px;
+  font-size: 15px;
+  letter-spacing: 0.3em;
+  padding: 0 18px;
+}
+
+/* Placas con la cantidad (donde el billete lleva el numero 1) */
+.nota-placa {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  min-width: 60px;
+  height: 24px;
+  padding: 0 9px;
+  border: 1px solid rgba(29, 58, 44, 0.5);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.42);
+  font-family: var(--serif);
+  font-size: var(--cifra, 12px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--verde);
+  white-space: nowrap;
+}
+
+.nota-placa-tl { top: 46px; left: 17px; }
+.nota-placa-tr { top: 46px; right: 17px; }
+.nota-placa-bl { bottom: 17px; left: 17px; }
+.nota-placa-br { bottom: 17px; right: 17px; }
+
+/* Retrato ovalado con la Z de Zent */
+.nota-retrato {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
-  width: 78px;
-  height: 88px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
-  border: 2px solid rgba(22, 59, 50, 0.45);
+  border: 2px solid rgba(29, 58, 44, 0.55);
   background:
-    repeating-radial-gradient(circle at 50% 50%, rgba(22, 59, 50, 0.08) 0 1px, transparent 1px 4px),
-    radial-gradient(circle at 38% 30%, #f4f7ea, #dde8d0 68%, #c3d8b7);
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.45), 0 2px 6px rgba(22, 59, 50, 0.18);
+    repeating-radial-gradient(circle at 50% 46%, rgba(29, 58, 44, 0.09) 0 1px, transparent 1px 4px),
+    radial-gradient(circle at 38% 28%, #f7f9ec, #e3ead2 68%, #c6d5b2);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.5);
 }
+
+/* Filetes grabados alrededor del retrato */
+.nota-retrato::before,
+.nota-retrato::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(29, 58, 44, 0.42);
+  pointer-events: none;
+}
+
+.nota-retrato::before { inset: -5px; }
+.nota-retrato::after { inset: -9px; border-style: dotted; opacity: 0.5; }
 
 .nota-z {
   font-family: var(--serif);
-  font-size: 40px;
+  font-size: 44px;
   line-height: 1;
-  color: #163b32;
+  color: var(--verde);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65), 0 -1px 0 rgba(29, 58, 44, 0.22);
 }
 
-.nota-pie {
+/* Sellos a los lados del retrato */
+.nota-sello {
   position: absolute;
-  bottom: 16px;
-  left: 20px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   font-family: var(--serif);
-  font-style: italic;
-  font-size: 14px;
-  color: rgba(22, 59, 50, 0.75);
+  font-size: 15px;
+}
+
+.nota-sello-oscuro {
+  left: 17px;
+  top: 100px;
+  background: radial-gradient(circle at 34% 28%, #305c46, #1a382b 72%);
+  color: #eaf1dd;
+  box-shadow: inset 0 0 0 1px rgba(234, 241, 221, 0.4);
+}
+
+.nota-sello-verde {
+  right: 17px;
+  top: 100px;
+  border: 1.5px solid rgba(29, 58, 44, 0.6);
+  background: rgba(61, 107, 82, 0.16);
+  color: var(--verde);
+}
+
+/* Texto legal (a la izquierda, como en el billete original) */
+.nota-legal {
+  position: absolute;
+  left: 17px;
+  top: 75px;
+  width: 82px;
+  text-align: center;
+  font-size: 5.5px;
+  font-weight: 700;
+  line-height: 1.7;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(29, 58, 44, 0.62);
 }
 
 .nota-serie {
   position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 9.5px;
+  font-size: 8px;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  color: rgba(22, 59, 50, 0.55);
+  letter-spacing: 0.16em;
+  color: rgba(61, 107, 82, 0.9);
   white-space: nowrap;
 }
 
-.nota-valor {
-  position: absolute;
-  bottom: 13px;
-  right: 20px;
-  font-family: var(--serif);
-  font-size: 21px;
-  font-weight: 400;
-  color: #163b32;
-  font-variant-numeric: tabular-nums;
-}
+.nota-serie-sup { top: 75px; right: 17px; }
 
 /* Botones de editar y eliminar */
 .nota-acciones {
   position: absolute;
-  top: 16px;
-  right: 18px;
+  top: 8px;
+  right: 8px;
   z-index: 3;
   display: flex;
-  gap: 6px;
+  gap: 5px;
 }
 
 .nota-acciones .card-btn {
-  background: rgba(255, 255, 255, 0.5);
-  border-color: rgba(22, 59, 50, 0.22);
-  color: #163b32;
+  width: 22px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(29, 58, 44, 0.2);
+  color: var(--verde);
 }
 
 .nota-acciones .card-btn:hover {
   background: #fff;
-  color: #163b32;
+  color: var(--verde);
 }
 
 /* El sello Zent */
@@ -1644,12 +1739,8 @@ textarea:focus {
 .wallet-card.nota-papel {
   height: 180px;
   min-height: 0;
-  --acct-ink: #163b32;
-  color: #163b32;
-}
-
-.wallet-card.nota-papel .nota-valor {
-  font-size: 20px;
+  --acct-ink: #1d3a2c;
+  color: #1d3a2c;
 }
 /* ------------------------------------------------------------
    12. Control de transparencia (Ajustes)
