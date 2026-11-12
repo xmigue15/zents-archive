@@ -457,6 +457,14 @@
     return 'Buenas noches';
   }
 
+  /* El saludo lleva el nombre del usuario entre parentesis */
+  function saludoHTML() {
+    const saludo = esc(greeting());
+    const nombre = String((state.profile && state.profile.name) || '').trim();
+    if (!nombre) return saludo;
+    return saludo + ' <span class="eyebrow-name">(' + esc(nombre) + ')</span>';
+  }
+
   function initial(name) {
     const text = String(name || '').trim();
     return text ? text.charAt(0).toUpperCase() : '?';
@@ -985,7 +993,7 @@
       : '<p class="hint">Todavía no hay gastos este mes.</p>';
 
     return '<div class="page-head">' +
-        '<div><p class="eyebrow">' + esc(greeting()) + '</p><h1>Tu resumen</h1></div>' +
+        '<div><p class="eyebrow">' + saludoHTML() + '</p><h1>Tu resumen</h1></div>' +
         '<button class="btn ghost sm" data-action="add-movement">' + ICON.plus + ' Agregar</button>' +
       '</div>' +
       '<section class="hero">' +
