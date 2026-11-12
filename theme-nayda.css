@@ -1602,8 +1602,8 @@ textarea:focus {
   white-space: nowrap;
 }
 
-.nota-placa-tl { top: 46px; left: 17px; }
-.nota-placa-tr { top: 46px; right: 17px; }
+.nota-placa-tl { top: 45px; left: 17px; }
+.nota-placa-tr { top: 45px; right: 17px; }
 .nota-placa-bl { bottom: 17px; left: 17px; }
 .nota-placa-br { bottom: 17px; right: 17px; }
 
@@ -1651,24 +1651,24 @@ textarea:focus {
   position: absolute;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   font-family: var(--serif);
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .nota-sello-oscuro {
-  left: 17px;
-  top: 100px;
+  left: 18px;
+  top: 102px;
   background: radial-gradient(circle at 34% 28%, #305c46, #1a382b 72%);
   color: #eaf1dd;
   box-shadow: inset 0 0 0 1px rgba(234, 241, 221, 0.4);
 }
 
 .nota-sello-verde {
-  right: 17px;
-  top: 100px;
+  right: 18px;
+  top: 102px;
   border: 1.5px solid rgba(29, 58, 44, 0.6);
   background: rgba(61, 107, 82, 0.16);
   color: var(--verde);
@@ -1678,13 +1678,13 @@ textarea:focus {
 .nota-legal {
   position: absolute;
   left: 17px;
-  top: 75px;
-  width: 82px;
+  top: 73px;
+  width: 84px;
   text-align: center;
-  font-size: 5.5px;
+  font-size: 5.2px;
   font-weight: 700;
-  line-height: 1.7;
-  letter-spacing: 0.05em;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(29, 58, 44, 0.62);
 }
