@@ -350,13 +350,6 @@ body::after {
   color: var(--camel);
 }
 
-/* El nombre dentro del saludo conserva sus mayusculas y su espaciado */
-.eyebrow-name {
-  text-transform: none;
-  letter-spacing: 0.01em;
-  font-weight: 600;
-}
-
 /* ------------------------------------------------------------
    5. Superficies de vidrio
    ------------------------------------------------------------ */

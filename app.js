@@ -457,12 +457,12 @@
     return 'Buenas noches';
   }
 
-  /* El saludo lleva el nombre del usuario, sin parentesis */
+  /* El saludo lleva el nombre del usuario, con el mismo formato */
   function saludoHTML() {
     const saludo = esc(greeting());
     const nombre = String((state.profile && state.profile.name) || '').trim();
     if (!nombre) return saludo;
-    return saludo + '<span class="eyebrow-name">, ' + esc(nombre) + '</span>';
+    return saludo + ', ' + esc(nombre);
   }
 
   function initial(name) {
