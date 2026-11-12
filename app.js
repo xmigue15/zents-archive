@@ -985,7 +985,7 @@
       : '<p class="hint">Todavía no hay gastos este mes.</p>';
 
     return '<div class="page-head">' +
-        '<div><p class="eyebrow">' + esc(greeting()) + '</p><h2>Tu resumen</h2></div>' +
+        '<div><p class="eyebrow">' + esc(greeting()) + '</p><h1>Tu resumen</h1></div>' +
         '<button class="btn ghost sm" data-action="add-movement">' + ICON.plus + ' Agregar</button>' +
       '</div>' +
       '<section class="hero">' +
@@ -1034,7 +1034,7 @@
     }).join('');
 
     return '<div class="page-head">' +
-        '<div><p class="eyebrow">Historial</p><h2>Movimientos</h2></div>' +
+        '<div><p class="eyebrow">Historial</p><h1>Movimientos</h1></div>' +
         '<button class="btn sm" data-action="add-movement">' + ICON.plus + ' Agregar</button>' +
       '</div>' +
       '<section class="card">' +
@@ -1153,7 +1153,7 @@
           '<button class="btn sm" data-action="add-account">Crear cuenta</button>');
 
     return '<div class="page-head">' +
-        '<div><p class="eyebrow">Patrimonio</p><h2>Cuentas</h2></div>' +
+        '<div><p class="eyebrow">Patrimonio</p><h1>Cuentas</h1></div>' +
         '<div class="head-actions">' +
           '<button class="btn ghost sm" data-action="add-transfer">' + ICON.transfer + ' Transferir</button>' +
           '<button class="btn sm" data-action="add-account">' + ICON.plus + ' Nueva</button>' +
@@ -1181,7 +1181,7 @@
     const max = Math.max(1, ...months.map((month) => Math.max(month.income, month.expense)));
 
     return '<div class="page-head">' +
-        '<div><p class="eyebrow">Análisis</p><h2>Estadísticas</h2></div>' +
+        '<div><p class="eyebrow">Análisis</p><h1>Estadísticas</h1></div>' +
         '<div class="date-shell narrow">' +
           '<input id="statsMonth" type="month" value="' + esc(ym) + '" aria-label="Mes de las estadísticas">' +
         '</div>' +
@@ -1214,7 +1214,7 @@
 
   function viewAjustes() {
     const profile = state.profile || { name: '', photoData: '' };
-    return '<div class="page-head"><div><p class="eyebrow">Preferencias</p><h2>Ajustes</h2></div></div>' +
+    return '<div class="page-head"><div><p class="eyebrow">Preferencias</p><h1>Ajustes</h1></div></div>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Perfil</h3>' +
         '<div class="profile-row">' +
@@ -1501,8 +1501,6 @@
   function render() {
     const view = currentView();
     document.body.dataset.view = view;
-    const title = $('#topTitle');
-    if (title) title.textContent = VIEW_META[view].title;
 
     $$('[data-action="nav"][data-view]').forEach((element) => {
       element.classList.toggle('active', element.dataset.view === view);

@@ -306,6 +306,7 @@ p {
   z-index: 20;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
   padding: 12px 16px;
   background: color-mix(in srgb, var(--bg) 84%, transparent);
@@ -313,18 +314,11 @@ p {
   border-bottom: 1px solid var(--line);
 }
 
-.topbar h1 {
-  flex: 1;
-  margin: 0;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
 .topbar-brand {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -336,11 +330,6 @@ p {
     background: transparent;
     backdrop-filter: none;
     border-bottom: 0;
-  }
-
-  .topbar h1 {
-    font-size: 26px;
-    letter-spacing: -0.03em;
   }
 }
 
@@ -465,7 +454,7 @@ body[data-view="ajustes"] .fab {
   gap: 8px;
 }
 
-.page-head h2 {
+.page-head h1 {
   margin: 2px 0 0;
   font-size: clamp(24px, 3vw, 32px);
   font-weight: 800;

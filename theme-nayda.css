@@ -292,8 +292,7 @@ body::after {
    4. Tipografía editorial
    ------------------------------------------------------------ */
 
-.topbar h1,
-.page-head h2,
+.page-head h1,
 .hero-amount,
 .account-balance,
 .quick-card b,
@@ -309,16 +308,12 @@ body::after {
   letter-spacing: -0.015em;
 }
 
-.topbar h1 {
-  font-size: 22px;
-}
-
-.page-head h2 {
+.page-head h1 {
   font-size: clamp(26px, 3vw, 34px);
 }
 
 /* Reglas finas camel: detalle editorial de la referencia */
-.page-head h2::after,
+.page-head h1::after,
 .section-head h3::after {
   content: "";
   display: block;
