@@ -384,7 +384,111 @@ body::after {
   border-radius: 20px;
 }
 
-/* ---------- Tarjeta de débito ---------- */
+/* ---------- Tarjetas de débito ---------- */
+
+/* Grupo de tarjetas en el Resumen (deslizable, tipo cartera) */
+
+.wallet-row {
+  display: flex;
+  gap: 12px;
+  margin: 0 -20px;
+  padding: 4px 20px 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.wallet-row::-webkit-scrollbar {
+  display: none;
+}
+
+.wallet-card {
+  position: relative;
+  flex: 0 0 234px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--acct-ink, #fff);
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--acct-color, #b08d6a) 72%, #ffffff) 0%,
+      var(--acct-color, #b08d6a) 45%,
+      color-mix(in srgb, var(--acct-color, #b08d6a) 74%, #05100d) 100%);
+  box-shadow:
+    0 16px 30px color-mix(in srgb, var(--acct-color, #b08d6a) 32%, rgba(90, 74, 52, 0.18)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.wallet-card::before {
+  content: "";
+  position: absolute;
+  inset: -40% -10%;
+  pointer-events: none;
+  background: linear-gradient(112deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.16) 49%,
+    rgba(255, 255, 255, 0.03) 57%,
+    transparent 65%);
+}
+
+.wallet-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.wallet-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wallet-card .card-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.wallet-card .acct-logo {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+}
+
+.wallet-card .acct-letter {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--acct-color, #163b32);
+}
+
+.wallet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wallet-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.wallet-foot .card-chip {
+  width: 26px;
+  height: 19px;
+  border-radius: 4px;
+}
+
+.wallet-foot .card-chip::before {
+  left: 34%;
+  box-shadow: 6px 0 0 rgba(120, 90, 20, 0.4);
+}
 
 .debit-card {
   position: relative;
@@ -435,14 +539,16 @@ body::after {
   min-width: 0;
 }
 
-.debit-card .account-name {
+.debit-card .account-name,
+.wallet-card .account-name {
   color: var(--acct-ink, #fff);
   font-size: 14.5px;
   font-weight: 650;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 }
 
-.debit-card .account-sub {
+.debit-card .account-sub,
+.wallet-card .account-sub {
   color: var(--acct-ink, #fff);
   opacity: 0.72;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
@@ -498,7 +604,7 @@ body::after {
   margin: 16px 0 14px;
 }
 
-.debit-card .card-label {
+.card-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -507,7 +613,7 @@ body::after {
   opacity: 0.72;
 }
 
-.debit-card .card-amount {
+.card-amount {
   font-family: var(--serif);
   font-size: 28px;
   font-weight: 400;
@@ -518,19 +624,28 @@ body::after {
   font-variant-numeric: tabular-nums;
 }
 
-.debit-card .card-foot {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.wallet-card .card-amount {
+  font-size: 23px;
 }
 
-.debit-card .card-number {
+.card-number {
   flex: 1;
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
   color: var(--acct-ink, #fff);
   opacity: 0.82;
+}
+
+.wallet-card .card-number {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.debit-card .card-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .debit-card .card-wave {

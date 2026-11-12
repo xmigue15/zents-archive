@@ -773,22 +773,33 @@
       .slice()
       .sort((a, b) => accountBalance(b.id) - accountBalance(a.id));
     const accountsHtml = accountsSorted.length
-      ? accountsSorted.map((account) => {
+      ? '<div class="wallet-row">' +
+        accountsSorted.map((account) => {
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
           const palette = ACCOUNT_COLORS[account.logo];
           const style = palette
             ? ' style="--acct-color:' + palette.color + '; --acct-ink:' + palette.ink + '"'
             : '';
-          return '<button class="row acct-row" data-action="nav" data-view="cuentas"' + style + '>' +
-            accountAvatar(account) +
-            '<span class="grow">' +
-              '<span class="title">' + esc(account.name) + '</span>' +
-              '<span class="sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</span>' +
-            '</span>' +
-            '<b class="amt' + (balance < 0 ? ' out' : '') + '" data-count="' + balance + '">' + formatMoney(balance) + '</b>' +
-          '</button>';
-        }).join('')
+          return '<article class="wallet-card"' + style + ' data-action="nav" data-view="cuentas">' +
+            '<div class="wallet-head">' +
+              accountAvatar(account) +
+              '<div class="card-id">' +
+                '<div class="account-name">' + esc(account.name) + '</div>' +
+                '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wallet-body">' +
+              '<span class="card-label">Saldo disponible</span>' +
+              '<b class="card-amount" data-count="' + balance + '">' + formatMoney(balance) + '</b>' +
+            '</div>' +
+            '<div class="wallet-foot">' +
+              '<span class="card-number">' + esc(accountCardNumber(account)) + '</span>' +
+              '<span class="card-chip" aria-hidden="true"></span>' +
+            '</div>' +
+          '</article>';
+        }).join('') +
+      '</div>'
       : '<p class="hint">Agrega una cuenta para empezar.</p>';
 
     const recentHtml = recent.length
@@ -828,7 +839,7 @@
       '</div>' +
       '<section class="card mt-16">' +
         '<div class="section-head"><h3>Cuentas</h3><button class="link" data-action="nav" data-view="cuentas">Ver todas</button></div>' +
-        '<div class="row-list">' + accountsHtml + '</div>' +
+        accountsHtml +
       '</section>' +
       '<section class="card">' +
         '<div class="section-head"><h3>Últimos movimientos</h3><button class="link" data-action="nav" data-view="movimientos">Ver todos</button></div>' +
