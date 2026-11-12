@@ -506,6 +506,22 @@
     return new Date().getDate();
   }
 
+  /* Gasto promedio por dia: lo gastado hasta hoy dividido por los dias
+     que ya pasaron del mes. Los gastos con fecha futura no cuentan,
+     porque ese dia todavia no ha ocurrido. */
+  function averageDailyExpense(ym) {
+    const hoy = todayISO();
+    const esMesActual = !ym || ym === currentMonth();
+    let suma = 0;
+    state.movements.forEach((movement) => {
+      if (movement.type !== 'expense') return;
+      if (ym && movement.date.slice(0, 7) !== ym) return;
+      if (esMesActual && movement.date > hoy) return;
+      suma += movementTotal(movement);
+    });
+    return Math.round(suma / Math.max(1, daysElapsedInMonth(ym)));
+  }
+
   /* ------------------------------------------------------------
      Estado y persistencia
      ------------------------------------------------------------ */
@@ -910,7 +926,7 @@
     const net = totals.income - totals.expense;
     const recent = sortedMovements().slice(0, 5);
     const topExpenses = categoryBreakdown('expense', ym).slice(0, 3);
-    const average = Math.round(totals.expense / Math.max(1, daysElapsedInMonth(ym)));
+    const average = averageDailyExpense(ym);
 
     const accountsSorted = state.accounts
       .slice()
