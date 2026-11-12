@@ -181,6 +181,10 @@
       '<span class="nota-serie">ZNT · ' + serie + '</span>' +
       '<span class="nota-valor"><b class="card-amount" data-count="' + balance + '">' +
         formatMoney(balance) + '</b><small>Efectivo disponible</small></span>' +
+      '<span class="card-actions nota-acciones">' +
+        '<button class="card-btn" data-action="edit-account" data-id="' + esc(account.id) + '" aria-label="Editar ' + esc(account.name) + '">' + ICON.edit + '</button>' +
+        '<button class="card-btn danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
+      '</span>' +
     '</div>';
   }
 

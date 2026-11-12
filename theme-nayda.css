@@ -1559,6 +1559,26 @@ textarea:focus {
   color: rgba(22, 59, 50, 0.55);
 }
 
+.nota-acciones {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+
+.nota-acciones .card-btn {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(22, 59, 50, 0.22);
+  color: #163b32;
+}
+
+.nota-acciones .card-btn:hover {
+  background: #fff;
+  color: #163b32;
+}
+
 /* El sello Zent */
 .acct-dot.zent-seal,
 .wallet-card .acct-dot.zent-seal,
