@@ -32,7 +32,8 @@
     monitor: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
     download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 4 5-4M5 20h14"/></svg>',
     upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>',
-    transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>'
+    transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>',
+    wave: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7.5a8 8 0 0 1 0 9"/><path d="M11.5 9.5a4.5 4.5 0 0 1 0 5"/><path d="M16 11.5a.6.6 0 0 1 0 1"/></svg>'
   };
 
   /* Iconos propios de Zent (reemplazan a los emojis) */
@@ -93,20 +94,28 @@
 
   const ACCOUNT_LOGO_IDS = ACCOUNT_LOGOS.map((logo) => logo.id);
 
-  /* Color de marca de cada cuenta (para el acabado platinado de las tarjetas) */
+  /* Color de marca de cada cuenta (tarjetas de débito) */
   const ACCOUNT_COLORS = {
-    cash: '#2e7d5b',
-    nequi: '#6c1bd1',
-    daviplata: '#e4002b',
-    bancolombia: '#e8b400',
-    bogota: '#0a4a9b',
-    bbva: '#12305e',
-    davivienda: '#d5192b',
-    itau: '#ec7000',
-    movii: '#00a0d8',
-    rappipay: '#f0441f',
-    nu: '#4f0d92'
+    cash: { color: '#2e7d5b', ink: '#eaf6ee' },
+    nequi: { color: '#6c1bd1', ink: '#f4eaff' },
+    daviplata: { color: '#e4002b', ink: '#ffe9ec' },
+    bancolombia: { color: '#e8b400', ink: '#3d2c00' },
+    bogota: { color: '#0a4a9b', ink: '#e6f0ff' },
+    bbva: { color: '#12305e', ink: '#e6ecf7' },
+    davivienda: { color: '#d5192b', ink: '#ffe9ec' },
+    itau: { color: '#ec7000', ink: '#fff3e6' },
+    movii: { color: '#00a0d8', ink: '#e6f7ff' },
+    rappipay: { color: '#f0441f', ink: '#ffeae3' },
+    nu: { color: '#4f0d92', ink: '#f1e7ff' }
   };
+
+  /* Número de tarjeta enmascarado, estable por cuenta */
+  function accountCardNumber(account) {
+    const base = String(account.id || account.name || '');
+    let hash = 7;
+    for (let i = 0; i < base.length; i++) hash = (hash * 31 + base.charCodeAt(i)) >>> 0;
+    return '\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 ' + String(hash % 10000).padStart(4, '0');
+  }
 
   const DEFAULT_ACCOUNTS = () => ([
     { id: 'cash', name: 'Efectivo', logo: 'cash', initial: 0 },
@@ -767,9 +776,11 @@
       ? accountsSorted.map((account) => {
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
-          const color = ACCOUNT_COLORS[account.logo] || '';
-          return '<button class="row acct-row" data-action="nav" data-view="cuentas"' +
-            (color ? ' style="--acct-color:' + color + '"' : '') + '>' +
+          const palette = ACCOUNT_COLORS[account.logo];
+          const style = palette
+            ? ' style="--acct-color:' + palette.color + '; --acct-ink:' + palette.ink + '"'
+            : '';
+          return '<button class="row acct-row" data-action="nav" data-view="cuentas"' + style + '>' +
             accountAvatar(account) +
             '<span class="grow">' +
               '<span class="title">' + esc(account.name) + '</span>' +
@@ -926,17 +937,30 @@
       ? state.accounts.map((account) => {
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
-          const color = ACCOUNT_COLORS[account.logo] || '';
-          return '<article class="account-card"' + (color ? ' style="--acct-color:' + color + '"' : '') + '>' +
-            '<div class="account-top">' +
+          const palette = ACCOUNT_COLORS[account.logo];
+          const style = palette
+            ? ' style="--acct-color:' + palette.color + '; --acct-ink:' + palette.ink + '"'
+            : '';
+          return '<article class="account-card debit-card"' + style + '>' +
+            '<div class="card-head">' +
               accountAvatar(account) +
-              '<div><div class="account-name">' + esc(account.name) + '</div>' +
-              '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div></div>' +
+              '<div class="card-id">' +
+                '<div class="account-name">' + esc(account.name) + '</div>' +
+                '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div>' +
+              '</div>' +
+              '<span class="card-chip" aria-hidden="true"></span>' +
             '</div>' +
-            '<div class="account-balance' + (balance < 0 ? ' out' : '') + '">' + formatMoney(balance) + '</div>' +
-            '<div class="account-actions">' +
-              '<button class="btn ghost sm" data-action="edit-account" data-id="' + esc(account.id) + '">' + ICON.edit + ' Editar</button>' +
-              '<button class="icon-btn sm danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
+            '<div class="card-mid">' +
+              '<span class="card-label">Saldo disponible</span>' +
+              '<b class="card-amount">' + formatMoney(balance) + '</b>' +
+            '</div>' +
+            '<div class="card-foot">' +
+              '<span class="card-number">' + esc(accountCardNumber(account)) + '</span>' +
+              '<span class="card-wave" aria-hidden="true">' + ICON.wave + '</span>' +
+              '<span class="card-actions">' +
+                '<button class="card-btn" data-action="edit-account" data-id="' + esc(account.id) + '" aria-label="Editar ' + esc(account.name) + '">' + ICON.edit + '</button>' +
+                '<button class="card-btn danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
+              '</span>' +
             '</div>' +
           '</article>';
         }).join('')
