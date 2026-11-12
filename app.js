@@ -172,15 +172,16 @@
     return { src: 'logos/' + archivo + '.png', clase: clase };
   }
 
-  /* El efectivo se ve como un billete de la marca Zent */
+  /* El efectivo se ve como un billete: en vez del signo $, la Z de Zent */
   function notaEfectivoHTML(account, balance) {
     const serie = (accountCardNumber(account).match(/\d{4}$/) || ['0000'])[0];
     return '<div class="nota-marco">' +
-      '<span class="nota-sello" aria-hidden="true">Z</span>' +
-      '<span class="nota-marca">Zent</span>' +
+      '<span class="nota-esquina nota-esq-izq">1</span>' +
+      '<span class="nota-titulo">Banco de Zent</span>' +
+      '<span class="nota-medallon"><span class="nota-z">Z</span></span>' +
+      '<span class="nota-pie">Un Zent</span>' +
       '<span class="nota-serie">ZNT · ' + serie + '</span>' +
-      '<span class="nota-valor"><b class="card-amount" data-count="' + balance + '">' +
-        formatMoney(balance) + '</b><small>Efectivo disponible</small></span>' +
+      '<span class="nota-valor">' + formatMoney(balance) + '</span>' +
       '<span class="card-actions nota-acciones">' +
         '<button class="card-btn" data-action="edit-account" data-id="' + esc(account.id) + '" aria-label="Editar ' + esc(account.name) + '">' + ICON.edit + '</button>' +
         '<button class="card-btn danger" data-action="delete-account" data-id="' + esc(account.id) + '" aria-label="Eliminar ' + esc(account.name) + '">' + ICON.trash + '</button>' +
@@ -883,6 +884,12 @@
               : '') + ' --i:' + index +
               '; top:' + top + 'px' +
               '; z-index:' + (total - index);
+            if (esEfectivo) {
+              return '<article class="wallet-card nota nota-papel' + (expanded ? ' expanded' : '') + '" style="' + style + '" ' +
+                'data-action="toggle-wallet" data-card-id="' + esc(account.id) + '">' +
+                notaEfectivoHTML(account, balance) +
+              '</article>';
+            }
             return '<article class="wallet-card' + cardClass + '" style="' + style + '" ' +
               'data-action="toggle-wallet" data-card-id="' + esc(account.id) + '">' +
               '<div class="wallet-head">' +
