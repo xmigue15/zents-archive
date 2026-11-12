@@ -776,23 +776,23 @@
       .sort((a, b) => accountBalance(b.id) - accountBalance(a.id));
     const accountsHtml = accountsSorted.length
       ? (() => {
-          // La tarjeta pulsada sale del grupo y se despliega arriba del todo.
-          const order = accountsSorted.slice();
-          const focusIndex = order.findIndex((a) => a.id === ui.walletFocus);
-          if (focusIndex > 0) order.unshift(order.splice(focusIndex, 1)[0]);
-          const total = order.length;
-          const stackHeight = (total - 1) * 44 + 140;
+          // La tarjeta pulsada se despliega EN SU SITIO: abre hacia abajo
+          // y las de abajo se desplazan para hacerle sitio.
+          const total = accountsSorted.length;
+          const focusIndex = accountsSorted.findIndex((a) => a.id === ui.walletFocus);
+          const stackHeight = (total - 1) * 44 + 140 + (focusIndex >= 0 ? 96 : 0);
 
-          const cards = order.map((account, pos) => {
+          const cards = accountsSorted.map((account, index) => {
             const balance = accountBalance(account.id);
             const count = movementCountForAccount(account.id);
             const palette = ACCOUNT_COLORS[account.logo];
-            const expanded = pos === 0 && focusIndex >= 0;
+            const expanded = index === focusIndex;
+            const shift = focusIndex >= 0 && index >= focusIndex ? 96 : 0;
             const style = (palette
               ? ' --acct-color:' + palette.color + '; --acct-ink:' + palette.ink + ';'
-              : '') + ' --i:' + pos +
-              '; top:' + (pos * 44) + 'px' +
-              '; z-index:' + (expanded ? total + 1 : total - pos);
+              : '') + ' --i:' + index +
+              '; top:' + (index * 44 + shift) + 'px' +
+              '; z-index:' + (total - index);
             return '<article class="wallet-card' + (expanded ? ' expanded' : '') + '" style="' + style + '" ' +
               'data-action="toggle-wallet" data-card-id="' + esc(account.id) + '">' +
               '<div class="wallet-head">' +
