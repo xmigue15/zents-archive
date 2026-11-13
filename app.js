@@ -996,11 +996,12 @@
             return '<article class="wallet-card' + cardClass + '" style="' + style + '" ' +
               'data-action="toggle-wallet" data-card-id="' + esc(account.id) + '">' +
               '<div class="wallet-head">' +
-                accountAvatar(account) +
+                '<span class="card-chip" aria-hidden="true"></span>' +
                 '<div class="card-id">' +
                   '<div class="account-name">' + esc(account.name) + '</div>' +
                   '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div>' +
                 '</div>' +
+                accountAvatar(account) +
               '</div>' +
               '<div class="wallet-body">' +
                 '<span class="card-label">Saldo disponible</span>' +
@@ -1008,7 +1009,6 @@
               '</div>' +
               '<div class="wallet-foot">' +
                 '<span class="card-number">' + esc(accountCardNumber(account)) + '</span>' +
-                '<span class="card-chip" aria-hidden="true"></span>' +
               '</div>' +
             '</article>';
           }).join('');
@@ -1197,12 +1197,13 @@
             (account.logo === 'cash'
               ? notaEfectivoHTML(account, balance)
               : '<div class="card-head">' +
-                  accountAvatar(account) +
+                  /* El chip va arriba a la izquierda, como en una tarjeta real. */
+                  '<span class="card-chip" aria-hidden="true"></span>' +
                   '<div class="card-id">' +
                     '<div class="account-name">' + esc(account.name) + '</div>' +
                     '<div class="account-sub">' + count + ' movimiento' + (count === 1 ? '' : 's') + '</div>' +
                   '</div>' +
-                  '<span class="card-chip" aria-hidden="true"></span>' +
+                  accountAvatar(account) +
                 '</div>' +
                 '<div class="card-mid">' +
                   '<span class="card-label">Saldo disponible</span>' +
