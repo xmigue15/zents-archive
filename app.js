@@ -1176,8 +1176,12 @@
 
   function viewCuentas() {
     const total = totalBalance();
-    const cards = state.accounts.length
-      ? state.accounts.map((account) => {
+    /* Siempre de mayor a menor: la cuenta con mas saldo arriba. */
+    const accountsSorted = state.accounts
+      .slice()
+      .sort((a, b) => accountBalance(b.id) - accountBalance(a.id));
+    const cards = accountsSorted.length
+      ? accountsSorted.map((account) => {
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
           const palette = ACCOUNT_COLORS[account.logo];
