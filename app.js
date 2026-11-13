@@ -217,6 +217,19 @@
     return { src: 'logos/' + archivo + '.png', clase: clase };
   }
 
+  /* El billete de Zent en miniatura, para el selector de logos */
+  function miniBillSVG() {
+    return '<svg class="mini-bill" viewBox="0 0 240 104" aria-hidden="true" focusable="false">' +
+      '<rect x="1" y="1" width="238" height="102" rx="9" fill="#eef2df" stroke="rgba(29,58,44,0.55)"/>' +
+      '<rect x="7" y="7" width="226" height="90" rx="5" fill="none" stroke="rgba(29,58,44,0.3)"/>' +
+      '<rect x="86" y="14" width="68" height="12" rx="2" fill="#1a382b"/>' +
+      '<ellipse cx="120" cy="52" rx="19" ry="17" fill="#f6f8ec" stroke="rgba(29,58,44,0.6)" stroke-width="2"/>' +
+      '<text x="120" y="62" text-anchor="middle" font-family="Redaction, Georgia, serif" font-size="28" fill="#1d3a2c">Z</text>' +
+      '<rect x="90" y="78" width="60" height="13" rx="2" fill="#1a382b"/>' +
+      '<text x="120" y="88" text-anchor="middle" font-family="Redaction, Georgia, serif" font-size="9" letter-spacing="1.4" fill="#eff4e1">EFECTIVO</text>' +
+    '</svg>';
+  }
+
   /* El efectivo se ve como un billete al estilo del dolar: la Z de Zent
      en el retrato y la cantidad de dinero en vez del numero 1. */
   function notaEfectivoHTML(account, balance) {
@@ -881,7 +894,7 @@
       ].filter(Boolean).join(' · ');
 
       return '<button class="row" data-action="edit-transfer" data-id="' + esc(movement.id) + '">' +
-        '<span class="cat-ic">🔁</span>' +
+        '<span class="cat-ic">' + iconSVG('transferencia') + '</span>' +
         '<span class="grow">' +
           '<span class="title">' + esc(title) + '</span>' +
           '<span class="sub">' + esc(sub) + '</span>' +
@@ -1996,7 +2009,7 @@
       '</button>';
     const presetChips = ACCOUNT_LOGOS.map((logo) => {
       const visual = logo.id === 'cash'
-        ? '<span class="logo-letter">💵</span>'
+        ? '<span class="logo-letter logo-bill">' + miniBillSVG() + '</span>'
         : '<img src="logos/' + logo.id + '.png" alt="">';
       return '<button type="button" class="logo-chip' + (currentLogo === logo.id ? ' active' : '') + '" data-action="acct-logo-pick" data-value="' + logo.id + '">' +
         visual +
@@ -2020,20 +2033,24 @@
           '<input class="input" id="acctName" maxlength="40" autocomplete="off" placeholder="Ej. Nequi, Efectivo, Banco..." value="' + esc(account ? account.name : '') + '" data-autofocus>' +
         '</div>' +
         '<div class="field">' +
-          '<label>Logo</label>' +
-          '<div class="logo-picker" id="acctLogoPicker">' + letterChip + presetChips + customChip + '</div>' +
-          '<div class="logo-picker-actions">' +
-            '<button type="button" class="btn ghost sm" data-action="acct-logo-upload">' + ICON.upload + ' Subir imagen</button>' +
-            '<button type="button" class="btn ghost sm" data-action="acct-logo-clear">Quitar logo</button>' +
+          '<div class="field-head">' +
+            '<label>Logo</label>' +
+            '<div class="logo-picker-actions">' +
+              '<button type="button" class="btn ghost sm" data-action="acct-logo-upload">' + ICON.upload + ' Subir imagen</button>' +
+              '<button type="button" class="btn ghost sm" data-action="acct-logo-clear">Quitar logo</button>' +
+            '</div>' +
           '</div>' +
-          '<p class="hint">Elige uno de la lista o sube tu propia imagen. Se recorta cuadrado automáticamente.</p>' +
+          '<div class="logo-picker-wrap">' +
+            '<div class="logo-picker" id="acctLogoPicker">' + letterChip + presetChips + customChip + '</div>' +
+          '</div>' +
+          '<p class="hint">Desliza para ver más logos. El tuyo se recorta cuadrado.</p>' +
           '<input type="file" id="acctLogoFile" accept="image/*" hidden>' +
           '<input type="hidden" id="acctLogo" value="' + esc(account && !account.logoData ? account.logo || '' : '') + '">' +
           '<input type="hidden" id="acctLogoData" value="' + esc(account ? account.logoData || '' : '') + '">' +
         '</div>' +
         '<div class="field">' +
           '<label for="acctInitial">Saldo inicial (opcional)</label>' +
-          '<input class="input" id="acctInitial" inputmode="numeric" autocomplete="off" placeholder="$ 0" value="' + (account && account.initial ? formatNumberInput(account.initial) : '') + '" data-raw="' + (account ? account.initial : '') + '" data-amount-input>' +
+          '<input class="input" id="acctInitial" inputmode="numeric" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute(\'readonly\')" placeholder="$ 0" value="' + (account && account.initial ? formatNumberInput(account.initial) : '') + '" data-raw="' + (account ? account.initial : '') + '" data-amount-input>' +
           '<p class="hint">Es el dinero que ya tenías en esta cuenta antes de empezar.</p>' +
         '</div>' +
         '<div class="modal-actions">' +

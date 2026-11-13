@@ -816,6 +816,55 @@ body[data-view="ajustes"] .fab {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  touch-action: pan-x;
+}
+
+/* El selector se desplaza: el borde derecho se difumina para que se note */
+.logo-picker-wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.logo-picker-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 34px;
+  pointer-events: none;
+  border-radius: 0 12px 12px 0;
+  background: linear-gradient(90deg, rgba(252, 249, 243, 0), rgba(252, 249, 243, 0.95));
+}
+
+:root[data-theme="dark"] .logo-picker-wrap::after {
+  background: linear-gradient(90deg, rgba(7, 28, 27, 0), rgba(7, 28, 27, 0.95));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-picker-wrap::after {
+    background: linear-gradient(90deg, rgba(7, 28, 27, 0), rgba(7, 28, 27, 0.95));
+  }
+}
+
+/* El billete de Zent en miniatura dentro del selector */
+.logo-chip .logo-bill {
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.logo-chip .logo-bill .mini-bill {
+  width: 30px;
+  height: 13px;
+}
+
+/* Etiqueta del campo con sus acciones a la derecha */
+.field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
 }
 
 .logo-picker::-webkit-scrollbar {
@@ -872,8 +921,8 @@ body[data-view="ajustes"] .fab {
 .logo-picker-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 0;
 }
 
 .dot {
