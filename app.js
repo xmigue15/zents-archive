@@ -731,7 +731,8 @@
     countersShown: {},
     walletOpen: false,
     walletFocus: '',
-    acctInitialUserTyping: false
+    acctInitialUserTyping: false,
+    acctInitialTimer: null
   };
 
   let saveTimer = null;
@@ -1640,6 +1641,11 @@
       try { window.scrollTo(0, scrollY); } catch (error) { /* ignorar */ }
     }
     ui.confirmCallback = null;
+    if (ui.acctInitialTimer) {
+      clearInterval(ui.acctInitialTimer);
+      ui.acctInitialTimer = null;
+    }
+    ui.acctInitialUserTyping = false;
     if (ui.lastFocus && typeof ui.lastFocus.focus === 'function') {
       try { ui.lastFocus.focus(); } catch (error) { /* ignorar */ }
     }
@@ -2042,16 +2048,16 @@
               '<button type="button" class="btn ghost sm" data-action="acct-logo-clear">Quitar logo</button>' +
             '</div>' +
           '</div>' +
-          '<div class="logo-picker-wrap">' +
-            '<div class="logo-picker" id="acctLogoPicker">' + letterChip + presetChips + customChip + '</div>' +
-          '</div>' +
-          '<p class="hint">Desliza para ver más logos. El tuyo se recorta cuadrado.</p>' +
+          '<div class="logo-picker" id="acctLogoPicker">' + letterChip + presetChips + customChip + '</div>' +
+          '<p class="hint">Elige el logo de la cuenta. El tuyo se recorta cuadrado.</p>' +
           '<input type="file" id="acctLogoFile" accept="image/*" hidden>' +
           '<input type="hidden" id="acctLogo" value="' + esc(account && !account.logoData ? account.logo || '' : '') + '">' +
           '<input type="hidden" id="acctLogoData" value="' + esc(account ? account.logoData || '' : '') + '">' +
         '</div>' +
         '<div class="field">' +
           '<label for="acctInitial">Saldo inicial (opcional)</label>' +
+          /* Trampa para el autocompletado: un campo falso que se lleva el relleno */
+          '<input type="text" class="input-fake" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>' +
           '<input class="input" id="acctInitial" inputmode="numeric" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute(\'readonly\')" placeholder="$ 0" value="' + (account && account.initial ? formatNumberInput(account.initial) : '') + '" data-raw="' + (account ? account.initial : '') + '" data-intended="' + (account ? account.initial : '') + '" data-amount-input>' +
           '<p class="hint">Es el dinero que ya tenías en esta cuenta antes de empezar.</p>' +
         '</div>' +
@@ -2069,23 +2075,22 @@
     );
     updateAcctLogoPicker();
     /* Evita que el navegador o el teclado inyecten un valor en el
-       saldo inicial: se reafirma el valor previsto varias veces. */
+       saldo inicial: se reafirma el valor previsto mientras el modal
+       siga abierto. */
     const intendedRaw = String(account ? (account.initial || '') : '');
+    if (ui.acctInitialTimer) clearInterval(ui.acctInitialTimer);
     const enforceInitial = () => {
       const input = $('#acctInitial');
       if (!input) return;
+      if (ui.acctInitialUserTyping) return;
       const digits = String(input.value || '').replace(/\\D/g, '');
-      if (digits !== intendedRaw && document.activeElement !== input) {
+      if (digits !== intendedRaw) {
         input.value = intendedRaw ? formatNumberInput(Number(intendedRaw)) : '';
         input.dataset.raw = intendedRaw;
       }
     };
-    let ticks = 0;
-    const timer = setInterval(() => {
-      enforceInitial();
-      ticks += 1;
-      if (ticks >= 20) clearInterval(timer);
-    }, 100);
+    ui.acctInitialTimer = setInterval(enforceInitial, 150);
+    enforceInitial();
   }
  
   function updateAcctLogoPicker() {

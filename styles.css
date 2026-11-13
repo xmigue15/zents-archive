@@ -810,13 +810,10 @@ body[data-view="ajustes"] .fab {
 }
 
 .logo-picker {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
   gap: 8px;
   padding: 2px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  touch-action: pan-x;
 }
 
 /* El selector se desplaza: el borde derecho se difumina para que se note */
@@ -825,26 +822,15 @@ body[data-view="ajustes"] .fab {
   min-width: 0;
 }
 
-.logo-picker-wrap::after {
-  content: "";
+/* Campo falso para que el navegador no autocomplete el saldo inicial */
+.input-fake {
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 34px;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
   pointer-events: none;
-  border-radius: 0 12px 12px 0;
-  background: linear-gradient(90deg, rgba(252, 249, 243, 0), rgba(252, 249, 243, 0.95));
-}
-
-:root[data-theme="dark"] .logo-picker-wrap::after {
-  background: linear-gradient(90deg, rgba(7, 28, 27, 0), rgba(7, 28, 27, 0.95));
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .logo-picker-wrap::after {
-    background: linear-gradient(90deg, rgba(7, 28, 27, 0), rgba(7, 28, 27, 0.95));
-  }
 }
 
 /* El billete de Zent en miniatura dentro del selector */
