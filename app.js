@@ -730,7 +730,8 @@
     renderedView: null,
     countersShown: {},
     walletOpen: false,
-    walletFocus: ''
+    walletFocus: '',
+    acctInitialUserTyping: false
   };
 
   let saveTimer = null;
@@ -2000,6 +2001,7 @@
   }
 
   function openAccountModal(id) {
+    ui.acctInitialUserTyping = false;
     const account = id ? accountById(id) : null;
     const currentLogo = account ? (account.logoData ? 'custom' : (account.logo || '')) : '';
     const letterChip =
@@ -2050,7 +2052,7 @@
         '</div>' +
         '<div class="field">' +
           '<label for="acctInitial">Saldo inicial (opcional)</label>' +
-          '<input class="input" id="acctInitial" inputmode="numeric" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute(\'readonly\')" placeholder="$ 0" value="' + (account && account.initial ? formatNumberInput(account.initial) : '') + '" data-raw="' + (account ? account.initial : '') + '" data-amount-input>' +
+          '<input class="input" id="acctInitial" inputmode="numeric" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute(\'readonly\')" placeholder="$ 0" value="' + (account && account.initial ? formatNumberInput(account.initial) : '') + '" data-raw="' + (account ? account.initial : '') + '" data-intended="' + (account ? account.initial : '') + '" data-amount-input>' +
           '<p class="hint">Es el dinero que ya tenías en esta cuenta antes de empezar.</p>' +
         '</div>' +
         '<div class="modal-actions">' +
@@ -2066,8 +2068,26 @@
       '</form>'
     );
     updateAcctLogoPicker();
+    /* Evita que el navegador o el teclado inyecten un valor en el
+       saldo inicial: se reafirma el valor previsto varias veces. */
+    const intendedRaw = String(account ? (account.initial || '') : '');
+    const enforceInitial = () => {
+      const input = $('#acctInitial');
+      if (!input) return;
+      const digits = String(input.value || '').replace(/\\D/g, '');
+      if (digits !== intendedRaw && document.activeElement !== input) {
+        input.value = intendedRaw ? formatNumberInput(Number(intendedRaw)) : '';
+        input.dataset.raw = intendedRaw;
+      }
+    };
+    let ticks = 0;
+    const timer = setInterval(() => {
+      enforceInitial();
+      ticks += 1;
+      if (ticks >= 20) clearInterval(timer);
+    }, 100);
   }
-
+ 
   function updateAcctLogoPicker() {
     const picker = $('#acctLogoPicker');
     if (!picker) return;
@@ -3005,12 +3025,35 @@
     }
 
     if (target.matches && target.matches('[data-amount-input]')) {
+      /* El saldo inicial no debe aceptar valores inyectados por el
+         navegador o el teclado: solo lo que el usuario escribe. */
+      if (target.id === 'acctInitial' && !ui.acctInitialUserTyping) {
+        const intended = target.dataset.intended || target.dataset.raw || '';
+        target.value = intended ? formatNumberInput(Number(intended)) : '';
+        target.dataset.raw = intended;
+        return;
+      }
       const digits = String(target.value || '').replace(/\D/g, '').slice(0, 12);
       target.dataset.raw = digits;
       target.value = digits ? formatNumberInput(Number(digits)) : '';
       updateGmfHint();
     }
   });
+
+  /* Marca si el usuario esta escribiendo en el saldo inicial, para
+     distinguirlo del autocompletado del navegador. */
+  document.addEventListener('beforeinput', (event) => {
+    const target = event.target;
+    if (target && target.id === 'acctInitial') {
+      ui.acctInitialUserTyping = true;
+    }
+  });
+  document.addEventListener('blur', (event) => {
+    const target = event.target;
+    if (target && target.id === 'acctInitial') {
+      ui.acctInitialUserTyping = false;
+    }
+  }, true);
 
   document.addEventListener('change', (event) => {
     const target = event.target;

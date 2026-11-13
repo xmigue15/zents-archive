@@ -1764,7 +1764,7 @@ textarea {
   background: rgba(8, 10, 20, 0.52);
   backdrop-filter: blur(4px);
   animation: fade 0.18s ease;
-  touch-action: pan-y;
+  touch-action: pan-y pan-x;
 }
 
 .modal {
@@ -1776,7 +1776,7 @@ textarea {
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: pan-y pan-x;
   padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
   border: 1px solid var(--line);
   border-radius: 24px 24px 0 0;
