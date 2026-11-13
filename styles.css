@@ -1047,47 +1047,37 @@ body[data-view="ajustes"] .fab {
 .filters {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
+/* Los filtros van en dos columnas: mes y cuenta, en una sola linea.
+   La cuenta necesita mas ancho porque su texto es mas largo. */
 .filters-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr);
   gap: 10px;
-}
-
-@media (min-width: 560px) {
-  .filters-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-}
-
-.filter-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.filter-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-}
-
-.filter-label {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.filter-label-row .link {
-  font-size: 12.5px;
 }
 
 .filter-types {
   margin-bottom: 0;
+}
+
+/* La barra de filtros es compacta: menos alto y sin etiquetas sueltas */
+.filters .search .input,
+.filters .select {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.filters .select {
+  font-size: 14px;
+  padding-left: 12px;
+  padding-right: 26px;
+}
+
+.filters .segmented button {
+  padding: 8px;
+  font-size: 13.5px;
 }
 
 .search {

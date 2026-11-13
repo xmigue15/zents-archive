@@ -1072,10 +1072,32 @@
       '</section>';
   }
 
+  /* Meses en los que hay movimientos, del mas reciente al mas viejo */
+  function monthsWithMovements() {
+    const seen = new Set();
+    state.movements.forEach((movement) => {
+      if (movement && movement.date) seen.add(String(movement.date).slice(0, 7));
+    });
+    return [...seen].filter(Boolean).sort().reverse();
+  }
+
+  function monthOptionLabel(ym) {
+    return shortMonthName(ym) + ' ' + String(ym).slice(0, 4);
+  }
+
   function viewMovimientos() {
     const accountOptions = state.accounts.map((account) =>
       '<option value="' + esc(account.id) + '"' + (ui.movAccount === account.id ? ' selected' : '') + '>' + esc(account.name) + '</option>'
     ).join('');
+
+    /* El filtro de mes es una lista compacta con los meses que tienen
+       movimientos: cabe en una linea y no ocupa un bloque entero. */
+    const months = monthsWithMovements();
+    if (ui.movMonth && months.indexOf(ui.movMonth) === -1) months.unshift(ui.movMonth);
+    const monthOptions = '<option value=""' + (ui.movMonth ? '' : ' selected') + '>Todos</option>' +
+      months.map((ym) =>
+        '<option value="' + esc(ym) + '"' + (ui.movMonth === ym ? ' selected' : '') + '>' + esc(monthOptionLabel(ym)) + '</option>'
+      ).join('');
 
     const typeChips = [
       ['all', 'Todos'],
@@ -1094,24 +1116,13 @@
       '<section class="card">' +
         '<div class="filters">' +
           '<div class="search">' + ICON.search +
-            '<input class="input" id="movSearch" type="search" autocomplete="off" placeholder="Buscar por descripción, categoría o cuenta" value="' + esc(ui.movQuery) + '" aria-label="Buscar movimientos">' +
+            '<input class="input" id="movSearch" type="search" autocomplete="off" placeholder="Buscar movimiento" value="' + esc(ui.movQuery) + '" aria-label="Buscar movimientos">' +
           '</div>' +
           '<div class="filters-grid">' +
-            '<div class="filter-field">' +
-              '<div class="filter-label-row">' +
-                '<label class="filter-label" for="movMonth">Mes</label>' +
-                (ui.movMonth ? '<button type="button" class="link" data-action="clear-month">Ver todo</button>' : '') +
-              '</div>' +
-              '<div class="date-shell">' +
-                '<input id="movMonth" type="month" value="' + esc(ui.movMonth) + '">' +
-              '</div>' +
-            '</div>' +
-            '<div class="filter-field">' +
-              '<label class="filter-label" for="movAccount">Cuenta</label>' +
-              '<select class="select" id="movAccount">' +
-                '<option value="all"' + (ui.movAccount === 'all' ? ' selected' : '') + '>Todas las cuentas</option>' + accountOptions +
-              '</select>' +
-            '</div>' +
+            '<select class="select" id="movMonth" aria-label="Filtrar por mes">' + monthOptions + '</select>' +
+            '<select class="select" id="movAccount" aria-label="Filtrar por cuenta">' +
+              '<option value="all"' + (ui.movAccount === 'all' ? ' selected' : '') + '>Todas las cuentas</option>' + accountOptions +
+            '</select>' +
           '</div>' +
           '<div class="segmented filter-types" role="group" aria-label="Tipo de movimiento">' + typeChips + '</div>' +
         '</div>' +
@@ -2701,24 +2712,8 @@
     if (container) container.innerHTML = movementResultsHTML();
   }
 
-  function updateMonthClearLink() {
-    const row = document.querySelector('.filter-label-row');
-    if (!row) return;
-    const existing = row.querySelector('[data-action="clear-month"]');
-    if (ui.movMonth && !existing) {
-      const link = document.createElement('button');
-      link.type = 'button';
-      link.className = 'link';
-      link.dataset.action = 'clear-month';
-      link.textContent = 'Ver todo';
-      row.appendChild(link);
-    } else if (!ui.movMonth && existing) {
-      existing.remove();
-    }
-  }
-
   function clearFilters() {
-    ui.movMonth = currentMonth();
+    ui.movMonth = '';
     ui.movType = 'all';
     ui.movQuery = '';
     ui.movAccount = 'all';
@@ -3000,7 +2995,6 @@
 
     if (target.id === 'movMonth') {
       ui.movMonth = target.value;
-      updateMonthClearLink();
       renderMovementResults();
       return;
     }
