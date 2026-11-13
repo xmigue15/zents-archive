@@ -666,6 +666,7 @@
   }
 
   let state = loadState();
+  if (typeof window.zentCarga === 'function') window.zentCarga('Cargando tus cuentas…');
 
   const ui = {
     movMonth: currentMonth(),
@@ -3067,10 +3068,19 @@
   setupBarDrag();
   registerServiceWorker();
 
-  /* La pantalla de carga se retira cuando la app ya esta pintada. */
-  if (typeof window.zentListo === 'function') {
-    requestAnimationFrame(() => requestAnimationFrame(window.zentListo));
+  /* La pantalla de carga avisa el paso real y se retira cuando la app
+     ya esta pintada y sincronizada (o como mucho, 1,2 s despues). */
+  const cargaPaso = typeof window.zentCarga === 'function' ? window.zentCarga : null;
+  const cargaLista = typeof window.zentListo === 'function' ? window.zentListo : null;
+  let cargaCerrada = false;
+  function cerrarCarga() {
+    if (cargaCerrada || !cargaLista) return;
+    cargaCerrada = true;
+    cargaLista();
   }
+
+  if (cargaPaso) cargaPaso('Sincronizando con la nube…');
+  if (cargaLista) setTimeout(cerrarCarga, 1200);
 
   (async () => {
     if (!window.sync) return;
@@ -3091,5 +3101,6 @@
     } catch (error) {
       console.warn('Zent: no se pudo sincronizar con Supabase.', error);
     }
+    cerrarCarga();
   })();
 })();
