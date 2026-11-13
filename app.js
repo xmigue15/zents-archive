@@ -452,13 +452,20 @@
     return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
   }
 
-  /* La hora de un movimiento, en formato de 24 horas (cabe en la lista) */
-  function formatTime(value) {
-    const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || '').trim());
-    if (!match) return '';
-    const h = Number(match[1]);
-    if (h > 23) return '';
-    return pad2(h) + ':' + match[2];
+  /* La hora de un movimiento: la que se guardo al crearlo o, en los
+     movimientos anteriores a esta funcion, la del momento en que se
+     registro (createdAt), siempre que sea el mismo dia. */
+  function movementTime(movement) {
+    if (!movement) return '';
+    if (movement.time) return movement.time;
+    const fecha = dateFromISO(movement.date);
+    if (!fecha) return '';
+    const creado = new Date(String(movement.createdAt || ''));
+    if (!isFinite(creado.getTime())) return '';
+    if (creado.getFullYear() !== fecha.getFullYear() ||
+        creado.getMonth() !== fecha.getMonth() ||
+        creado.getDate() !== fecha.getDate()) return '';
+    return pad2(creado.getHours()) + ':' + pad2(creado.getMinutes());
   }
 
   function monthName(ym) {
@@ -863,7 +870,7 @@
   }
 
   function movementRow(movement, soloHora) {
-    const hora = formatTime(movement.time);
+    const hora = movementTime(movement);
     if (movement.type === 'transfer') {
       const from = accountById(movement.accountId);
       const to = accountById(movement.toAccountId);
@@ -1697,7 +1704,7 @@
       categoryId: existing ? existing.categoryId : (firstCategory ? firstCategory.id : ''),
       accountId: existing ? existing.accountId : state.accounts[0].id,
       date: existing ? existing.date : todayISO(),
-      time: existing ? (existing.time || currentTimeISO()) : currentTimeISO(),
+      time: existing ? (movementTime(existing) || currentTimeISO()) : currentTimeISO(),
       note: existing ? existing.note : '',
       gmf: existing ? Boolean(existing.gmf) : false
     };
@@ -1859,7 +1866,7 @@
       toId: toAccount ? toAccount.id : state.accounts[1].id,
       amount: existing ? existing.amount : 0,
       date: existing ? existing.date : todayISO(),
-      time: existing ? (existing.time || currentTimeISO()) : currentTimeISO(),
+      time: existing ? (movementTime(existing) || currentTimeISO()) : currentTimeISO(),
       note: existing ? existing.note : ''
     };
     openModal(transferFormHTML());
@@ -2544,7 +2551,7 @@
         const toAccount = movement.type === 'transfer' ? accountById(movement.toAccountId) : null;
         return [
           movement.date,
-          movement.time || '',
+          movementTime(movement),
           movement.type === 'transfer' ? 'Transferencia' : (movement.type === 'income' ? 'Ingreso' : 'Gasto'),
           movement.description || '',
           category ? category.name : '',
