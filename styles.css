@@ -683,13 +683,14 @@ body[data-view="ajustes"] .fab {
 }
 
 .row .sub {
-  display: block;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   margin-top: 2px;
   font-size: 12px;
   color: var(--muted);
-  white-space: nowrap;
+  line-height: 1.35;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .row .amt {
@@ -1165,7 +1166,8 @@ textarea::placeholder {
 }
 
 .date-shell > input[type="date"],
-.date-shell > input[type="month"] {
+.date-shell > input[type="month"],
+.date-shell > input[type="time"] {
   position: absolute;
   top: 0;
   right: 0;
@@ -1191,7 +1193,9 @@ textarea::placeholder {
 .date-shell > input[type="date"]::-webkit-date-and-time-value,
 .date-shell > input[type="date"]::-webkit-datetime-edit,
 .date-shell > input[type="month"]::-webkit-date-and-time-value,
-.date-shell > input[type="month"]::-webkit-datetime-edit {
+.date-shell > input[type="month"]::-webkit-datetime-edit,
+.date-shell > input[type="time"]::-webkit-date-and-time-value,
+.date-shell > input[type="time"]::-webkit-datetime-edit {
   text-align: center;
 }
 

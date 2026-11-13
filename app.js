@@ -435,6 +435,32 @@
     return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }).replace('.', '');
   }
 
+  /* Fecha corta: "13 nov" y sin el año cuando es el actual */
+  function formatDateShort(value) {
+    const d = dateFromISO(value);
+    if (!d) return '';
+    const mes = d.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '');
+    if (d.getFullYear() !== new Date().getFullYear()) {
+      return d.getDate() + ' ' + mes + ' ' + d.getFullYear();
+    }
+    return d.getDate() + ' ' + mes;
+  }
+
+  /* La hora del momento, en HH:MM */
+  function currentTimeISO() {
+    const d = new Date();
+    return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  /* La hora de un movimiento, en formato de 24 horas (cabe en la lista) */
+  function formatTime(value) {
+    const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || '').trim());
+    if (!match) return '';
+    const h = Number(match[1]);
+    if (h > 23) return '';
+    return pad2(h) + ':' + match[2];
+  }
+
   function monthName(ym) {
     if (!ym) return 'todo el historial';
     const d = dateFromISO(ym + '-01');
@@ -555,6 +581,7 @@
     const type = raw.type === 'transfer' ? 'transfer' : (raw.type === 'income' ? 'income' : 'expense');
     const isTransfer = type === 'transfer';
     const date = /^\d{4}-\d{2}-\d{2}$/.test(String(raw.date || '')) ? String(raw.date) : todayISO();
+    const time = /^\d{1,2}:\d{2}$/.test(String(raw.time || '').trim()) ? String(raw.time).trim().padStart(5, '0') : '';
     const now = new Date().toISOString();
     return {
       id: String(raw.id || uid()),
@@ -565,6 +592,7 @@
       accountId: String(raw.accountId || ''),
       toAccountId: isTransfer ? String(raw.toAccountId || '') : '',
       date,
+      time,
       note: String(raw.note || '').trim().slice(0, 140),
       gmf: isTransfer ? false : Boolean(raw.gmf),
       createdAt: String(raw.createdAt || now),
@@ -834,13 +862,14 @@
       '</div>';
   }
 
-  function movementRow(movement) {
+  function movementRow(movement, soloHora) {
+    const hora = formatTime(movement.time);
     if (movement.type === 'transfer') {
       const from = accountById(movement.accountId);
       const to = accountById(movement.toAccountId);
       const title = (from ? from.name : 'Cuenta') + ' → ' + (to ? to.name : 'Cuenta');
       const sub = [
-        formatDate(movement.date),
+        soloHora ? hora : [formatDateShort(movement.date), hora].filter(Boolean).join(' · '),
         movement.note
       ].filter(Boolean).join(' · ');
 
@@ -862,7 +891,7 @@
     const sub = [
       category && category.name,
       account && account.name,
-      formatDate(movement.date),
+      soloHora ? hora : [formatDateShort(movement.date), hora].filter(Boolean).join(' · '),
       tax > 0 ? '4x1000 ' + formatMoney(tax) : ''
     ].filter(Boolean).join(' · ');
     const sign = movement.type === 'income' ? '+' : '−';
@@ -984,7 +1013,7 @@
       : '<p class="hint">Agrega una cuenta para empezar.</p>';
 
     const recentHtml = recent.length
-      ? '<div class="row-list">' + recent.map(movementRow).join('') + '</div>'
+      ? '<div class="row-list">' + recent.map((item) => movementRow(item, false)).join('') + '</div>'
       : emptyState('creciente', 'Aún no hay movimientos', 'Registra tu primer ingreso o gasto para ver tu resumen aquí.',
           '<button class="btn soft sm" data-action="add-movement">Agregar el primero</button>');
 
@@ -1115,7 +1144,7 @@
     let rows = '';
     groups.forEach((items, date) => {
       rows += '<div class="day-head">' + esc(dayHeading(date)) + '</div>' +
-        '<div class="row-list">' + items.map(movementRow).join('') + '</div>';
+        '<div class="row-list">' + items.map((item) => movementRow(item, true)).join('') + '</div>';
     });
 
     return '<section class="card mt-16">' +
@@ -1639,8 +1668,9 @@
         '</div>' +
         '<div class="grid-2">' +
           '<div class="field"><label for="movDate">Fecha</label><div class="date-shell"><input id="movDate" type="date" value="' + esc(draft.date) + '"></div></div>' +
-          '<div class="field"><label for="movNote">Nota (opcional)</label><input class="input" id="movNote" maxlength="140" autocomplete="off" placeholder="Detalle corto" value="' + esc(draft.note) + '"></div>' +
+          '<div class="field"><label for="movTime">Hora</label><div class="date-shell"><input id="movTime" type="time" value="' + esc(draft.time) + '"></div></div>' +
         '</div>' +
+        '<div class="field"><label for="movNote">Nota (opcional)</label><input class="input" id="movNote" maxlength="140" autocomplete="off" placeholder="Detalle corto" value="' + esc(draft.note) + '"></div>' +
         (draft.id ? '<button type="button" class="btn danger block" data-action="delete-movement" data-id="' + esc(draft.id) + '">' + ICON.trash + ' Eliminar movimiento</button>' : '') +
         '<div class="modal-actions">' +
           '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
@@ -1667,6 +1697,7 @@
       categoryId: existing ? existing.categoryId : (firstCategory ? firstCategory.id : ''),
       accountId: existing ? existing.accountId : state.accounts[0].id,
       date: existing ? existing.date : todayISO(),
+      time: existing ? (existing.time || currentTimeISO()) : currentTimeISO(),
       note: existing ? existing.note : '',
       gmf: existing ? Boolean(existing.gmf) : false
     };
@@ -1682,6 +1713,7 @@
     const category = $('#formCategory');
     const account = $('#formAccount');
     const date = $('#movDate');
+    const time = $('#movTime');
     const note = $('#movNote');
     const gmf = $('#movGmf');
 
@@ -1690,6 +1722,7 @@
     if (category) draft.categoryId = category.value;
     if (account) draft.accountId = account.value;
     if (date) draft.date = date.value;
+    if (time) draft.time = time.value;
     if (note) draft.note = note.value;
     if (gmf) draft.gmf = gmf.checked;
   }
@@ -1726,6 +1759,7 @@
         movement.categoryId = draft.categoryId;
         movement.accountId = draft.accountId;
         movement.date = draft.date;
+        movement.time = draft.time;
         movement.note = draft.note.trim();
         movement.gmf = Boolean(draft.gmf);
         movement.updatedAt = now;
@@ -1739,6 +1773,7 @@
         categoryId: draft.categoryId,
         accountId: draft.accountId,
         date: draft.date,
+        time: draft.time,
         note: draft.note.trim(),
         gmf: Boolean(draft.gmf),
         createdAt: now,
@@ -1794,8 +1829,9 @@
         '</div>' +
         '<div class="grid-2">' +
           '<div class="field"><label for="transferDate">Fecha</label><div class="date-shell"><input id="transferDate" type="date" value="' + esc(draft.date) + '"></div></div>' +
-          '<div class="field"><label for="transferNote">Nota (opcional)</label><input class="input" id="transferNote" maxlength="140" autocomplete="off" placeholder="Detalle corto" value="' + esc(draft.note) + '"></div>' +
+          '<div class="field"><label for="transferTime">Hora</label><div class="date-shell"><input id="transferTime" type="time" value="' + esc(draft.time) + '"></div></div>' +
         '</div>' +
+        '<div class="field"><label for="transferNote">Nota (opcional)</label><input class="input" id="transferNote" maxlength="140" autocomplete="off" placeholder="Detalle corto" value="' + esc(draft.note) + '"></div>' +
         (draft.id ? '<button type="button" class="btn danger block" data-action="delete-transfer" data-id="' + esc(draft.id) + '">' + ICON.trash + ' Eliminar transferencia</button>' : '') +
         '<div class="modal-actions">' +
           '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
@@ -1823,6 +1859,7 @@
       toId: toAccount ? toAccount.id : state.accounts[1].id,
       amount: existing ? existing.amount : 0,
       date: existing ? existing.date : todayISO(),
+      time: existing ? (existing.time || currentTimeISO()) : currentTimeISO(),
       note: existing ? existing.note : ''
     };
     openModal(transferFormHTML());
@@ -1836,12 +1873,14 @@
     const to = $('#transferTo');
     const amount = $('#transferAmount');
     const date = $('#transferDate');
+    const time = $('#transferTime');
     const note = $('#transferNote');
 
     if (from) draft.fromId = from.value;
     if (to) draft.toId = to.value;
     if (amount) draft.amount = Number(amount.dataset.raw || 0);
     if (date) draft.date = date.value;
+    if (time) draft.time = time.value;
     if (note) draft.note = note.value;
 
     if (!draft.amount || draft.amount <= 0) {
@@ -1858,6 +1897,7 @@
       return;
     }
     if (!draft.date) draft.date = todayISO();
+    if (!draft.time) draft.time = currentTimeISO();
 
     const wasEdit = !!draft.id;
     const now = new Date().toISOString();
@@ -1872,6 +1912,7 @@
         movement.accountId = draft.fromId;
         movement.toAccountId = draft.toId;
         movement.date = draft.date;
+        movement.time = draft.time;
         movement.note = draft.note.trim();
         movement.gmf = false;
         movement.updatedAt = now;
@@ -1886,6 +1927,7 @@
         accountId: draft.fromId,
         toAccountId: draft.toId,
         date: draft.date,
+        time: draft.time,
         note: draft.note.trim(),
         gmf: false,
         createdAt: now,
@@ -2495,13 +2537,14 @@
 
   function buildBackupXlsx() {
     const movementsSheet = xlsxSheetXML(
-      ['Fecha', 'Tipo', 'Descripción', 'Categoría', 'Cuenta origen', 'Cuenta destino', 'Monto', '4x1000', 'Nota'],
+      ['Fecha', 'Hora', 'Tipo', 'Descripción', 'Categoría', 'Cuenta origen', 'Cuenta destino', 'Monto', '4x1000', 'Nota'],
       sortedMovements().map((movement) => {
         const category = categoryById(movement.categoryId);
         const account = accountById(movement.accountId);
         const toAccount = movement.type === 'transfer' ? accountById(movement.toAccountId) : null;
         return [
           movement.date,
+          movement.time || '',
           movement.type === 'transfer' ? 'Transferencia' : (movement.type === 'income' ? 'Ingreso' : 'Gasto'),
           movement.description || '',
           category ? category.name : '',
