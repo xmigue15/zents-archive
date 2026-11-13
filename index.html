@@ -47,8 +47,213 @@
     __zentTouchY = null;
   }, { passive: true });
 </script>
+<style>
+  /* ============================================================
+     Pantalla de carga
+     Va incrustada en el HTML para que aparezca de inmediato,
+     sin esperar a los CSS externos ni al CDN de Supabase.
+     ============================================================ */
+  #boot {
+    --boot-bg:
+      radial-gradient(900px 520px at 12% -6%, rgba(255, 252, 244, 0.92), transparent 62%),
+      radial-gradient(760px 460px at 92% 4%, rgba(142, 182, 155, 0.3), transparent 60%),
+      radial-gradient(700px 520px at 70% 100%, rgba(176, 141, 106, 0.22), transparent 62%),
+      linear-gradient(168deg, #efe7da 0%, #e6dccd 48%, #ded2c1 100%);
+    --boot-ink: #163b32;
+    --boot-ink-2: rgba(29, 58, 44, 0.52);
+    --boot-line: rgba(29, 58, 44, 0.13);
+    --boot-humo: rgba(29, 58, 44, 0.1);
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: grid;
+    place-items: center;
+    background: var(--boot-bg);
+    transition: opacity .45s ease, visibility .45s;
+  }
+
+  #boot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: .3;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.22'/%3E%3C/svg%3E");
+  }
+
+  #boot.listo {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  #boot .boot-caja {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #boot .boot-marca {
+    display: grid;
+    place-items: center;
+    width: 78px;
+    height: 78px;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #163b32, #0b2b26);
+    color: #daf1de;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    box-shadow: 0 18px 38px rgba(22, 59, 50, 0.26);
+    animation: boot-flotar 2.8s ease-in-out infinite;
+  }
+
+  #boot .boot-nombre {
+    margin-top: 18px;
+    font-family: "Redaction", Georgia, "Times New Roman", serif;
+    font-size: 34px;
+    letter-spacing: 0.005em;
+    color: var(--boot-ink);
+    animation: boot-entrar .55s ease both;
+  }
+
+  #boot .boot-lema {
+    margin-top: 6px;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--boot-ink-2);
+    animation: boot-entrar .55s ease .1s both;
+  }
+
+  #boot .boot-barra {
+    width: 128px;
+    height: 2px;
+    margin-top: 30px;
+    border-radius: 2px;
+    background: var(--boot-line);
+    overflow: hidden;
+    animation: boot-entrar .55s ease .18s both;
+  }
+
+  #boot .boot-barra i {
+    display: block;
+    width: 38%;
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #8eb69b, #b08d6a);
+    animation: boot-barra 1.3s cubic-bezier(.55, 0, .45, 1) infinite;
+  }
+
+  /* Tema oscuro */
+  @media (prefers-color-scheme: dark) {
+    #boot:not(.claro) {
+      --boot-bg:
+        radial-gradient(900px 520px at 12% -6%, rgba(142, 182, 155, 0.2), transparent 62%),
+        radial-gradient(760px 460px at 92% 4%, rgba(218, 241, 222, 0.1), transparent 60%),
+        linear-gradient(168deg, #051f20 0%, #0b2b26 55%, #103830 100%);
+      --boot-ink: #daf1de;
+      --boot-ink-2: rgba(218, 241, 222, 0.55);
+      --boot-line: rgba(218, 241, 222, 0.16);
+      --boot-humo: rgba(218, 241, 222, 0.08);
+    }
+  }
+
+  #boot.oscuro {
+    --boot-bg:
+      radial-gradient(900px 520px at 12% -6%, rgba(142, 182, 155, 0.2), transparent 62%),
+      radial-gradient(760px 460px at 92% 4%, rgba(218, 241, 222, 0.1), transparent 60%),
+      linear-gradient(168deg, #051f20 0%, #0b2b26 55%, #103830 100%);
+    --boot-ink: #daf1de;
+    --boot-ink-2: rgba(218, 241, 222, 0.55);
+    --boot-line: rgba(218, 241, 222, 0.16);
+    --boot-humo: rgba(218, 241, 222, 0.08);
+  }
+
+  #boot.oscuro .boot-marca {
+    background: linear-gradient(135deg, #0b2b26, #051f20);
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(218, 241, 222, 0.16);
+  }
+
+  @keyframes boot-flotar {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  @keyframes boot-entrar {
+    from { opacity: 0; transform: translateY(9px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes boot-barra {
+    0% { transform: translateX(-105%); }
+    100% { transform: translateX(365%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #boot .boot-marca,
+    #boot .boot-nombre,
+    #boot .boot-lema,
+    #boot .boot-barra,
+    #boot .boot-barra i {
+      animation: none;
+    }
+    #boot .boot-nombre,
+    #boot .boot-lema,
+    #boot .boot-barra {
+      opacity: 1;
+    }
+  }
+</style>
+<script>
+  /* La pantalla de carga se retira cuando la app avisa que ya esta lista.
+     Si algo falla, se retira sola para no dejar al usuario trapped. */
+  (function () {
+    function bootEl() { return document.getElementById('boot'); }
+
+    window.zentListo = function () {
+      var boot = bootEl();
+      if (!boot || boot.classList.contains('listo')) return;
+      boot.classList.add('listo');
+      setTimeout(function () {
+        if (boot.parentNode) boot.parentNode.removeChild(boot);
+      }, 500);
+    };
+
+    function aplicarTema() {
+      var boot = bootEl();
+      if (!boot) return;
+      try {
+        var raw = localStorage.getItem('zent.state.v1');
+        var tema = raw ? (JSON.parse(raw).theme || 'system') : 'system';
+        if (tema === 'dark') boot.classList.add('oscuro');
+        if (tema === 'light') boot.classList.add('claro');
+      } catch (e) { /* sin tema guardado: se usa el del sistema */ }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aplicarTema);
+    } else {
+      aplicarTema();
+    }
+
+    setTimeout(window.zentListo, 9000);
+  })();
+</script>
 </head>
 <body>
+<div id="boot" aria-hidden="true">
+  <div class="boot-caja">
+    <span class="boot-marca">Z</span>
+    <span class="boot-nombre">Zent</span>
+    <span class="boot-lema">Tus finanzas, claras</span>
+    <span class="boot-barra"><i></i></span>
+  </div>
+</div>
 <div class="app">
   <aside class="sidebar" aria-label="Navegación principal">
     <a class="brand" href="#/resumen" aria-label="Zent, ir al resumen">

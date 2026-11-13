@@ -3067,6 +3067,11 @@
   setupBarDrag();
   registerServiceWorker();
 
+  /* La pantalla de carga se retira cuando la app ya esta pintada. */
+  if (typeof window.zentListo === 'function') {
+    requestAnimationFrame(() => requestAnimationFrame(window.zentListo));
+  }
+
   (async () => {
     if (!window.sync) return;
     try {
