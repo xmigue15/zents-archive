@@ -275,11 +275,23 @@
    3. Fondo de la app: luz moteada + grano fino
    ------------------------------------------------------------ */
 
+/* El fondo también va en <html>: si no, al hacer overscroll el
+   navegador pinta el área sobrante de blanco (el temido "blanco
+   infinito"). Además se desactiva el rebote vertical. */
+html {
+  background-color: var(--bg);
+  background-image: var(--app-bg);
+  background-attachment: fixed;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+}
+
 body {
   font-family: var(--sans);
   background: var(--app-bg);
   background-attachment: fixed;
   color: var(--text);
+  overscroll-behavior-y: none;
 }
 
 body::before {
@@ -1478,12 +1490,72 @@ section.wallet-sec {
   background: var(--sage);
 }
 
+/* ------------------------------------------------------------
+   Gráfica de barras con volumen (3D)
+   Luz desde arriba-izquierda, sombra en el borde derecho y una
+   tapa elíptica que redondea el remate de cada barra.
+   ------------------------------------------------------------ */
+
+.chart-bars {
+  position: relative;
+  gap: 5px;
+  padding-bottom: 2px;
+}
+
+/* Piso de la gráfica: línea de apoyo con sombra suave */
+.chart-bars::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  bottom: 0;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(122, 102, 72, 0.16) 12%, rgba(122, 102, 72, 0.22) 50%, rgba(122, 102, 72, 0.16) 88%, transparent);
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+.chart .bar {
+  position: relative;
+  width: 15px;
+  min-height: 6px;
+  border-radius: 7px 7px 3px 3px;
+  background:
+    linear-gradient(90deg,
+      rgba(0, 0, 0, 0.26) 0%,
+      rgba(0, 0, 0, 0.05) 16%,
+      rgba(255, 255, 255, 0.46) 38%,
+      rgba(255, 255, 255, 0.14) 56%,
+      rgba(0, 0, 0, 0.12) 80%,
+      rgba(0, 0, 0, 0.3) 100%),
+    var(--bar-color);
+  box-shadow:
+    0 7px 13px -5px rgba(60, 45, 30, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transform: translateZ(0);
+}
+
+/* Tapa elíptica: remate de cilindro */
+.chart .bar::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 1px;
+  right: 1px;
+  height: 5px;
+  border-radius: 50%;
+  background:
+    radial-gradient(130% 150% at 32% 18%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.18) 60%, rgba(0, 0, 0, 0.16) 100%),
+    var(--bar-color);
+}
+
 .bar.income {
-  background: var(--sage);
+  --bar-color: var(--income);
 }
 
 .bar.expense {
-  background: var(--camel);
+  --bar-color: var(--expense);
 }
 
 /* ------------------------------------------------------------
@@ -1536,6 +1608,90 @@ textarea:focus {
 .date-shell:focus-within {
   border-color: var(--camel);
   box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+/* ------------------------------------------------------------
+   Mes de Estadísticas: píldora centrada con el nombre del mes.
+   El input nativo va encima, invisible, para abrir el selector.
+   ------------------------------------------------------------ */
+
+.month-center {
+  display: flex;
+  justify-content: center;
+  margin: -4px 0 18px;
+}
+
+.month-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  height: 48px;
+  padding: 0 40px;
+  border: 1px solid var(--field-line);
+  border-radius: 999px;
+  background: var(--field-bg);
+  box-shadow: 0 10px 24px rgba(122, 102, 72, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.month-pill:active {
+  transform: scale(0.985);
+}
+
+.month-pill:focus-within {
+  border-color: var(--camel);
+  box-shadow: 0 0 0 3px var(--brand-soft), 0 10px 24px rgba(122, 102, 72, 0.14);
+}
+
+.month-pill-label {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.month-pill-chevron {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  flex: none;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.month-pill input[type="month"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .theme-choice {

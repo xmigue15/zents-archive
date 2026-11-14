@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '0.1.0';
+  const APP_VERSION = '1.0.0';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -1295,9 +1295,13 @@
 
     return '<div class="page-head">' +
         '<div><p class="eyebrow">Análisis</p><h1>Estadísticas</h1></div>' +
-        '<div class="date-shell narrow">' +
+      '</div>' +
+      '<div class="month-center">' +
+        '<label class="month-pill">' +
+          '<span class="month-pill-label">' + esc(monthName(ym)) + '</span>' +
+          '<svg class="month-pill-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
           '<input id="statsMonth" type="month" value="' + esc(ym) + '" aria-label="Mes de las estadísticas">' +
-        '</div>' +
+        '</label>' +
       '</div>' +
       '<div class="stat-grid">' +
         '<div class="stat-card"><span>Ingresos · ' + esc(monthName(ym)) + '</span><b class="in">' + formatMoney(totals.income) + '</b></div>' +
@@ -1581,12 +1585,14 @@
     const currentIndex = () => Math.max(0, views.indexOf(currentView()));
 
     const placeBubble = (index, offsetX) => {
-      const r = tabs[index].getBoundingClientRect();
-      const barRect = bar.getBoundingClientRect();
-      const x = offsetX == null ? r.left - barRect.left : offsetX;
-      bubble.style.width = r.width + 'px';
-      bubble.style.height = r.height + 'px';
-      bubble.style.transform = 'translate3d(' + x + 'px,' + (r.top - barRect.top) + 'px,0)';
+      const tab = tabs[index];
+      const x = offsetX == null ? tab.offsetLeft : offsetX;
+      bubble.style.width = tab.offsetWidth + 'px';
+      bubble.style.height = tab.offsetHeight + 'px';
+      /* offsetTop/offsetLeft ignoran el translateY(-1px) de la pestaña
+         activa: la burbuja queda siempre a la misma altura y no da el
+         saltito vertical al cambiar de pestaña. */
+      bubble.style.transform = 'translate3d(' + x + 'px,' + (tab.offsetTop - 1) + 'px,0)';
     };
 
     const indexAt = (clientX) => {
@@ -1699,11 +1705,13 @@
         bubble.style.transition = 'none';
       }
       event.preventDefault();
-      const first = tabs[0].getBoundingClientRect();
-      const last = tabs[tabs.length - 1].getBoundingClientRect();
+      /* Todo en el sistema de la burbuja (caja de padding de la barra):
+         nada de getBoundingClientRect, que cambia con los transforms. */
       const barRect = bar.getBoundingClientRect();
-      const width = tabs[drag.index].getBoundingClientRect().width;
-      const x = clamp(event.clientX - width / 2, first.left, last.right - width) - barRect.left;
+      const last = tabs[tabs.length - 1];
+      const width = tabs[drag.index].offsetWidth;
+      const pointerX = event.clientX - barRect.left - bar.clientLeft;
+      const x = clamp(pointerX - width / 2, tabs[0].offsetLeft, last.offsetLeft + last.offsetWidth - width);
       placeBubble(drag.index, x);
 
       /* La pantalla salta de golpe a la pestana que hay bajo el dedo. */
