@@ -1027,6 +1027,44 @@ body[data-view="ajustes"] .fab {
   box-shadow: 0 0 0 2px var(--brand-soft);
 }
 
+/* Selector de color de la tarjeta de una cuenta */
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 2px;
+}
+
+.color-chip {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--chip, var(--brand));
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.color-chip:active {
+  transform: scale(0.94);
+}
+
+.color-chip.active {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--brand);
+}
+
+.color-chip.auto {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
 .logo-picker-actions {
   display: flex;
   flex-wrap: wrap;

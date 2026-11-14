@@ -182,6 +182,35 @@
     nu: { color: '#4f0d92', ink: '#f1e7ff' }
   };
 
+  /* Colores disponibles para personalizar la tarjeta de una cuenta.
+     El primer valor (vacio) significa "color del logo". */
+  const CARD_COLORS = [
+    '#6c1bd1', '#e4002b', '#e8b400', '#0a4a9b', '#12305e',
+    '#d5192b', '#ec7000', '#00a0d8', '#f0441f', '#4f0d92',
+    '#2e7d5b', '#0f766e', '#9d174d', '#3f6212', '#1f2937', '#b08d6a'
+  ];
+
+  function inkForColor(hex) {
+    const clean = String(hex || '').replace('#', '');
+    if (!/^[0-9a-f]{6}$/i.test(clean)) return '#ffffff';
+    const channel = (i) => {
+      const c = parseInt(clean.slice(i, i + 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const luminance = 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
+    return luminance > 0.55 ? '#1b241f' : '#ffffff';
+  }
+
+  /* Color final de la tarjeta: el elegido por el usuario o el del logo. */
+  function accountPalette(account) {
+    const base = ACCOUNT_COLORS[account.logo] || null;
+    const custom = /^#[0-9a-f]{6}$/i.test(account.color || '') ? account.color : '';
+    const color = custom || (base ? base.color : '');
+    if (!color) return null;
+    const ink = custom ? inkForColor(color) : base.ink;
+    return { color, ink };
+  }
+
   /* Logos cuyo color choca con el de su tarjeta: se usan en blanco */
   const LOGO_EN_BLANCO = {
     daviplata: true,
@@ -576,6 +605,7 @@
       name,
       logo: ACCOUNT_LOGO_IDS.indexOf(raw.logo) !== -1 ? raw.logo : '',
       logoData,
+      color: /^#[0-9a-f]{6}$/i.test(raw.color || '') ? String(raw.color).toLowerCase() : '',
       initial: toAmount(raw.initial)
     };
   }
@@ -989,7 +1019,7 @@
           const cards = accountsSorted.map((account, index) => {
             const balance = accountBalance(account.id);
             const count = movementCountForAccount(account.id);
-            const palette = ACCOUNT_COLORS[account.logo];
+            const palette = accountPalette(account);
             const expanded = index === focusIndex;
             const isFirst = index === 0;
             const esEfectivo = account.logo === 'cash';
@@ -1198,7 +1228,7 @@
       ? accountsSorted.map((account) => {
           const balance = accountBalance(account.id);
           const count = movementCountForAccount(account.id);
-          const palette = ACCOUNT_COLORS[account.logo];
+          const palette = accountPalette(account);
           const style = palette
             ? ' style="--acct-color:' + palette.color + '; --acct-ink:' + palette.ink + '"'
             : '';
@@ -1522,57 +1552,8 @@
     badge._timer = setTimeout(() => badge.classList.remove('on'), 900);
   }
 
-  /* Arrastrar la barra inferior para cambiar su transparencia. */
-  function setupBarDrag() {
-    const bar = document.querySelector('.tabbar');
-    if (!bar) return;
-    let drag = null;
-    let suppressClick = false;
-
-    bar.addEventListener('pointerdown', (event) => {
-      if (event.pointerType === 'mouse' && event.button !== 0) return;
-      drag = {
-        id: event.pointerId,
-        x: event.clientX,
-        y: event.clientY,
-        start: Number(state.barTransparency) || 0,
-        moved: false
-      };
-    });
-
-    bar.addEventListener('pointermove', (event) => {
-      if (!drag || event.pointerId !== drag.id) return;
-      const dx = event.clientX - drag.x;
-      const dy = event.clientY - drag.y;
-      if (!drag.moved) {
-        if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy)) return;
-        drag.moved = true;
-        try { bar.setPointerCapture(event.pointerId); } catch (error) { /* ignorar */ }
-      }
-      event.preventDefault();
-      setBarTransparency(drag.start + dx / 3);
-    });
-
-    const finish = (event) => {
-      if (!drag || event.pointerId !== drag.id) return;
-      if (drag.moved) {
-        scheduleSave();
-        suppressClick = true;
-        setTimeout(() => { suppressClick = false; }, 400);
-      }
-      drag = null;
-    };
-
-    bar.addEventListener('pointerup', finish);
-    bar.addEventListener('pointercancel', finish);
-
-    // Tras arrastrar no debe interpretarse como toque en una pestaña.
-    bar.addEventListener('click', (event) => {
-      if (!suppressClick) return;
-      event.stopPropagation();
-      event.preventDefault();
-    }, true);
-  }
+  /* La transparencia de la barra SOLO se ajusta con el deslizador de
+     Configuracion. La barra ya no cambia de opacidad al deslizarla. */
 
   function effectiveTheme() {
     if (state.theme === 'system') {
@@ -1608,9 +1589,10 @@
      Modales
      ------------------------------------------------------------ */
 
-  function openModal(html) {
+  function openModal(html, options) {
     const root = $('#modalRoot');
     if (!root) return;
+    const opts = options || {};
     ui.lastFocus = document.activeElement;
     root.innerHTML = '<div class="modal-backdrop" data-backdrop>' +
       '<div class="modal" role="dialog" aria-modal="true">' + html + '</div>' +
@@ -1624,8 +1606,13 @@
       document.body.style.top = '-' + scrollY + 'px';
       document.body.classList.add('modal-open');
     }
+    if (opts.autoFocus === false) return;
     const target = root.querySelector('[data-autofocus]') || root.querySelector('input, select, textarea, button');
-    if (target) setTimeout(() => { try { target.focus(); } catch (error) { /* ignorar */ } }, 40);
+    if (target) {
+      setTimeout(() => {
+        try { target.focus({ preventScroll: true }); } catch (error) { /* ignorar */ }
+      }, 40);
+    }
   }
 
   function closeModal() {
@@ -1636,13 +1623,17 @@
     document.body.classList.remove('modal-open');
     document.body.style.top = '';
     delete document.body.dataset.scrollY;
-    if (scrollY) {
+    /* Restaura la posicion dos veces: iOS a veces ignora el primer
+       intento porque el navegador aun no recalculo el alto del documento. */
+    const restore = () => {
       try { window.scrollTo(0, scrollY); } catch (error) { /* ignorar */ }
-    }
+    };
+    restore();
+    requestAnimationFrame(restore);
     ui.confirmCallback = null;
     closeKeypad();
     if (ui.lastFocus && typeof ui.lastFocus.focus === 'function') {
-      try { ui.lastFocus.focus(); } catch (error) { /* ignorar */ }
+      try { ui.lastFocus.focus({ preventScroll: true }); } catch (error) { /* ignorar */ }
     }
     ui.lastFocus = null;
   }
@@ -1651,8 +1642,6 @@
     const modal = $('#modalRoot .modal');
     if (!modal) return;
     modal.innerHTML = movementFormHTML();
-    const amount = $('#movAmount');
-    if (amount) setTimeout(() => { try { amount.focus(); } catch (error) { /* ignorar */ } }, 20);
   }
 
   function updateGmfHint() {
@@ -1689,8 +1678,8 @@
           '<button type="button" class="' + (draft.type === 'income' ? 'active income' : '') + '" data-action="movement-type" data-type="income">Ingreso</button>' +
         '</div>' +
         '<div class="field">' +
-          '<label for="movAmount">Monto</label>' +
-          '<input class="input amount-input" id="movAmount" inputmode="numeric" autocomplete="off" placeholder="$ 0" value="' + (draft.amount ? formatNumberInput(draft.amount) : '') + '" data-raw="' + (draft.amount || '') + '" data-amount-input data-autofocus>' +
+          '<label>Monto</label>' +
+          amountFieldHTML('movAmount', draft.amount, 'Monto') +
         '</div>' +
         '<label class="gmf-box">' +
           '<input type="checkbox" id="movGmf"' + (draft.gmf ? ' checked' : '') + '>' +
@@ -1739,7 +1728,7 @@
       note: existing ? existing.note : '',
       gmf: existing ? Boolean(existing.gmf) : false
     };
-    openModal(movementFormHTML());
+    openModal(movementFormHTML(), { autoFocus: false });
   }
 
   function syncMovementDraftFromForm() {
@@ -1772,8 +1761,8 @@
 
     if (!draft.amount || draft.amount <= 0) {
       toast('Escribe un monto mayor a cero.');
-      const amount = $('#movAmount');
-      if (amount) amount.focus();
+      const amount = $('#movAmountField');
+      if (amount) { try { amount.focus({ preventScroll: true }); } catch (error) { /* ignorar */ } }
       return;
     }
 
@@ -1862,8 +1851,8 @@
           '<div class="field"><label for="transferTo">Hacia</label><select class="select" id="transferTo">' + accountOptions(draft.toId) + '</select></div>' +
         '</div>' +
         '<div class="field">' +
-          '<label for="transferAmount">Monto</label>' +
-          '<input class="input amount-input" id="transferAmount" inputmode="numeric" autocomplete="off" placeholder="$ 0" value="' + (draft.amount ? formatNumberInput(draft.amount) : '') + '" data-raw="' + (draft.amount || '') + '" data-amount-input data-autofocus>' +
+          '<label>Monto</label>' +
+          amountFieldHTML('transferAmount', draft.amount, 'Monto') +
         '</div>' +
         '<div class="grid-2">' +
           '<div class="field"><label for="transferDate">Fecha</label><div class="date-shell"><input id="transferDate" type="date" value="' + esc(draft.date) + '"></div></div>' +
@@ -1900,7 +1889,7 @@
       time: existing ? (movementTime(existing) || currentTimeISO()) : currentTimeISO(),
       note: existing ? existing.note : ''
     };
-    openModal(transferFormHTML());
+    openModal(transferFormHTML(), { autoFocus: false });
   }
 
   function saveTransfer() {
@@ -1923,7 +1912,8 @@
 
     if (!draft.amount || draft.amount <= 0) {
       toast('Escribe un monto mayor a cero.');
-      if (amount) amount.focus();
+      const field = $('#transferAmountField');
+      if (field) { try { field.focus({ preventScroll: true }); } catch (error) { /* ignorar */ } }
       return;
     }
     if (!accountById(draft.fromId) || !accountById(draft.toId)) {
@@ -2025,7 +2015,17 @@
       '</button>';
 
     const balanceNow = account ? Math.round(accountBalance(account.id)) : null;
-    const hasBalance = balanceNow !== null && balanceNow !== 0;
+    const currentColor = account && /^#[0-9a-f]{6}$/i.test(account.color || '') ? account.color.toLowerCase() : '';
+    const autoPalette = account ? accountPalette(account) : null;
+    const autoChip =
+      '<button type="button" class="color-chip auto' + (currentColor ? '' : ' active') + '" ' +
+        'data-action="acct-color-pick" data-value="" style="--chip:' + (autoPalette ? autoPalette.color : '#b08d6a') + '" ' +
+        'title="Color del logo" aria-label="Color del logo">A</button>';
+    const colorChips = CARD_COLORS.map((color) =>
+      '<button type="button" class="color-chip' + (color === currentColor ? ' active' : '') + '" ' +
+        'data-action="acct-color-pick" data-value="' + color + '" style="--chip:' + color + '" ' +
+        'aria-label="Color ' + color + '"></button>'
+    ).join('');
 
     openModal(
       '<div class="modal-head">' +
@@ -2052,14 +2052,18 @@
           '<input type="hidden" id="acctLogoData" value="' + esc(account ? account.logoData || '' : '') + '">' +
         '</div>' +
         '<div class="field">' +
+          '<div class="field-head">' +
+            '<label>Color de la tarjeta</label>' +
+          '</div>' +
+          '<div class="color-picker" id="acctColorPicker">' + autoChip + colorChips + '</div>' +
+          '<input type="hidden" id="acctColor" value="' + esc(currentColor) + '">' +
+          '<p class="hint">Elige el color de la tarjeta de esta cuenta. "A" usa el color del logo.</p>' +
+        '</div>' +
+        '<div class="field">' +
           '<label>Saldo de la cuenta</label>' +
           /* Campo de solo lectura con teclado numerico propio: el navegador
              no puede autocompletarlo ni el teclado inyectarle numeros. */
-          '<button type="button" class="input amount-field" id="acctInitialField" data-action="open-keypad" aria-label="Saldo de la cuenta">' +
-            '<span class="amount-text" id="acctInitialText"' + (hasBalance ? '' : ' hidden') + '>' + (hasBalance ? formatMoney(balanceNow) : '') + '</span>' +
-            '<span class="amount-placeholder"' + (hasBalance ? ' hidden' : '') + '>$ 0</span>' +
-          '</button>' +
-          '<input type="hidden" id="acctInitial" data-raw="' + (balanceNow === null ? '' : balanceNow) + '">' +
+          amountFieldHTML('acctInitial', balanceNow, 'Saldo de la cuenta') +
           '<p class="hint">' + (account
             ? 'Escribe el saldo que quieres que tenga la cuenta. Ajustamos sus movimientos por ti.'
             : 'Es el dinero que ya tienes en esta cuenta.') + '</p>' +
@@ -2074,7 +2078,8 @@
               ICON.trash + ' Eliminar cuenta</button>' +
           '</div>'
           : '') +
-      '</form>'
+      '</form>',
+      { autoFocus: false }
     );
     updateAcctLogoPicker();
   }
@@ -2095,17 +2100,27 @@
       const img = custom.querySelector('img');
       if (img && data) img.src = data;
     }
+    /* El chip "A" (color del logo) se actualiza con el logo elegido. */
+    const autoChip = document.querySelector('#acctColorPicker .color-chip.auto');
+    if (autoChip) {
+      const palette = ACCOUNT_COLORS[logo || ''];
+      autoChip.style.setProperty('--chip', palette ? palette.color : '#b08d6a');
+    }
   }
 
   /* ------------------------------------------------------------
-     Teclado numerico propio para el saldo inicial.
+     Teclado numerico propio (montos y saldos).
      Al no usar un <input>, el navegador no puede autocompletarlo
      ni el teclado del sistema inyectarle numeros.
      ------------------------------------------------------------ */
+  let keypadOnDone = null;
+
   function openKeypad(options) {
     closeKeypad();
     const opts = options || {};
     const current = String(opts.current || '');
+    const currentLabel = opts.currentLabel || 'Valor actual';
+    keypadOnDone = typeof opts.onDone === 'function' ? opts.onDone : null;
     let value = '';
     const wrap = document.createElement('div');
     wrap.className = 'keypad-overlay';
@@ -2115,7 +2130,7 @@
       '<div class="keypad-sheet" role="dialog" aria-modal="true" aria-label="Teclado numerico">' +
         '<div class="keypad-display">' +
           '<span id="keypadPlaceholder" class="amount-placeholder">' +
-            (Number(current) > 0 ? 'Saldo actual: ' + formatMoney(Number(current)) : 'Escribe el saldo') +
+            (Number(current) > 0 ? currentLabel + ': ' + formatMoney(Number(current)) : 'Escribe el monto') +
           '</span>' +
           '<span id="keypadValue"></span>' +
         '</div>' +
@@ -2163,6 +2178,7 @@
   function closeKeypad() {
     const wrap = document.getElementById('keypadOverlay');
     if (wrap) wrap.remove();
+    keypadOnDone = null;
   }
 
   function doneKeypad() {
@@ -2170,18 +2186,42 @@
     if (!wrap) return;
     const display = wrap.querySelector('#keypadValue');
     const raw = display ? String(display.textContent || '').replace(/\D/g, '') : '';
+    const callback = keypadOnDone;
     closeKeypad();
-    /* Sin numeros escritos no se toca el saldo actual. */
-    if (!raw) return;
-    const hidden = $('#acctInitial');
+    /* Sin numeros escritos no se toca el valor actual. */
+    if (!raw || !callback) return;
+    callback(raw);
+  }
+
+  /* ------------------------------------------------------------
+     Campos de monto: un boton de solo lectura + un input oculto.
+     Al tocar el boton se abre el teclado propio, nunca el del
+     telefono.
+     ------------------------------------------------------------ */
+
+  function amountFieldHTML(id, value, label) {
+    const raw = Math.round(Number(value) || 0);
+    const safeLabel = esc(label || 'Monto');
+    return '<button type="button" class="input amount-field" id="' + id + 'Field" ' +
+        'data-action="amount-keypad" data-field="' + id + '" aria-label="' + safeLabel + '">' +
+        '<span class="amount-text" id="' + id + 'Text"' + (raw ? '' : ' hidden') + '>' + (raw ? formatMoney(raw) : '') + '</span>' +
+        '<span class="amount-placeholder"' + (raw ? ' hidden' : '') + '>$ 0</span>' +
+      '</button>' +
+      '<input type="hidden" id="' + id + '" data-raw="' + (raw || '') + '">';
+  }
+
+  function setAmountFieldValue(id, value) {
+    const raw = String(value == null ? '' : value);
+    const hidden = $('#' + id);
     if (hidden) hidden.dataset.raw = raw;
-    const text = $('#acctInitialText');
+    const field = $('#' + id + 'Field');
+    const text = $('#' + id + 'Text');
+    const placeholder = field ? field.querySelector('.amount-placeholder') : null;
     if (text) {
-      text.textContent = formatMoney(Number(raw));
-      text.hidden = false;
+      text.textContent = raw ? formatMoney(Number(raw)) : '';
+      text.hidden = !raw;
     }
-    const placeholder = $('#acctInitialField .amount-placeholder');
-    if (placeholder) placeholder.hidden = true;
+    if (placeholder) placeholder.hidden = !!raw;
   }
 
   function readSquareImage(file, onReady) {
@@ -2310,6 +2350,8 @@
     const initialInput = $('#acctInitial');
     const name = nameInput ? nameInput.value.trim() : '';
     const typed = initialInput ? toAmount(initialInput.dataset.raw || 0) : 0;
+    const colorField = $('#acctColor');
+    const color = colorField && /^#[0-9a-f]{6}$/i.test(colorField.value) ? colorField.value.toLowerCase() : '';
 
     if (!name) {
       toast('Escribe un nombre para la cuenta.');
@@ -2341,13 +2383,14 @@
         const logoData = dataInput && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(dataInput.value) && dataInput.value.length <= 500000 ? dataInput.value : '';
         account.logo = logo;
         account.logoData = logoData;
+        account.color = color;
       }
     } else {
       const logoInput = $('#acctLogo');
       const dataInput = $('#acctLogoData');
       const logo = logoInput && ACCOUNT_LOGO_IDS.indexOf(logoInput.value) !== -1 ? logoInput.value : '';
       const logoData = dataInput && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(dataInput.value) && dataInput.value.length <= 500000 ? dataInput.value : '';
-      state.accounts.push({ id: uid(), name, initial: typed, logo, logoData });
+      state.accounts.push({ id: uid(), name, initial: typed, logo, logoData, color });
     }
 
     save();
@@ -2955,9 +2998,18 @@
         break;
       }
 
-      case 'open-keypad': {
-        const hidden = $('#acctInitial');
-        openKeypad({ current: hidden ? hidden.dataset.raw || '' : '' });
+      case 'amount-keypad': {
+        const fieldId = button.dataset.field || '';
+        const hidden = $('#' + fieldId);
+        if (!hidden) break;
+        openKeypad({
+          current: hidden.dataset.raw || '',
+          currentLabel: fieldId === 'acctInitial' ? 'Saldo actual' : 'Monto actual',
+          onDone: (raw) => {
+            setAmountFieldValue(fieldId, raw);
+            if (fieldId === 'movAmount') updateGmfHint();
+          }
+        });
         break;
       }
 
@@ -2987,6 +3039,19 @@
         if (logoInput) logoInput.value = button.dataset.value === 'custom' ? '' : (button.dataset.value || '');
         if (dataInput) dataInput.value = '';
         updateAcctLogoPicker();
+        break;
+      }
+
+      case 'acct-color-pick': {
+        const picker = $('#acctColorPicker');
+        const colorInput = $('#acctColor');
+        const value = button.dataset.value || '';
+        if (colorInput) colorInput.value = value;
+        if (picker) {
+          $$('.color-chip', picker).forEach((chip) => {
+            chip.classList.toggle('active', (chip.dataset.value || '') === value);
+          });
+        }
         break;
       }
 
@@ -3120,13 +3185,6 @@
       renderMovementResults();
       return;
     }
-
-    if (target.matches && target.matches('[data-amount-input]')) {
-      const digits = String(target.value || '').replace(/\D/g, '').slice(0, 12);
-      target.dataset.raw = digits;
-      target.value = digits ? formatNumberInput(Number(digits)) : '';
-      updateGmfHint();
-    }
   });
 
   document.addEventListener('change', (event) => {
@@ -3248,7 +3306,6 @@
 
   applyTheme();
   render();
-  setupBarDrag();
   registerServiceWorker();
 
   /* La pantalla de carga avisa el paso real y se retira cuando la app
