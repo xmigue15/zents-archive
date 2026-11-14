@@ -1553,14 +1553,13 @@
   }
 
   /* ------------------------------------------------------------
-     Deslizar entre pestanas desde la barra inferior.
-     Al mantener y arrastrar, la burbuja sigue el dedo y la pantalla
-     se desliza hacia la pestana que queda debajo.
+     Barra inferior: la burbuja sigue el dedo al arrastrar y viaja
+     hasta la pestana que tocas. La vista cambia de golpe, sin
+     deslizamiento en pantalla.
      ------------------------------------------------------------ */
   function setupTabSwipe() {
     const bar = document.querySelector('.tabbar');
-    const view = $('#view');
-    if (!bar || !view) return;
+    if (!bar) return;
     const tabs = $$('.tab-item', bar);
     if (!tabs.length) return;
     const views = tabs.map((tab) => tab.dataset.view);
@@ -1571,8 +1570,8 @@
     bar.appendChild(bubble);
 
     let drag = null;
-    let preview = null;
     let suppressClick = false;
+    let bubbleTimer = null;
 
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
     const currentIndex = () => Math.max(0, views.indexOf(currentView()));
@@ -1600,63 +1599,56 @@
       return best;
     };
 
-    const ensurePreview = (index) => {
-      if (!preview) {
-        const el = document.createElement('div');
-        el.className = 'tab-slide-pane';
-        el.setAttribute('aria-hidden', 'true');
-        const vr = view.getBoundingClientRect();
-        const topbar = document.querySelector('.topbar');
-        const minTop = topbar ? topbar.getBoundingClientRect().bottom : 0;
-        const top = Math.max(0, minTop, vr.top);
-        el.style.top = top + 'px';
-        el.style.left = vr.left + 'px';
-        el.style.width = vr.width + 'px';
-        el.style.height = Math.max(0, window.innerHeight - top) + 'px';
-        document.body.appendChild(el);
-        preview = { el: el, index: -1 };
-      }
-      if (preview.index !== index) {
-        preview.index = index;
-        preview.el.innerHTML = '<main class="view">' + RENDERERS[views[index]]() + '</main>';
-      }
-      return preview.el;
+    const showBubble = (index, offsetX) => {
+      clearTimeout(bubbleTimer);
+      bubble.style.transition = 'none';
+      bubble.style.opacity = '1';
+      bar.classList.add('dragging');
+      placeBubble(index, offsetX);
+      void bubble.offsetWidth;
     };
 
-    const updateScreen = (clientX) => {
-      const target = indexAt(clientX);
-      drag.target = target;
-      /* La pantalla se mueve segun la distancia recorrida, y el sentido
-         depende de la posicion de la pestana destino respecto a la vista
-         actual (no de la pestana que se pulso). */
-      const from = drag.from;
-      if (target === from) {
-        view.style.transform = '';
-        if (preview) preview.el.style.opacity = '0';
+    const hideBubble = (delay) => {
+      clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(() => {
+        bubble.style.transition = 'opacity .18s ease';
+        bubble.style.opacity = '0';
+        bar.classList.remove('dragging');
+      }, delay || 0);
+    };
+
+    /* Cambia la vista al instante, sin animacion y sin llenar el historial. */
+    const switchView = (index) => {
+      const target = views[index];
+      if (!target || currentView() === target) return;
+      try {
+        history.replaceState(null, '', '#/' + target);
+      } catch (error) {
+        location.hash = '#/' + target;
         return;
       }
-      const dir = target > from ? 1 : -1;
-      const limit = window.innerWidth;
-      /* Al mover la burbuja a la derecha, la pantalla actual se va a la
-         izquierda y la nueva entra desde la derecha (como un paginador). */
-      const offset = -dir * clamp(Math.abs(clientX - drag.center), 0, limit);
-      view.style.transform = 'translate3d(' + offset + 'px,0,0)';
-      const pane = ensurePreview(target);
-      pane.style.opacity = '1';
-      pane.style.transform = 'translate3d(' + (offset + dir * limit) + 'px,0,0)';
+      render();
+    };
+
+    /* Toque en una pestana: la burbuja viaja desde la actual hasta ella. */
+    const glideBubble = (from, to) => {
+      if (from === to) return;
+      showBubble(from);
+      bubble.style.transition = 'transform .28s cubic-bezier(.22, .61, .36, 1)';
+      requestAnimationFrame(() => placeBubble(to));
+      hideBubble(300);
     };
 
     bar.addEventListener('pointerdown', (event) => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
-      /* La burbuja nace en la pestana que se toca; el deslizamiento de la
-         pantalla se mide desde la vista actual. */
+      const now = currentIndex();
       drag = {
         id: event.pointerId,
         x: event.clientX,
         y: event.clientY,
         index: indexAt(event.clientX),
-        from: currentIndex(),
-        target: currentIndex(),
+        from: now,
+        target: now,
         center: 0,
         moved: false
       };
@@ -1671,10 +1663,9 @@
         drag.moved = true;
         const r = tabs[drag.index].getBoundingClientRect();
         drag.center = r.left + r.width / 2;
-        bar.classList.add('dragging');
         document.documentElement.classList.add('tab-swiping');
         try { bar.setPointerCapture(event.pointerId); } catch (error) { /* ignorar */ }
-        placeBubble(drag.index);
+        showBubble(drag.index);
       }
       event.preventDefault();
       const first = tabs[0].getBoundingClientRect();
@@ -1683,79 +1674,47 @@
       const width = tabs[drag.index].getBoundingClientRect().width;
       const x = clamp(event.clientX - width / 2, first.left, last.right - width) - barRect.left;
       placeBubble(drag.index, x);
-      updateScreen(event.clientX);
+
+      /* La pantalla salta de golpe a la pestana que hay bajo el dedo. */
+      const target = indexAt(event.clientX);
+      if (target !== drag.target) {
+        drag.target = target;
+        switchView(target);
+      }
     });
 
     const finish = (event) => {
       if (!drag || event.pointerId !== drag.id) return;
-      if (!drag.moved) {
-        drag = null;
-        return;
-      }
-      const base = drag.from;
+      const moved = drag.moved;
       const target = drag.target;
+      drag = null;
+      if (!moved) return;
       suppressClick = true;
       setTimeout(() => { suppressClick = false; }, 420);
-
-      if (target === base) {
-        bar.classList.remove('dragging');
-        document.documentElement.classList.remove('tab-swiping');
-        view.style.transition = 'transform .22s ease';
-        view.style.transform = '';
-        if (preview) preview.el.style.opacity = '0';
-        setTimeout(() => {
-          view.style.transition = '';
-          if (preview && preview.el.parentNode) preview.el.parentNode.removeChild(preview.el);
-          preview = null;
-        }, 240);
-        drag = null;
-        return;
-      }
-
-      const dir = target > base ? 1 : -1;
-      const width = window.innerWidth;
-      const pane = ensurePreview(target);
-      pane.style.transition = 'transform .24s cubic-bezier(.22, .61, .36, 1), opacity .18s ease';
-      view.style.transition = 'transform .24s cubic-bezier(.22, .61, .36, 1)';
-      void view.offsetWidth;
-      view.style.transform = 'translate3d(' + (-dir * width) + 'px,0,0)';
-      pane.style.transform = 'translate3d(0,0,0)';
-      preview = null;
-      const targetView = views[target];
-      drag = null;
-
-      setTimeout(() => {
-        swipeCleanup = () => {
-          bar.classList.remove('dragging');
-          document.documentElement.classList.remove('tab-swiping');
-          view.style.transition = 'none';
-          view.style.transform = '';
-          if (pane.parentNode) pane.parentNode.removeChild(pane);
-          requestAnimationFrame(() => { view.style.transition = ''; });
-        };
-        navigate(targetView);
-        /* Red de seguridad: si no hubo cambio de hash, limpia igual. */
-        setTimeout(() => {
-          if (swipeCleanup) {
-            const cleanup = swipeCleanup;
-            swipeCleanup = null;
-            cleanup();
-          }
-        }, 400);
-      }, 250);
+      document.documentElement.classList.remove('tab-swiping');
+      /* La burbuja se centra en la pestana final y se desvanece. */
+      bubble.style.transition = 'transform .18s ease';
+      placeBubble(target);
+      hideBubble(170);
     };
 
     bar.addEventListener('pointerup', finish);
     bar.addEventListener('pointercancel', finish);
 
-    /* Tras deslizar, el toque no debe contar como clic en una pestana. */
+    /* Toque normal: la burbuja se desliza hasta la pestana tocada. */
     bar.addEventListener('click', (event) => {
-      if (!suppressClick) return;
-      event.stopPropagation();
-      event.preventDefault();
+      if (suppressClick) {
+        event.stopPropagation();
+        event.preventDefault();
+        return;
+      }
+      const tab = event.target.closest ? event.target.closest('.tab-item') : null;
+      if (!tab || !bar.contains(tab)) return;
+      const to = views.indexOf(tab.dataset.view);
+      if (to === -1) return;
+      glideBubble(currentIndex(), to);
     }, true);
   }
-
   /* La transparencia de la barra SOLO se ajusta con el deslizador de
      Configuracion. La barra ya no cambia de opacidad al deslizarla. */
 
@@ -1780,8 +1739,6 @@
     html.style.scrollBehavior = prev;
   }
 
-  let swipeCleanup = null;
-
   function render() {
     const view = currentView();
     document.body.dataset.view = view;
@@ -1802,13 +1759,6 @@
     if (ui.renderedView !== view) {
       ui.renderedView = view;
       instantScrollTo(0);
-    }
-    /* Si venimos de un deslizamiento entre pestanas, limpiamos las capas
-       cuando la nueva vista ya esta pintada. */
-    if (swipeCleanup) {
-      const cleanup = swipeCleanup;
-      swipeCleanup = null;
-      requestAnimationFrame(cleanup);
     }
   }
 

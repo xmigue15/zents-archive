@@ -1097,21 +1097,16 @@ section.wallet-sec {
   transition: none;
 }
 
-/* Mientras se arrastra, la burbuja es la unica resaltada */
+/* Mientras se arrastra, la burbuja es la unica que pinta el fondo;
+   el texto e icono de la pestaña activa conservan su color. */
 .tabbar.dragging .tab-item.active {
   background: transparent;
   box-shadow: none;
-  color: var(--muted);
-  transform: none;
 }
 
 .tabbar.dragging .tab-item.active::before,
 .tabbar.dragging .tab-item.active::after {
   opacity: 0;
-}
-
-.tabbar.dragging .tab-item.active svg {
-  stroke: currentColor;
 }
 
 /* Dispersión cromática: halo de color alrededor de la burbuja */
