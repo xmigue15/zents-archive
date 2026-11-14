@@ -32,6 +32,7 @@
     monitor: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
     download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 4 5-4M5 20h14"/></svg>',
     upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>',
+    back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6H9l-6 6 6 6h11z"/><path d="M13 10l4 4M17 10l-4 4"/></svg>',
     transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>'
   };
 
@@ -730,9 +731,7 @@
     renderedView: null,
     countersShown: {},
     walletOpen: false,
-    walletFocus: '',
-    acctInitialUserTyping: false,
-    acctInitialTimer: null
+    walletFocus: ''
   };
 
   let saveTimer = null;
@@ -1641,11 +1640,7 @@
       try { window.scrollTo(0, scrollY); } catch (error) { /* ignorar */ }
     }
     ui.confirmCallback = null;
-    if (ui.acctInitialTimer) {
-      clearInterval(ui.acctInitialTimer);
-      ui.acctInitialTimer = null;
-    }
-    ui.acctInitialUserTyping = false;
+    closeKeypad();
     if (ui.lastFocus && typeof ui.lastFocus.focus === 'function') {
       try { ui.lastFocus.focus(); } catch (error) { /* ignorar */ }
     }
@@ -2007,7 +2002,6 @@
   }
 
   function openAccountModal(id) {
-    ui.acctInitialUserTyping = false;
     const account = id ? accountById(id) : null;
     const currentLogo = account ? (account.logoData ? 'custom' : (account.logo || '')) : '';
     const letterChip =
@@ -2029,6 +2023,9 @@
         '<img alt="">' +
         '<span>Mi logo</span>' +
       '</button>';
+
+    const balanceNow = account ? Math.round(accountBalance(account.id)) : null;
+    const hasBalance = balanceNow !== null && balanceNow !== 0;
 
     openModal(
       '<div class="modal-head">' +
@@ -2055,11 +2052,17 @@
           '<input type="hidden" id="acctLogoData" value="' + esc(account ? account.logoData || '' : '') + '">' +
         '</div>' +
         '<div class="field">' +
-          '<label for="acctInitial">Saldo inicial (opcional)</label>' +
-          /* Trampa para el autocompletado: un campo falso que se lleva el relleno */
-          '<input type="text" class="input-fake" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>' +
-          '<input class="input" id="acctInitial" inputmode="numeric" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute(\'readonly\')" placeholder="$ 0" value="' + (account && account.initial ? formatNumberInput(account.initial) : '') + '" data-raw="' + (account ? account.initial : '') + '" data-intended="' + (account ? account.initial : '') + '" data-amount-input>' +
-          '<p class="hint">Es el dinero que ya tenías en esta cuenta antes de empezar.</p>' +
+          '<label>Saldo de la cuenta</label>' +
+          /* Campo de solo lectura con teclado numerico propio: el navegador
+             no puede autocompletarlo ni el teclado inyectarle numeros. */
+          '<button type="button" class="input amount-field" id="acctInitialField" data-action="open-keypad" aria-label="Saldo de la cuenta">' +
+            '<span class="amount-text" id="acctInitialText"' + (hasBalance ? '' : ' hidden') + '>' + (hasBalance ? formatMoney(balanceNow) : '') + '</span>' +
+            '<span class="amount-placeholder"' + (hasBalance ? ' hidden' : '') + '>$ 0</span>' +
+          '</button>' +
+          '<input type="hidden" id="acctInitial" data-raw="' + (balanceNow === null ? '' : balanceNow) + '">' +
+          '<p class="hint">' + (account
+            ? 'Escribe el saldo que quieres que tenga la cuenta. Ajustamos sus movimientos por ti.'
+            : 'Es el dinero que ya tienes en esta cuenta.') + '</p>' +
         '</div>' +
         '<div class="modal-actions">' +
           '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
@@ -2074,23 +2077,6 @@
       '</form>'
     );
     updateAcctLogoPicker();
-    /* Evita que el navegador o el teclado inyecten un valor en el
-       saldo inicial: se reafirma el valor previsto mientras el modal
-       siga abierto. */
-    const intendedRaw = String(account ? (account.initial || '') : '');
-    if (ui.acctInitialTimer) clearInterval(ui.acctInitialTimer);
-    const enforceInitial = () => {
-      const input = $('#acctInitial');
-      if (!input) return;
-      if (ui.acctInitialUserTyping) return;
-      const digits = String(input.value || '').replace(/\\D/g, '');
-      if (digits !== intendedRaw) {
-        input.value = intendedRaw ? formatNumberInput(Number(intendedRaw)) : '';
-        input.dataset.raw = intendedRaw;
-      }
-    };
-    ui.acctInitialTimer = setInterval(enforceInitial, 150);
-    enforceInitial();
   }
  
   function updateAcctLogoPicker() {
@@ -2109,6 +2095,93 @@
       const img = custom.querySelector('img');
       if (img && data) img.src = data;
     }
+  }
+
+  /* ------------------------------------------------------------
+     Teclado numerico propio para el saldo inicial.
+     Al no usar un <input>, el navegador no puede autocompletarlo
+     ni el teclado del sistema inyectarle numeros.
+     ------------------------------------------------------------ */
+  function openKeypad(options) {
+    closeKeypad();
+    const opts = options || {};
+    const current = String(opts.current || '');
+    let value = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'keypad-overlay';
+    wrap.id = 'keypadOverlay';
+    wrap.innerHTML =
+      '<div class="keypad-backdrop" data-action="close-keypad"></div>' +
+      '<div class="keypad-sheet" role="dialog" aria-modal="true" aria-label="Teclado numerico">' +
+        '<div class="keypad-display">' +
+          '<span id="keypadPlaceholder" class="amount-placeholder">' +
+            (Number(current) > 0 ? 'Saldo actual: ' + formatMoney(Number(current)) : 'Escribe el saldo') +
+          '</span>' +
+          '<span id="keypadValue"></span>' +
+        '</div>' +
+        '<div class="keypad-grid">' +
+          '<button type="button" data-key="1">1</button>' +
+          '<button type="button" data-key="2">2</button>' +
+          '<button type="button" data-key="3">3</button>' +
+          '<button type="button" data-key="4">4</button>' +
+          '<button type="button" data-key="5">5</button>' +
+          '<button type="button" data-key="6">6</button>' +
+          '<button type="button" data-key="7">7</button>' +
+          '<button type="button" data-key="8">8</button>' +
+          '<button type="button" data-key="9">9</button>' +
+          '<button type="button" data-key="clear" class="key-clear">C</button>' +
+          '<button type="button" data-key="0">0</button>' +
+          '<button type="button" data-key="back" class="key-back" aria-label="Borrar">' + ICON.back + '</button>' +
+        '</div>' +
+        '<div class="keypad-actions">' +
+          '<button type="button" class="btn ghost" data-action="close-keypad">Cancelar</button>' +
+          '<button type="button" class="btn" data-action="done-keypad">Listo</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(wrap);
+
+    const render = () => {
+      const text = value ? formatNumberInput(Number(value)) : '';
+      const display = wrap.querySelector('#keypadValue');
+      const placeholder = wrap.querySelector('#keypadPlaceholder');
+      if (display) display.textContent = text;
+      if (placeholder) placeholder.hidden = !!text;
+    };
+    render();
+
+    wrap.addEventListener('click', (event) => {
+      const keyBtn = event.target.closest ? event.target.closest('[data-key]') : null;
+      if (!keyBtn) return;
+      const key = keyBtn.dataset.key;
+      if (key === 'back') value = value.slice(0, -1);
+      else if (key === 'clear') value = '';
+      else if (value.length < 12) value += key;
+      render();
+    });
+  }
+
+  function closeKeypad() {
+    const wrap = document.getElementById('keypadOverlay');
+    if (wrap) wrap.remove();
+  }
+
+  function doneKeypad() {
+    const wrap = document.getElementById('keypadOverlay');
+    if (!wrap) return;
+    const display = wrap.querySelector('#keypadValue');
+    const raw = display ? String(display.textContent || '').replace(/\D/g, '') : '';
+    closeKeypad();
+    /* Sin numeros escritos no se toca el saldo actual. */
+    if (!raw) return;
+    const hidden = $('#acctInitial');
+    if (hidden) hidden.dataset.raw = raw;
+    const text = $('#acctInitialText');
+    if (text) {
+      text.textContent = formatMoney(Number(raw));
+      text.hidden = false;
+    }
+    const placeholder = $('#acctInitialField .amount-placeholder');
+    if (placeholder) placeholder.hidden = true;
   }
 
   function readSquareImage(file, onReady) {
@@ -2236,7 +2309,7 @@
     const nameInput = $('#acctName');
     const initialInput = $('#acctInitial');
     const name = nameInput ? nameInput.value.trim() : '';
-    const initial = initialInput ? Number(initialInput.dataset.raw || 0) : 0;
+    const typed = initialInput ? toAmount(initialInput.dataset.raw || 0) : 0;
 
     if (!name) {
       toast('Escribe un nombre para la cuenta.');
@@ -2256,7 +2329,12 @@
       const account = accountById(id);
       if (account) {
         account.name = name;
-        account.initial = toAmount(initial);
+        /* El campo representa el saldo que debe tener la cuenta, no el
+           valor historico de "initial": se deduce initial restando los
+           movimientos que ya tiene la cuenta. Asi, si escribes 50000 el
+           saldo queda en 50000 aunque haya gastos o ingresos. */
+        const movementsNet = Math.round(accountBalance(id) - account.initial);
+        account.initial = Math.round(typed - movementsNet);
         const logoInput = $('#acctLogo');
         const dataInput = $('#acctLogoData');
         const logo = logoInput && ACCOUNT_LOGO_IDS.indexOf(logoInput.value) !== -1 ? logoInput.value : '';
@@ -2269,7 +2347,7 @@
       const dataInput = $('#acctLogoData');
       const logo = logoInput && ACCOUNT_LOGO_IDS.indexOf(logoInput.value) !== -1 ? logoInput.value : '';
       const logoData = dataInput && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(dataInput.value) && dataInput.value.length <= 500000 ? dataInput.value : '';
-      state.accounts.push({ id: uid(), name, initial: toAmount(initial), logo, logoData });
+      state.accounts.push({ id: uid(), name, initial: typed, logo, logoData });
     }
 
     save();
@@ -2877,6 +2955,20 @@
         break;
       }
 
+      case 'open-keypad': {
+        const hidden = $('#acctInitial');
+        openKeypad({ current: hidden ? hidden.dataset.raw || '' : '' });
+        break;
+      }
+
+      case 'close-keypad':
+        closeKeypad();
+        break;
+
+      case 'done-keypad':
+        doneKeypad();
+        break;
+
       case 'add-account':
         openAccountModal();
         break;
@@ -3030,35 +3122,12 @@
     }
 
     if (target.matches && target.matches('[data-amount-input]')) {
-      /* El saldo inicial no debe aceptar valores inyectados por el
-         navegador o el teclado: solo lo que el usuario escribe. */
-      if (target.id === 'acctInitial' && !ui.acctInitialUserTyping) {
-        const intended = target.dataset.intended || target.dataset.raw || '';
-        target.value = intended ? formatNumberInput(Number(intended)) : '';
-        target.dataset.raw = intended;
-        return;
-      }
       const digits = String(target.value || '').replace(/\D/g, '').slice(0, 12);
       target.dataset.raw = digits;
       target.value = digits ? formatNumberInput(Number(digits)) : '';
       updateGmfHint();
     }
   });
-
-  /* Marca si el usuario esta escribiendo en el saldo inicial, para
-     distinguirlo del autocompletado del navegador. */
-  document.addEventListener('beforeinput', (event) => {
-    const target = event.target;
-    if (target && target.id === 'acctInitial') {
-      ui.acctInitialUserTyping = true;
-    }
-  });
-  document.addEventListener('blur', (event) => {
-    const target = event.target;
-    if (target && target.id === 'acctInitial') {
-      ui.acctInitialUserTyping = false;
-    }
-  }, true);
 
   document.addEventListener('change', (event) => {
     const target = event.target;
