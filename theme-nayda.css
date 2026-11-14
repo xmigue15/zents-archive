@@ -43,10 +43,15 @@
   --field-line: rgba(255, 255, 255, 0.72);
   --modal-bg: rgba(252, 249, 243, 0.9);
   --tab-alpha: 0.2;
-  --tab-bg: linear-gradient(180deg,
+  /* Velo de leche bajo el vidrio: asegura que las letras se lean
+     incluso con la transparencia al maximo. */
+  --tab-veil: linear-gradient(180deg, rgba(253, 250, 244, 0.36) 0%, rgba(253, 250, 244, 0.56) 100%);
+  --tab-bg:
+    linear-gradient(180deg,
       rgba(255, 255, 255, min(1, calc(var(--tab-alpha) * 1.5))) 0%,
       rgba(255, 255, 255, calc(var(--tab-alpha) * 0.4)) 52%,
-      rgba(255, 255, 255, calc(var(--tab-alpha) * 1.05)) 100%);
+      rgba(255, 255, 255, calc(var(--tab-alpha) * 1.05)) 100%),
+    var(--tab-veil);
   --tab-line: rgba(255, 255, 255, 0.85);
   --tab-shadow: 0 16px 40px rgba(122, 102, 72, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --tab-active: rgba(255, 255, 255, calc(0.2 + (1 - var(--tab-alpha)) * 0.55));
@@ -61,6 +66,10 @@
   --tab-specular: rgba(255, 255, 255, calc(var(--tab-alpha) * 0.85));
   --tab-disperse: conic-gradient(from 200deg, rgba(142, 182, 155, 0.62), rgba(176, 141, 106, 0.5), rgba(255, 255, 255, 0.35), rgba(142, 182, 155, 0.62));
   --tab-bubble: radial-gradient(130% 140% at 28% 0%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 48%, rgba(255, 255, 255, 0.32) 100%);
+  /* Texto de la barra: mas oscuro que --muted para que siempre se lea */
+  --tab-ink: #33443b;
+  --tab-ink-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
+  --tab-lift-shadow: 0 12px 26px rgba(122, 102, 72, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --top-bg: rgba(236, 227, 214, 0.62);
   --side-bg: rgba(255, 255, 255, 0.42);
 
@@ -130,10 +139,13 @@
     --field-line: rgba(142, 182, 155, 0.28);
     --modal-bg: rgba(7, 28, 27, 0.92);
     --tab-alpha: 0.2;
-    --tab-bg: linear-gradient(180deg,
-      rgba(218, 241, 222, min(1, calc(var(--tab-alpha) * 0.6))) 0%,
-      rgba(6, 28, 26, min(1, calc(var(--tab-alpha) * 1.2))) 52%,
-      rgba(4, 22, 21, min(1, calc(var(--tab-alpha) * 1.5))) 100%);
+    --tab-veil: linear-gradient(180deg, rgba(8, 30, 28, 0.44) 0%, rgba(4, 22, 21, 0.62) 100%);
+    --tab-bg:
+      linear-gradient(180deg,
+        rgba(218, 241, 222, min(1, calc(var(--tab-alpha) * 0.6))) 0%,
+        rgba(6, 28, 26, min(1, calc(var(--tab-alpha) * 1.2))) 52%,
+        rgba(4, 22, 21, min(1, calc(var(--tab-alpha) * 1.5))) 100%),
+      var(--tab-veil);
     --tab-line: rgba(142, 182, 155, 0.38);
     --tab-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(218, 241, 222, 0.2);
     --tab-active: rgba(218, 241, 222, calc(0.06 + (1 - var(--tab-alpha)) * 0.1));
@@ -148,6 +160,9 @@
     --tab-specular: rgba(218, 241, 222, calc(var(--tab-alpha) * 0.5));
     --tab-disperse: conic-gradient(from 200deg, rgba(142, 182, 155, 0.55), rgba(200, 161, 121, 0.42), rgba(218, 241, 222, 0.28), rgba(142, 182, 155, 0.55));
     --tab-bubble: radial-gradient(130% 140% at 28% 0%, rgba(218, 241, 222, 0.26) 0%, rgba(218, 241, 222, 0.13) 46%, rgba(218, 241, 222, 0.07) 100%);
+    --tab-ink: #b6dabf;
+    --tab-ink-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    --tab-lift-shadow: 0 14px 30px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(218, 241, 222, 0.28);
     --top-bg: rgba(5, 31, 32, 0.66);
     --side-bg: rgba(11, 43, 38, 0.5);
 
@@ -204,10 +219,13 @@
   --field-line: rgba(142, 182, 155, 0.28);
   --modal-bg: rgba(7, 28, 27, 0.92);
   --tab-alpha: 0.2;
-  --tab-bg: linear-gradient(180deg,
-    rgba(218, 241, 222, min(1, calc(var(--tab-alpha) * 0.6))) 0%,
-    rgba(6, 28, 26, min(1, calc(var(--tab-alpha) * 1.2))) 52%,
-    rgba(4, 22, 21, min(1, calc(var(--tab-alpha) * 1.5))) 100%);
+  --tab-veil: linear-gradient(180deg, rgba(8, 30, 28, 0.44) 0%, rgba(4, 22, 21, 0.62) 100%);
+  --tab-bg:
+    linear-gradient(180deg,
+      rgba(218, 241, 222, min(1, calc(var(--tab-alpha) * 0.6))) 0%,
+      rgba(6, 28, 26, min(1, calc(var(--tab-alpha) * 1.2))) 52%,
+      rgba(4, 22, 21, min(1, calc(var(--tab-alpha) * 1.5))) 100%),
+    var(--tab-veil);
   --tab-line: rgba(142, 182, 155, 0.38);
   --tab-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(218, 241, 222, 0.2);
   --tab-active: rgba(218, 241, 222, calc(0.06 + (1 - var(--tab-alpha)) * 0.1));
@@ -222,6 +240,9 @@
   --tab-specular: rgba(218, 241, 222, calc(var(--tab-alpha) * 0.5));
   --tab-disperse: conic-gradient(from 200deg, rgba(142, 182, 155, 0.55), rgba(200, 161, 121, 0.42), rgba(218, 241, 222, 0.28), rgba(142, 182, 155, 0.55));
   --tab-bubble: radial-gradient(130% 140% at 28% 0%, rgba(218, 241, 222, 0.26) 0%, rgba(218, 241, 222, 0.13) 46%, rgba(218, 241, 222, 0.07) 100%);
+  --tab-ink: #b6dabf;
+  --tab-ink-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --tab-lift-shadow: 0 14px 30px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(218, 241, 222, 0.28);
   --top-bg: rgba(5, 31, 32, 0.66);
   --side-bg: rgba(11, 43, 38, 0.5);
 
@@ -1005,8 +1026,8 @@ section.wallet-sec {
   border-radius: 999px;
   background: var(--tab-bg);
   box-shadow: var(--tab-shadow);
-  backdrop-filter: blur(calc(var(--tab-alpha) * 24px)) saturate(calc(100% + (1 - var(--tab-alpha)) * 150%)) brightness(1.04);
-  -webkit-backdrop-filter: blur(calc(var(--tab-alpha) * 24px)) saturate(calc(100% + (1 - var(--tab-alpha)) * 150%)) brightness(1.04);
+  backdrop-filter: blur(calc(5px + var(--tab-alpha) * 21px)) saturate(calc(100% + (1 - var(--tab-alpha)) * 150%)) brightness(1.04);
+  -webkit-backdrop-filter: blur(calc(5px + var(--tab-alpha) * 21px)) saturate(calc(100% + (1 - var(--tab-alpha)) * 150%)) brightness(1.04);
   touch-action: pan-y;
   transform: translateX(-50%);
   overflow: hidden;
@@ -1056,8 +1077,11 @@ section.wallet-sec {
   min-width: 0;
   padding: 6px 2px;
   border-radius: 999px;
-  color: var(--muted);
-  font-weight: 650;
+  color: var(--tab-ink, var(--muted));
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: var(--tab-ink-shadow, none);
   transition: background 0.25s ease, color 0.2s ease, transform 0.25s ease;
 }
 
@@ -1074,17 +1098,18 @@ section.wallet-sec {
   transform: translateY(-1px);
   box-shadow: var(--tab-active-shadow);
   overflow: visible;
+  text-shadow: none;
 }
 
-/* Burbuja que sigue el dedo al deslizar entre pestañas */
+/* Burbuja que sigue el dedo al deslizar entre pestañas.
+   El cristal vive en un hijo para poder aplastarlo o estirarlo sin
+   pelear con el desplazamiento. */
 .tab-drag-bubble {
   position: absolute;
   left: 0;
   top: 0;
   z-index: 0;
   border-radius: 999px;
-  background: var(--tab-bubble);
-  box-shadow: var(--tab-active-shadow);
   opacity: 0;
   pointer-events: none;
   transform: translate3d(0, 0, 0);
@@ -1092,9 +1117,63 @@ section.wallet-sec {
   will-change: transform;
 }
 
+.tab-bubble-inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tab-bubble);
+  box-shadow: var(--tab-active-shadow);
+  transform: scale(1);
+  transform-origin: 50% 62%;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  will-change: transform;
+}
+
 .tabbar.dragging .tab-drag-bubble {
   opacity: 1;
   transition: none;
+}
+
+/* Al tocar: mini aplastado */
+.tab-drag-bubble.pressed .tab-bubble-inner {
+  transform: scale(0.9, 0.85);
+  transition: transform 0.11s ease-out;
+}
+
+/* Mantener pulsado: respira */
+.tab-drag-bubble.holding .tab-bubble-inner {
+  animation: tab-bubble-breath 1.15s ease-in-out infinite;
+}
+
+/* Deslizar: se estira como gelatina */
+.tab-drag-bubble.moving .tab-bubble-inner {
+  transform: scale(1.09, 0.9);
+  box-shadow: var(--tab-lift-shadow);
+}
+
+/* Al soltar: rebote de asentamiento */
+.tab-drag-bubble.landing .tab-bubble-inner {
+  animation: tab-bubble-land 0.38s cubic-bezier(0.22, 0.9, 0.28, 1) both;
+}
+
+@keyframes tab-bubble-breath {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06, 0.97); }
+}
+
+@keyframes tab-bubble-land {
+  0% { transform: scale(0.94, 0.88); }
+  40% { transform: scale(1.1, 0.93); }
+  70% { transform: scale(0.96, 1.04); }
+  100% { transform: scale(1, 1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-drag-bubble.holding .tab-bubble-inner,
+  .tab-drag-bubble.landing .tab-bubble-inner {
+    animation: none;
+  }
 }
 
 /* Mientras se arrastra, la burbuja es la unica que pinta el fondo;

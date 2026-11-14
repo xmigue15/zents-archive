@@ -1553,9 +1553,9 @@
   }
 
   /* ------------------------------------------------------------
-     Barra inferior: la burbuja sigue el dedo al arrastrar y viaja
-     hasta la pestana que tocas. La vista cambia de golpe, sin
-     deslizamiento en pantalla.
+     Barra inferior: la burbuja responde al dedo (se aplasta al
+     tocar, respira si la mantienes, se estira al deslizar y rebota
+     al soltar). La vista cambia de golpe, sin deslizamiento.
      ------------------------------------------------------------ */
   function setupTabSwipe() {
     const bar = document.querySelector('.tabbar');
@@ -1567,11 +1567,15 @@
     const bubble = document.createElement('span');
     bubble.className = 'tab-drag-bubble';
     bubble.setAttribute('aria-hidden', 'true');
+    bubble.innerHTML = '<span class="tab-bubble-inner"></span>';
     bar.appendChild(bubble);
 
     let drag = null;
     let suppressClick = false;
     let bubbleTimer = null;
+    let pressTimer = null;
+    let settleTimer = null;
+    let pressedIndex = -1;
 
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
     const currentIndex = () => Math.max(0, views.indexOf(currentView()));
@@ -1611,10 +1615,30 @@
     const hideBubble = (delay) => {
       clearTimeout(bubbleTimer);
       bubbleTimer = setTimeout(() => {
+        bubble.classList.remove('pressed', 'holding', 'moving', 'landing');
         bubble.style.transition = 'opacity .18s ease';
         bubble.style.opacity = '0';
         bar.classList.remove('dragging');
       }, delay || 0);
+    };
+
+    const stopPress = () => {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+      bubble.classList.remove('pressed', 'holding');
+    };
+
+    /* Lleva la burbuja a una pestana; con spring da un mini rebote al llegar. */
+    const travelTo = (index, duration, spring) => {
+      bubble.style.transition = 'transform ' + duration + 'ms ' +
+        (spring ? 'cubic-bezier(.22, .9, .28, 1.12)' : 'cubic-bezier(.22, .61, .36, 1)');
+      placeBubble(index);
+      if (!spring) return;
+      clearTimeout(bubble._landTimer);
+      bubble._landTimer = setTimeout(() => {
+        bubble.classList.add('landing');
+        bubble._landTimer = setTimeout(() => bubble.classList.remove('landing'), 380);
+      }, Math.max(0, duration - 60));
     };
 
     /* Cambia la vista al instante, sin animacion y sin llenar el historial. */
@@ -1630,28 +1654,34 @@
       render();
     };
 
-    /* Toque en una pestana: la burbuja viaja desde la actual hasta ella. */
-    const glideBubble = (from, to) => {
-      if (from === to) return;
-      showBubble(from);
-      bubble.style.transition = 'transform .28s cubic-bezier(.22, .61, .36, 1)';
-      requestAnimationFrame(() => placeBubble(to));
-      hideBubble(300);
-    };
-
     bar.addEventListener('pointerdown', (event) => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
       const now = currentIndex();
+      const pressed = indexAt(event.clientX);
+      pressedIndex = pressed;
       drag = {
         id: event.pointerId,
         x: event.clientX,
         y: event.clientY,
-        index: indexAt(event.clientX),
+        index: pressed,
         from: now,
         target: now,
-        center: 0,
         moved: false
       };
+      clearTimeout(settleTimer);
+
+      /* La burbuja aparece al instante y viaja hasta el dedo. */
+      showBubble(now);
+      bubble.classList.add('pressed');
+      if (pressed !== now) travelTo(pressed, 190, false);
+
+      /* Mantener pulsado: empieza a respirar. */
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => {
+        if (!drag || drag.moved) return;
+        bubble.classList.remove('pressed');
+        bubble.classList.add('holding');
+      }, 260);
     });
 
     bar.addEventListener('pointermove', (event) => {
@@ -1661,11 +1691,12 @@
       if (!drag.moved) {
         if (Math.abs(dx) < 9 || Math.abs(dx) <= Math.abs(dy)) return;
         drag.moved = true;
-        const r = tabs[drag.index].getBoundingClientRect();
-        drag.center = r.left + r.width / 2;
+        stopPress();
+        bubble.classList.remove('landing');
+        bubble.classList.add('moving');
         document.documentElement.classList.add('tab-swiping');
         try { bar.setPointerCapture(event.pointerId); } catch (error) { /* ignorar */ }
-        showBubble(drag.index);
+        bubble.style.transition = 'none';
       }
       event.preventDefault();
       const first = tabs[0].getBoundingClientRect();
@@ -1688,20 +1719,34 @@
       const moved = drag.moved;
       const target = drag.target;
       drag = null;
-      if (!moved) return;
+      stopPress();
+      if (!moved) {
+        /* El clic decide. Si no llega (gesto cancelado), la burbuja
+           vuelve a su pestana y se apaga. */
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(() => {
+          if (bubble.style.opacity === '1') {
+            travelTo(currentIndex(), 190, false);
+            hideBubble(210);
+          }
+        }, 260);
+        return;
+      }
       suppressClick = true;
       setTimeout(() => { suppressClick = false; }, 420);
       document.documentElement.classList.remove('tab-swiping');
-      /* La burbuja se centra en la pestana final y se desvanece. */
-      bubble.style.transition = 'transform .18s ease';
-      placeBubble(target);
-      hideBubble(170);
+      bubble.classList.remove('moving');
+      travelTo(target, 170, false);
+      bubble.classList.add('landing');
+      clearTimeout(bubble._landTimer);
+      bubble._landTimer = setTimeout(() => bubble.classList.remove('landing'), 380);
+      hideBubble(200);
     };
 
     bar.addEventListener('pointerup', finish);
     bar.addEventListener('pointercancel', finish);
 
-    /* Toque normal: la burbuja se desliza hasta la pestana tocada. */
+    /* Toque en una pestana: rebote al asentarse. */
     bar.addEventListener('click', (event) => {
       if (suppressClick) {
         event.stopPropagation();
@@ -1712,7 +1757,20 @@
       if (!tab || !bar.contains(tab)) return;
       const to = views.indexOf(tab.dataset.view);
       if (to === -1) return;
-      glideBubble(currentIndex(), to);
+      clearTimeout(settleTimer);
+      stopPress();
+      if (bar.classList.contains('dragging')) {
+        /* Ya venia viajando desde el toque. */
+        if (pressedIndex !== to) travelTo(to, 160, false);
+      } else {
+        /* Llego desde el teclado u otro sitio: viaja y rebota. */
+        showBubble(currentIndex());
+        requestAnimationFrame(() => travelTo(to, 260, true));
+      }
+      bubble.classList.add('landing');
+      clearTimeout(bubble._landTimer);
+      bubble._landTimer = setTimeout(() => bubble.classList.remove('landing'), 380);
+      hideBubble(290);
     }, true);
   }
   /* La transparencia de la barra SOLO se ajusta con el deslizador de
