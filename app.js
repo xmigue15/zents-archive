@@ -1552,6 +1552,210 @@
     badge._timer = setTimeout(() => badge.classList.remove('on'), 900);
   }
 
+  /* ------------------------------------------------------------
+     Deslizar entre pestanas desde la barra inferior.
+     Al mantener y arrastrar, la burbuja sigue el dedo y la pantalla
+     se desliza hacia la pestana que queda debajo.
+     ------------------------------------------------------------ */
+  function setupTabSwipe() {
+    const bar = document.querySelector('.tabbar');
+    const view = $('#view');
+    if (!bar || !view) return;
+    const tabs = $$('.tab-item', bar);
+    if (!tabs.length) return;
+    const views = tabs.map((tab) => tab.dataset.view);
+
+    const bubble = document.createElement('span');
+    bubble.className = 'tab-drag-bubble';
+    bubble.setAttribute('aria-hidden', 'true');
+    bar.appendChild(bubble);
+
+    let drag = null;
+    let preview = null;
+    let suppressClick = false;
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    const currentIndex = () => Math.max(0, views.indexOf(currentView()));
+
+    const placeBubble = (index, offsetX) => {
+      const r = tabs[index].getBoundingClientRect();
+      const barRect = bar.getBoundingClientRect();
+      const x = offsetX == null ? r.left - barRect.left : offsetX;
+      bubble.style.width = r.width + 'px';
+      bubble.style.height = r.height + 'px';
+      bubble.style.transform = 'translate3d(' + x + 'px,' + (r.top - barRect.top) + 'px,0)';
+    };
+
+    const indexAt = (clientX) => {
+      let best = 0;
+      let distance = Infinity;
+      tabs.forEach((tab, index) => {
+        const r = tab.getBoundingClientRect();
+        const d = Math.abs(clientX - (r.left + r.width / 2));
+        if (d < distance) {
+          distance = d;
+          best = index;
+        }
+      });
+      return best;
+    };
+
+    const ensurePreview = (index) => {
+      if (!preview) {
+        const el = document.createElement('div');
+        el.className = 'tab-slide-pane';
+        el.setAttribute('aria-hidden', 'true');
+        const vr = view.getBoundingClientRect();
+        const topbar = document.querySelector('.topbar');
+        const minTop = topbar ? topbar.getBoundingClientRect().bottom : 0;
+        const top = Math.max(0, minTop, vr.top);
+        el.style.top = top + 'px';
+        el.style.left = vr.left + 'px';
+        el.style.width = vr.width + 'px';
+        el.style.height = Math.max(0, window.innerHeight - top) + 'px';
+        document.body.appendChild(el);
+        preview = { el: el, index: -1 };
+      }
+      if (preview.index !== index) {
+        preview.index = index;
+        preview.el.innerHTML = '<main class="view">' + RENDERERS[views[index]]() + '</main>';
+      }
+      return preview.el;
+    };
+
+    const updateScreen = (clientX) => {
+      const target = indexAt(clientX);
+      drag.target = target;
+      /* La pantalla se mueve segun la distancia recorrida, y el sentido
+         depende de la posicion de la pestana destino respecto a la vista
+         actual (no de la pestana que se pulso). */
+      const from = drag.from;
+      if (target === from) {
+        view.style.transform = '';
+        if (preview) preview.el.style.opacity = '0';
+        return;
+      }
+      const dir = target > from ? 1 : -1;
+      const limit = window.innerWidth;
+      /* Al mover la burbuja a la derecha, la pantalla actual se va a la
+         izquierda y la nueva entra desde la derecha (como un paginador). */
+      const offset = -dir * clamp(Math.abs(clientX - drag.center), 0, limit);
+      view.style.transform = 'translate3d(' + offset + 'px,0,0)';
+      const pane = ensurePreview(target);
+      pane.style.opacity = '1';
+      pane.style.transform = 'translate3d(' + (offset + dir * limit) + 'px,0,0)';
+    };
+
+    bar.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      /* La burbuja nace en la pestana que se toca; el deslizamiento de la
+         pantalla se mide desde la vista actual. */
+      drag = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        index: indexAt(event.clientX),
+        from: currentIndex(),
+        target: currentIndex(),
+        center: 0,
+        moved: false
+      };
+    });
+
+    bar.addEventListener('pointermove', (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (!drag.moved) {
+        if (Math.abs(dx) < 9 || Math.abs(dx) <= Math.abs(dy)) return;
+        drag.moved = true;
+        const r = tabs[drag.index].getBoundingClientRect();
+        drag.center = r.left + r.width / 2;
+        bar.classList.add('dragging');
+        document.documentElement.classList.add('tab-swiping');
+        try { bar.setPointerCapture(event.pointerId); } catch (error) { /* ignorar */ }
+        placeBubble(drag.index);
+      }
+      event.preventDefault();
+      const first = tabs[0].getBoundingClientRect();
+      const last = tabs[tabs.length - 1].getBoundingClientRect();
+      const barRect = bar.getBoundingClientRect();
+      const width = tabs[drag.index].getBoundingClientRect().width;
+      const x = clamp(event.clientX - width / 2, first.left, last.right - width) - barRect.left;
+      placeBubble(drag.index, x);
+      updateScreen(event.clientX);
+    });
+
+    const finish = (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      if (!drag.moved) {
+        drag = null;
+        return;
+      }
+      const base = drag.from;
+      const target = drag.target;
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 420);
+
+      if (target === base) {
+        bar.classList.remove('dragging');
+        document.documentElement.classList.remove('tab-swiping');
+        view.style.transition = 'transform .22s ease';
+        view.style.transform = '';
+        if (preview) preview.el.style.opacity = '0';
+        setTimeout(() => {
+          view.style.transition = '';
+          if (preview && preview.el.parentNode) preview.el.parentNode.removeChild(preview.el);
+          preview = null;
+        }, 240);
+        drag = null;
+        return;
+      }
+
+      const dir = target > base ? 1 : -1;
+      const width = window.innerWidth;
+      const pane = ensurePreview(target);
+      pane.style.transition = 'transform .24s cubic-bezier(.22, .61, .36, 1), opacity .18s ease';
+      view.style.transition = 'transform .24s cubic-bezier(.22, .61, .36, 1)';
+      void view.offsetWidth;
+      view.style.transform = 'translate3d(' + (-dir * width) + 'px,0,0)';
+      pane.style.transform = 'translate3d(0,0,0)';
+      preview = null;
+      const targetView = views[target];
+      drag = null;
+
+      setTimeout(() => {
+        swipeCleanup = () => {
+          bar.classList.remove('dragging');
+          document.documentElement.classList.remove('tab-swiping');
+          view.style.transition = 'none';
+          view.style.transform = '';
+          if (pane.parentNode) pane.parentNode.removeChild(pane);
+          requestAnimationFrame(() => { view.style.transition = ''; });
+        };
+        navigate(targetView);
+        /* Red de seguridad: si no hubo cambio de hash, limpia igual. */
+        setTimeout(() => {
+          if (swipeCleanup) {
+            const cleanup = swipeCleanup;
+            swipeCleanup = null;
+            cleanup();
+          }
+        }, 400);
+      }, 250);
+    };
+
+    bar.addEventListener('pointerup', finish);
+    bar.addEventListener('pointercancel', finish);
+
+    /* Tras deslizar, el toque no debe contar como clic en una pestana. */
+    bar.addEventListener('click', (event) => {
+      if (!suppressClick) return;
+      event.stopPropagation();
+      event.preventDefault();
+    }, true);
+  }
+
   /* La transparencia de la barra SOLO se ajusta con el deslizador de
      Configuracion. La barra ya no cambia de opacidad al deslizarla. */
 
@@ -1561,6 +1765,22 @@
     }
     return state.theme;
   }
+
+  /* Desplazamiento inmediato: la hoja tiene scroll-behavior: smooth y un
+     scrollTo normal se ve como un deslizamiento desde arriba. */
+  function instantScrollTo(top) {
+    const html = document.documentElement;
+    const prev = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+    try {
+      window.scrollTo({ top: top, left: 0, behavior: 'instant' });
+    } catch (error) {
+      try { window.scrollTo(0, top); } catch (error2) { /* ignorar */ }
+    }
+    html.style.scrollBehavior = prev;
+  }
+
+  let swipeCleanup = null;
 
   function render() {
     const view = currentView();
@@ -1581,7 +1801,14 @@
     }
     if (ui.renderedView !== view) {
       ui.renderedView = view;
-      window.scrollTo(0, 0);
+      instantScrollTo(0);
+    }
+    /* Si venimos de un deslizamiento entre pestanas, limpiamos las capas
+       cuando la nueva vista ya esta pintada. */
+    if (swipeCleanup) {
+      const cleanup = swipeCleanup;
+      swipeCleanup = null;
+      requestAnimationFrame(cleanup);
     }
   }
 
@@ -1623,11 +1850,8 @@
     document.body.classList.remove('modal-open');
     document.body.style.top = '';
     delete document.body.dataset.scrollY;
-    /* Restaura la posicion dos veces: iOS a veces ignora el primer
-       intento porque el navegador aun no recalculo el alto del documento. */
-    const restore = () => {
-      try { window.scrollTo(0, scrollY); } catch (error) { /* ignorar */ }
-    };
+    /* Restaura la posicion de forma inmediata (sin animacion de scroll). */
+    const restore = () => instantScrollTo(scrollY);
     restore();
     requestAnimationFrame(restore);
     ui.confirmCallback = null;
@@ -3306,6 +3530,7 @@
 
   applyTheme();
   render();
+  setupTabSwipe();
   registerServiceWorker();
 
   /* La pantalla de carga avisa el paso real y se retira cuando la app

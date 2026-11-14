@@ -160,6 +160,32 @@ p {
   outline: none;
 }
 
+/* Capa con la vista que entra al deslizar entre pestanas */
+.tab-slide-pane {
+  position: fixed;
+  z-index: 19;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg);
+  will-change: transform;
+}
+
+html.tab-swiping {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html.tab-swiping #view {
+  will-change: transform;
+}
+
+html.tab-swiping .fab {
+  opacity: 0;
+  pointer-events: none;
+}
+
 @media (min-width: 960px) {
   .sidebar {
     display: flex;

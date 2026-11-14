@@ -1076,6 +1076,44 @@ section.wallet-sec {
   overflow: visible;
 }
 
+/* Burbuja que sigue el dedo al deslizar entre pestañas */
+.tab-drag-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: var(--tab-bubble);
+  box-shadow: var(--tab-active-shadow);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.16s ease;
+  will-change: transform;
+}
+
+.tabbar.dragging .tab-drag-bubble {
+  opacity: 1;
+  transition: none;
+}
+
+/* Mientras se arrastra, la burbuja es la unica resaltada */
+.tabbar.dragging .tab-item.active {
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  transform: none;
+}
+
+.tabbar.dragging .tab-item.active::before,
+.tabbar.dragging .tab-item.active::after {
+  opacity: 0;
+}
+
+.tabbar.dragging .tab-item.active svg {
+  stroke: currentColor;
+}
+
 /* Dispersión cromática: halo de color alrededor de la burbuja */
 .tab-item.active::before {
   content: "";
