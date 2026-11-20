@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.1.1';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -1742,12 +1742,10 @@
       const x = clamp(pointerX - width / 2, tabs[0].offsetLeft, last.offsetLeft + last.offsetWidth - width);
       placeBubble(drag.index, x);
 
-      /* La pantalla salta de golpe a la pestana que hay bajo el dedo. */
+      /* Solo se guarda la pestaña bajo el dedo: la pantalla no cambia
+         hasta soltar, así no se pasan las vistas mientras se desliza. */
       const target = indexAt(event.clientX);
-      if (target !== drag.target) {
-        drag.target = target;
-        switchView(target);
-      }
+      if (target !== drag.target) drag.target = target;
     });
 
     const finish = (event) => {
@@ -1772,6 +1770,9 @@
       setTimeout(() => { suppressClick = false; }, 420);
       document.documentElement.classList.remove('tab-swiping');
       bubble.classList.remove('moving');
+      /* Recién al soltar se cambia la pestaña: la vista no se mueve
+         mientras el dedo va deslizando por la barra. */
+      switchView(target);
       travelTo(target, 170, false);
       bubble.classList.add('landing');
       clearTimeout(bubble._landTimer);
