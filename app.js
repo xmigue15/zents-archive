@@ -3594,10 +3594,10 @@
     if (!('serviceWorker' in navigator)) return;
     const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if (location.protocol !== 'https:' && !isLocal) return;
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch((error) => {
-        console.warn('Zent: no se pudo registrar el service worker.', error);
-      });
+    // updateViaCache: 'none' hace que el navegador revise sw.js en cada
+    // apertura, así las actualizaciones llegan sin esperar 24 horas.
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch((error) => {
+      console.warn('Zent: no se pudo registrar el service worker.', error);
     });
   }
 

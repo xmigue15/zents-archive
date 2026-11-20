@@ -9,9 +9,6 @@
 <link rel="preload" href="fonts/inter-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/redaction10-regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="fonts.css">
-<script src="vendor/supabase-js.js"></script>
-<script src="supabase-config.js"></script>
-<script src="sync.js"></script>
 <script>
   var __zentTouchX = null;
   var __zentTouchY = null;
@@ -114,6 +111,11 @@
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+<!-- La librería se carga al final para que la tarjeta de inicio de
+     sesión aparezca de inmediato. -->
+<script src="vendor/supabase-js.js"></script>
+<script src="supabase-config.js"></script>
+<script src="sync.js"></script>
 <script>
 (function () {
   'use strict';
