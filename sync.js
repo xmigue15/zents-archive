@@ -22,6 +22,10 @@
   let retryStep = 0;
   let lastState = null;
   let pending = readPending();
+  /* En un dispositivo nuevo no se sube nada hasta comprobar qué hay en
+     la nube: así una conexión mala nunca sobrescribe la copia buena. */
+  let puedeSubir = true;
+  let nubeRevisada = false;
 
   function readPending() {
     try { return localStorage.getItem(PENDING_KEY) === '1'; } catch (error) { return false; }
@@ -60,7 +64,8 @@
     return {
       online: navigator.onLine !== false,
       pending,
-      ready: Boolean(client)
+      ready: Boolean(client),
+      blocked: !puedeSubir
     };
   }
 
@@ -147,24 +152,34 @@
   }
 
   async function signOut() {
-    const sb = await ensureClient();
-    if (!sb) return;
     try {
-      await sb.auth.signOut();
+      const sb = await ensureClient();
+      if (sb) await sb.auth.signOut();
     } catch (error) {
       console.warn('Zent: error al cerrar sesión.', error);
     }
+    // La próxima sesión en este dispositivo empieza de cero y vuelve a
+    // comprobar la nube antes de subir nada.
+    setPending(false);
+    puedeSubir = true;
+    nubeRevisada = false;
+    lastState = null;
+    resetRetry();
   }
 
   /* Solo se usa en un dispositivo nuevo (sin datos locales) o
-     cuando el usuario pide traer la copia de la nube a mano. */
+     cuando el usuario pide traer la copia de la nube a mano.
+     Devuelve el estado, o null si no hay copia o no se pudo leer;
+     `cloudChecked()` dice si la respuesta de la nube fue segura. */
   async function loadStateFromSupabase() {
+    nubeRevisada = false;
     if (navigator.onLine === false) return null;
     const sb = await ensureClient();
     if (!sb) return null;
     try {
       const session = await getSession();
       if (!session || !session.user) return null;
+      nubeRevisada = true;
 
       const { data, error } = await withTimeout(
         sb.from('user_states').select('state').eq('user_id', session.user.id).maybeSingle(),
@@ -172,6 +187,7 @@
       );
 
       if (error) {
+        nubeRevisada = false;
         console.warn('Zent: no se pudo leer el estado en Supabase.', error.message, error.code);
         return null;
       }
@@ -179,6 +195,7 @@
 
       return data.state;
     } catch (error) {
+      nubeRevisada = false;
       console.warn('Zent: fallo al cargar desde Supabase.', error);
       return null;
     }
@@ -204,6 +221,20 @@
     }
   }
 
+  /* Si el dispositivo es nuevo y no se pudo comprobar la nube, se
+     reintenta más tarde para poder subir con seguridad. */
+  let pullTimer = null;
+
+  function schedulePullRetry() {
+    if (pullTimer || navigator.onLine === false) return;
+    pullTimer = setTimeout(() => {
+      pullTimer = null;
+      if (!puedeSubir) {
+        try { window.dispatchEvent(new CustomEvent('zent-needs-pull')); } catch (error) { /* nada */ }
+      }
+    }, 15000);
+  }
+
   async function upsertState(sb, payload) {
     const session = await getSession();
     if (!session || !session.user) return new Error('sin-sesion');
@@ -222,6 +253,10 @@
      marcado como pendiente para reintentarlo después. */
   async function flushPending(force) {
     if (!pending && !force) return null;
+    if (!puedeSubir) {
+      if (pending) schedulePullRetry();
+      return null;
+    }
     if (flushing) {
       flushAgain = true;
       return null;
@@ -275,6 +310,24 @@
     if (navigator.onLine !== false) flushPending();
   }
 
+  function holdUploads() {
+    puedeSubir = false;
+    emitStatus();
+  }
+
+  function releaseUploads() {
+    puedeSubir = true;
+    if (pullTimer) {
+      clearTimeout(pullTimer);
+      pullTimer = null;
+    }
+    emitStatus();
+  }
+
+  function cloudChecked() {
+    return nubeRevisada;
+  }
+
   window.sync = {
     init,
     ensureClient,
@@ -287,6 +340,9 @@
     saveState,
     flushPending,
     markLoaded,
+    holdUploads,
+    releaseUploads,
+    cloudChecked,
     status,
     isReady: () => Boolean(client)
   };
@@ -294,6 +350,10 @@
   window.addEventListener('online', () => {
     resetRetry();
     emitStatus();
+    if (!puedeSubir) {
+      // Dispositivo nuevo sin comprobar: primero se mira la nube.
+      window.dispatchEvent(new CustomEvent('zent-needs-pull'));
+    }
     flushPending();
   });
   window.addEventListener('offline', emitStatus);

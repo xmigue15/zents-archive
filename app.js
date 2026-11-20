@@ -1349,7 +1349,7 @@
       : { online: navigator.onLine !== false, pending: false, ready: false };
     const syncState = (syncInfo.online === false || !syncInfo.ready)
       ? 'offline'
-      : (syncInfo.pending ? 'pending' : 'ok');
+      : ((syncInfo.pending || syncInfo.blocked) ? 'pending' : 'ok');
     return '<div class="page-head"><div><p class="eyebrow">Preferencias</p><h1>Ajustes</h1></div></div>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Perfil</h3>' +
@@ -3428,9 +3428,12 @@
         (async () => {
           if (!window.sync) { toast('La nube no está disponible en este momento.'); return; }
           if (navigator.onLine === false) { toast('Sin conexión. Se subirá cuando vuelva internet.'); return; }
+          let trajo = false;
+          if (sync.status().blocked) trajo = await traerCopiaDeLaNube(false);
           const error = await sync.flushPending(true);
           updateSyncStatus();
-          toast(error ? 'No se pudo subir todavía. Reintentaremos en un momento.' : 'Cambios subidos a la nube.');
+          if (trajo) toast('Datos restaurados desde la nube.');
+          else toast(error ? 'No se pudo subir todavía. Reintentaremos en un momento.' : 'Cambios subidos a la nube.');
         })();
         break;
 
@@ -3445,13 +3448,10 @@
             (async () => {
               if (!window.sync) { toast('La nube no está disponible en este momento.'); return; }
               if (navigator.onLine === false) { toast('Sin conexión. Inténtalo cuando vuelva internet.'); return; }
-              const synced = await sync.loadStateFromSupabase();
-              if (!synced) { toast('No hay una copia nueva en la nube o no se pudo leer.'); return; }
-              state = normalizeState(synced);
-              guardarCopiaLocal();
+              const trajo = await traerCopiaDeLaNube(true);
               sync.markLoaded();
-              render();
-              toast('Datos restaurados desde la nube.');
+              updateSyncStatus();
+              toast(trajo ? 'Datos restaurados desde la nube.' : 'No hay una copia nueva en la nube o no se pudo leer.');
             })();
           }
         });
@@ -3639,6 +3639,7 @@
       ? sync.status()
       : { online: navigator.onLine !== false, pending: false, ready: false };
     if (!info.online) return 'Sin conexión · tus datos están guardados en este dispositivo.';
+    if (info.blocked) return 'Comprobando la nube antes de subir, para no sobrescribir tus datos…';
     if (info.pending) return 'Cambios guardados aquí, esperando subir a la nube…';
     if (!info.ready) return 'Nube no disponible por ahora. Tus datos están seguros aquí.';
     return 'Todo guardado en este dispositivo y en la nube.';
@@ -3653,7 +3654,7 @@
     element.textContent = syncStatusText();
     element.dataset.state = (info.online === false || !info.ready)
       ? 'offline'
-      : (info.pending ? 'pending' : 'ok');
+      : ((info.pending || info.blocked) ? 'pending' : 'ok');
   }
 
   window.addEventListener('online', updateSyncStatus);
@@ -3663,18 +3664,41 @@
   /* Segunda fase, ya con la app en pantalla: nube y sesión.
      - Dispositivo con datos: no se descarga nada; solo se suben
        los cambios que hayan quedado pendientes.
-     - Dispositivo nuevo: se trae la copia de la nube una vez. */
+     - Dispositivo nuevo: se trae la copia de la nube una vez y no se
+       sube nada hasta saber qué hay allí (para no sobrescribirla). */
+  async function traerCopiaDeLaNube(silencioso) {
+    if (!window.sync) return false;
+    const synced = await sync.loadStateFromSupabase();
+    if (synced) {
+      state = normalizeState(synced);
+      guardarCopiaLocal();
+      render();
+      if (!silencioso) toast('Tus datos se cargaron desde la nube.');
+      sync.releaseUploads();
+      return true;
+    }
+    if (sync.cloudChecked()) {
+      // La nube respondió y no hay copia: este dispositivo puede subir.
+      sync.releaseUploads();
+    }
+    return false;
+  }
+
+  window.addEventListener('zent-needs-pull', () => {
+    if (hadLocalState || !window.sync) return;
+    if (sync.status().blocked === false) return;
+    traerCopiaDeLaNube(false).then(() => {
+      sync.markLoaded();
+      updateSyncStatus();
+    }).catch(() => {});
+  });
+
   (async () => {
     if (!window.sync) return;
     try {
       if (!hadLocalState) {
-        const synced = await sync.loadStateFromSupabase();
-        if (synced) {
-          state = normalizeState(synced);
-          guardarCopiaLocal();
-          render();
-          toast('Tus datos se cargaron desde la nube.');
-        }
+        sync.holdUploads();
+        await traerCopiaDeLaNube(false);
       }
       sync.markLoaded();
       updateSyncStatus();
