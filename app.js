@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.4.0';
+  const APP_VERSION = '1.5.0';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -803,7 +803,8 @@
     walletOpen: false,
     walletFocus: '',
     frase: '',
-    fraseVistaEn: 0
+    fraseVistaEn: 0,
+    categoriesReturn: false
   };
 
   let saveTimer = null;
@@ -2083,15 +2084,35 @@
     '</div>';
   }
 
+  function updateWizardAmountState() {
+    const draft = ui.movementDraft;
+    const next = $('#movNext');
+    if (!draft || !next) return;
+    next.disabled = !(Number(draft.amount) > 0);
+  }
+
   function movementAmountStepHTML(draft) {
     const income = draft.type === 'income';
     const amount = Number(draft.amount) || 0;
+    /* Cada vez que se entra al paso, el primer número empieza un monto
+       nuevo; el monto actual se ve hasta que se toca una tecla. */
+    draft.amountEntry = '';
+    draft.amountTouched = false;
+    let keys = '';
+    for (let i = 1; i <= 9; i += 1) {
+      keys += '<button type="button" data-action="movement-key" data-key="' + i + '">' + i + '</button>';
+    }
+    keys += '<button type="button" data-action="movement-key" data-key="clear" class="key-clear">C</button>';
+    keys += '<button type="button" data-action="movement-key" data-key="0">0</button>';
+    keys += '<button type="button" data-action="movement-key" data-key="back" class="key-back" aria-label="Borrar">' + ICON.back + '</button>';
     return '<div class="wizard-body">' +
         '<p class="wizard-question">' + (income ? '¿Cuánto recibiste?' : '¿Cuánto fue?') + '</p>' +
         '<p class="wizard-sub">' + (income ? 'Escribe el monto que entró a tu cuenta.' : 'Escribe el monto que salió de tu cuenta.') + '</p>' +
         '<div class="wizard-amount">' +
-          amountFieldHTML('movAmount', amount, 'Monto') +
-          '<span class="wizard-amount-hint">Toca el monto para usar el teclado.</span>' +
+          amountDisplayHTML('movAmount', amount, 'Monto') +
+        '</div>' +
+        '<div class="wizard-keypad" role="group" aria-label="Teclado numérico">' +
+          '<div class="keypad-grid">' + keys + '</div>' +
         '</div>' +
       '</div>' +
       movementNextHTML(draft, 'Continuar', amount <= 0);
@@ -2114,7 +2135,10 @@
         '<p class="wizard-sub">' + (income ? 'Así sabrás de dónde vino el dinero.' : 'Así sabrás en qué se fue el dinero.') + '</p>' +
         (categories.length
           ? '<div class="wizard-categories">' + cards + '</div>'
-          : '<p class="wizard-empty">No hay categorías de ' + (income ? 'ingreso' : 'gasto') + '. Puedes crear una en Ajustes.</p>') +
+          : '<p class="wizard-empty">No hay categorías de ' + (income ? 'ingreso' : 'gasto') + '. Puedes crear una aquí mismo.</p>') +
+        '<button type="button" class="wizard-manage" data-action="movement-edit-categories">' +
+          ICON.edit + ' Editar categorías' +
+        '</button>' +
       '</div>' +
       movementNextHTML(draft, 'Continuar', categories.length > 0 && !draft.categoryId);
   }
@@ -2200,6 +2224,8 @@
       id: existing ? existing.id : null,
       type,
       amount: existing ? existing.amount : 0,
+      amountEntry: '',
+      amountTouched: false,
       description: existing ? existing.description : '',
       categoryId,
       accountId: existing ? existing.accountId : state.accounts[0].id,
@@ -2702,6 +2728,19 @@
       '<input type="hidden" id="' + id + '" data-raw="' + (raw || '') + '">';
   }
 
+  /* Monto dentro del asistente: se muestra como texto y el teclado
+     vive en el mismo paso, sin abrir una capa encima del modal. */
+  function amountDisplayHTML(id, value, label) {
+    const raw = Math.round(Number(value) || 0);
+    const safeLabel = esc(label || 'Monto');
+    return '<div class="input amount-field wizard-amount-display" id="' + id + 'Field" ' +
+        'role="textbox" aria-readonly="true" aria-label="' + safeLabel + '">' +
+        '<span class="amount-text" id="' + id + 'Text"' + (raw ? '' : ' hidden') + '>' + (raw ? formatMoney(raw) : '') + '</span>' +
+        '<span class="amount-placeholder"' + (raw ? ' hidden' : '') + '>$ 0</span>' +
+      '</div>' +
+      '<input type="hidden" id="' + id + '" data-raw="' + (raw || '') + '">';
+  }
+
   function setAmountFieldValue(id, value) {
     const raw = String(value == null ? '' : value);
     const hidden = $('#' + id);
@@ -2925,6 +2964,7 @@
 
   function categoriesModalHTML() {
     const kind = ui.categoryType === 'income' ? 'income' : 'expense';
+    const volviendo = Boolean(ui.categoriesReturn);
     const categories = state.categories.filter((category) => category.type === kind);
     const cards = categories.map((category) => {
       const count = state.movements.filter((movement) => movement.categoryId === category.id).length;
@@ -2935,22 +2975,49 @@
       '</button>';
     }).join('');
 
-    return '<div class="modal-head">' +
+    return '<div class="categories-manager" data-categories-modal>' +
+      '<div class="modal-head">' +
         '<h2>Categorías</h2>' +
-        '<button class="icon-btn sm" data-action="close-modal" aria-label="Cerrar">' + ICON.close + '</button>' +
+        '<button type="button" class="icon-btn sm" data-action="' + (volviendo ? 'close-categories' : 'close-modal') + '" ' +
+          'aria-label="' + (volviendo ? 'Volver al movimiento' : 'Cerrar') + '">' +
+          ICON.close +
+        '</button>' +
       '</div>' +
       '<div class="segmented" role="group" aria-label="Tipo de categoría">' +
         '<button type="button" class="' + (kind === 'expense' ? 'active expense' : '') + '" data-action="category-tab" data-type="expense">Gastos</button>' +
         '<button type="button" class="' + (kind === 'income' ? 'active income' : '') + '" data-action="category-tab" data-type="income">Ingresos</button>' +
       '</div>' +
-      '<p class="hint category-hint">Toca una categoría para cambiar su nombre o icono.</p>' +
+      '<p class="hint category-hint">Toca una categoría para cambiar su nombre o icono.' +
+        (volviendo ? ' Al terminar, vuelve al movimiento.' : '') + '</p>' +
       '<div class="category-grid">' + (cards || '<p class="hint">Sin categorías.</p>') + '</div>' +
-      '<button type="button" class="btn ghost block mt-16" data-action="add-category" data-type="' + kind + '">' + ICON.plus + ' Nueva categoría</button>';
+      '<button type="button" class="btn ghost block mt-16" data-action="add-category" data-type="' + kind + '">' + ICON.plus + ' Nueva categoría</button>' +
+      (volviendo ? '<button type="button" class="btn block mt-16" data-action="close-categories">Volver al movimiento</button>' : '') +
+    '</div>';
   }
 
-  function openCategoriesModal(type) {
+  function openCategoriesModal(type, fromMovement) {
     ui.categoryType = type === 'income' ? 'income' : 'expense';
+    ui.categoriesReturn = Boolean(fromMovement);
     openModal(categoriesModalHTML());
+  }
+
+  /* Vuelve al paso de categoría del asistente sin perder el borrador. */
+  function volverAlMovimiento() {
+    const draft = ui.movementDraft;
+    ui.categoriesReturn = false;
+    if (!draft) {
+      closeModal();
+      return;
+    }
+    draft.step = 3;
+    const selected = categoryById(draft.categoryId);
+    if (!selected || selected.type !== draft.type) {
+      const fallback = state.categories.find((category) => category.type === draft.type);
+      draft.categoryId = fallback ? fallback.id : '';
+    }
+    openModal(movementFormHTML(), { autoFocus: false });
+    const modal = $('#modalRoot .modal');
+    if (modal) modal.scrollTop = 0;
   }
 
   function refreshCategoriesModal() {
@@ -2971,9 +3038,9 @@
     openModal(
       '<div class="modal-head">' +
         '<h2>' + (existing ? 'Editar categoría' : 'Nueva categoría') + '</h2>' +
-        '<button class="icon-btn sm" data-action="close-modal" aria-label="Cerrar">' + ICON.close + '</button>' +
+        '<button type="button" class="icon-btn sm" data-action="back-categories" aria-label="Volver a categorías">' + ICON.arrowLeft + '</button>' +
       '</div>' +
-      '<form id="categoryForm" data-id="' + esc(existing ? existing.id : '') + '" data-type="' + kind + '" novalidate>' +
+      '<form id="categoryForm" data-id="' + esc(existing ? existing.id : '') + '" data-type="' + kind + '" data-categories-modal novalidate>' +
         '<div class="field">' +
           '<label for="catName">Nombre</label>' +
           '<input class="input" id="catName" maxlength="40" autocomplete="off" placeholder="Ej. Mascotas, Café, Freelance" value="' + esc(existing ? existing.name : '') + '" data-autofocus>' +
@@ -3036,12 +3103,13 @@
     save();
     render();
     toast(id ? 'Categoría actualizada.' : 'Categoría creada.');
-    openCategoriesModal(type);
+    openCategoriesModal(type, ui.categoriesReturn);
   }
 
   function deleteCategory(id) {
     const category = categoryById(id);
     if (!category) return;
+    const volverAlMovimientoDespues = ui.categoriesReturn;
     const count = state.movements.filter((movement) => movement.categoryId === id).length;
     if (count > 0) {
       toast('Esta categoría tiene movimientos; no se puede eliminar.');
@@ -3063,7 +3131,7 @@
         closeModal();
         render();
         toast('Categoría eliminada.');
-        openCategoriesModal(category.type);
+        openCategoriesModal(category.type, volverAlMovimientoDespues);
       }
     });
   }
@@ -3406,6 +3474,10 @@
 
   document.addEventListener('click', (event) => {
     if (event.target && event.target.matches && event.target.matches('[data-backdrop]')) {
+      if (ui.categoriesReturn && document.querySelector('#modalRoot [data-categories-modal]')) {
+        volverAlMovimiento();
+        return;
+      }
       closeModal();
       return;
     }
@@ -3469,6 +3541,31 @@
         }
         draft.step = 2;
         refreshMovementForm();
+        break;
+      }
+
+      case 'movement-key': {
+        const draft = ui.movementDraft;
+        if (!draft) break;
+        const key = button.dataset.key || '';
+        let entry = String(draft.amountEntry || '');
+        const starting = !draft.amountTouched;
+        if (starting) {
+          draft.amountTouched = true;
+          if (key === 'back') entry = String(Math.round(Number(draft.amount) || 0)).slice(0, -1);
+          else if (key === 'clear') entry = '';
+          else if (/^[0-9]$/.test(key)) entry = key;
+        } else if (key === 'back') {
+          entry = entry.slice(0, -1);
+        } else if (key === 'clear') {
+          entry = '';
+        } else if (/^[0-9]$/.test(key) && entry.length < 12) {
+          entry = (entry === '0' ? '' : entry) + key;
+        }
+        draft.amountEntry = entry;
+        draft.amount = Number(entry) || 0;
+        setAmountFieldValue('movAmount', entry);
+        updateWizardAmountState();
         break;
       }
 
@@ -3678,7 +3775,16 @@
         break;
 
       case 'back-categories':
-        openCategoriesModal(ui.categoryType);
+        openCategoriesModal(ui.categoryType, ui.categoriesReturn);
+        break;
+
+      case 'close-categories':
+        volverAlMovimiento();
+        break;
+
+      case 'movement-edit-categories':
+        if (!ui.movementDraft) break;
+        openCategoriesModal(ui.movementDraft.type, true);
         break;
 
       case 'delete-category':
@@ -3874,7 +3980,13 @@
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       const root = $('#modalRoot');
-      if (root && root.firstElementChild) closeModal();
+      if (root && root.firstElementChild) {
+        if (ui.categoriesReturn && document.querySelector('#modalRoot [data-categories-modal]')) {
+          volverAlMovimiento();
+          return;
+        }
+        closeModal();
+      }
       return;
     }
     /* Los elementos que hacen de boton (como el billete) se activan

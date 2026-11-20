@@ -2828,7 +2828,7 @@ textarea:focus {
 
 .wizard-amount .amount-field {
   justify-content: center;
-  min-height: 96px;
+  min-height: 84px;
   border-radius: 22px;
   border-color: var(--field-line);
   background: var(--field-bg);
@@ -2837,6 +2837,14 @@ textarea:focus {
   font-weight: 700;
   letter-spacing: -0.025em;
   font-variant-numeric: tabular-nums;
+}
+
+.wizard-amount-display {
+  cursor: default;
+}
+
+.wizard-amount-display:active {
+  border-color: var(--field-line);
 }
 
 .wizard-amount .amount-field .amount-placeholder {
@@ -2849,12 +2857,38 @@ textarea:focus {
   font-size: inherit;
 }
 
-.wizard-amount-hint {
-  display: block;
-  margin-top: 10px;
+.wizard-keypad {
+  margin-top: 12px;
+}
+
+.wizard-keypad .keypad-grid {
+  gap: 8px;
+}
+
+.wizard-keypad .keypad-grid button {
+  min-height: 47px;
+  border-color: var(--glass-line);
+  border-radius: 14px;
+  background: var(--glass-2);
+  font-family: var(--sans);
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.wizard-keypad .keypad-grid button:active {
+  background: var(--brand-soft);
+  transform: scale(0.97);
+}
+
+.wizard-keypad .keypad-grid .key-clear,
+.wizard-keypad .keypad-grid .key-back {
   color: var(--muted);
-  font-size: 11px;
-  text-align: center;
+  font-size: 17px;
+}
+
+.wizard-keypad .keypad-grid .key-back svg {
+  width: 21px;
+  height: 21px;
 }
 
 /* --- Paso 3: categoría --- */
@@ -2940,6 +2974,45 @@ textarea:focus {
   stroke-width: 2.2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.wizard-manage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px auto 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--brand);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wizard-manage:hover {
+  background: var(--brand-soft);
+}
+
+.wizard-manage svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.categories-manager .category-card .name {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 /* --- Paso 4: detalles --- */
@@ -3137,6 +3210,23 @@ textarea:focus {
 
   .wizard-accounts {
     grid-template-columns: 1fr;
+  }
+
+  .wizard-amount .amount-field {
+    min-height: 74px;
+  }
+
+  .wizard-keypad {
+    margin-top: 8px;
+  }
+
+  .wizard-keypad .keypad-grid {
+    gap: 6px;
+  }
+
+  .wizard-keypad .keypad-grid button {
+    min-height: 42px;
+    font-size: 17px;
   }
 }
 
