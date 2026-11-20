@@ -1,9 +1,10 @@
 ﻿/* ============================================================
-   Zent â€” service worker
-   Guarda el shell de la app para que funcione sin conexiÃ³n.
+   Zent — service worker
+   Guarda el shell de la app para que funcione sin conexión y
+   abra al instante, incluso con internet lento o caído.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v77';
+const CACHE_NAME = 'zent-v78';
 const APP_SHELL = [
   './',
   './index.html',
@@ -46,6 +47,30 @@ const APP_SHELL = [
   './logos/nu-marca.png'
 ];
 
+/* El hosting puede redirigir /index.html a / o /login.html a /login.
+   Una respuesta redirigida no se puede usar para una navegación, así
+   que se reconstruye como respuesta normal antes de entregarla. */
+async function sinRedireccion(response) {
+  if (!response || !response.redirected) return response;
+  try {
+    const body = await response.blob();
+    const headers = new Headers();
+    const type = response.headers.get('content-type');
+    if (type) headers.set('content-type', type);
+    return new Response(body, { status: 200, statusText: 'OK', headers });
+  } catch (error) {
+    return response;
+  }
+}
+
+async function primeraCopia(rutas) {
+  for (var i = 0; i < rutas.length; i += 1) {
+    var copia = await caches.match(rutas[i]);
+    if (copia) return sinRedireccion(copia);
+  }
+  return null;
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -80,13 +105,13 @@ self.addEventListener('fetch', (event) => {
     request.destination === 'worker' ||
     url.pathname.endsWith('.webmanifest');
 
-  // Navegacion y codigo: cache primero para que la app abra al instante
+  // Navegación y código: caché primero para que la app abra al instante
   // incluso sin internet. En paralelo se actualiza la copia para la
-  // proxima apertura.
+  // próxima apertura.
   if (isDocument || isCode) {
     const update = fetch(request, { cache: 'no-cache' })
       .then(async (response) => {
-        if (response && response.ok && response.type === 'basic') {
+        if (response && response.ok && response.type === 'basic' && !response.redirected) {
           const cache = await caches.open(CACHE_NAME);
           await cache.put(request, response.clone());
         }
@@ -97,23 +122,28 @@ self.addEventListener('fetch', (event) => {
     event.waitUntil(update.then(() => {}).catch(() => {}));
 
     event.respondWith((async () => {
-      const cached = await caches.match(request);
-      if (cached) return cached;
+      const cached = await caches.match(request, isDocument ? { ignoreSearch: true } : undefined);
+      if (cached) return sinRedireccion(cached);
 
       const fresh = await update;
-      if (fresh) return fresh;
+      if (fresh) return sinRedireccion(fresh);
 
       if (isDocument) {
-        const fallback = url.pathname.endsWith('login.html') ? './login.html' : './index.html';
-        const offline = await caches.match(fallback);
+        const esLogin = /\/login(\.html)?$/.test(url.pathname);
+        const offline = await primeraCopia(
+          esLogin
+            ? ['./login.html', './login', './']
+            : ['./', './index.html']
+        );
         if (offline) return offline;
       }
-      return new Response('', { status: 503, statusText: 'Sin conexion' });
+
+      return new Response('', { status: 503, statusText: 'Sin conexión' });
     })());
     return;
   }
 
-  // ImÃ¡genes e iconos: cachÃ© primero, actualizando en segundo plano.
+  // Imágenes e iconos: caché primero, actualizando en segundo plano.
   event.respondWith(
     caches.match(request).then((cached) => {
       const network = fetch(request)
