@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.3.0';
+  const APP_VERSION = '1.4.0';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -39,6 +39,8 @@
     wallet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="13.5" r="1"/></svg>',
     archive: '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>',
     logout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="m10 8-4 4 4 4M6 12h9"/></svg>',
+    arrowLeft: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>',
+    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>',
     sparkle: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3l1.7 4.8L17.5 9.5l-4.8 1.7L11 16l-1.7-4.8L4.5 9.5l4.8-1.7z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>'
   };
 
@@ -2005,8 +2007,11 @@
 
   function refreshMovementForm() {
     const modal = $('#modalRoot .modal');
-    if (!modal) return;
+    if (!modal || !ui.movementDraft) return;
     modal.innerHTML = movementFormHTML();
+    const heading = modal.querySelector('.modal-head h2');
+    if (heading) modal.setAttribute('aria-label', heading.textContent);
+    modal.scrollTop = 0;
   }
 
   function updateGmfHint() {
@@ -2020,55 +2025,164 @@
     hint.textContent = gmfHintText(amount, draft.type, enabled);
   }
 
-  function movementFormHTML() {
-    const draft = ui.movementDraft;
-    if (!draft) return '';
-    const categories = state.categories.filter((category) => category.type === draft.type);
-    const categoryOptions = categories.map((category) =>
-      '<option value="' + esc(category.id) + '"' + (category.id === draft.categoryId ? ' selected' : '') + '>' +
-        esc(category.name) +
-      '</option>'
-    ).join('');
-    const accountOptions = state.accounts.map((account) =>
-      '<option value="' + esc(account.id) + '"' + (account.id === draft.accountId ? ' selected' : '') + '>' + esc(account.name) + '</option>'
-    ).join('');
+  /* ---- Asistente de nuevo movimiento ---------------------------------- */
 
-    return '<div class="modal-head">' +
-        '<h2>' + (draft.id ? 'Editar movimiento' : 'Nuevo movimiento') + '</h2>' +
-        '<button class="icon-btn sm" data-action="close-modal" aria-label="Cerrar">' + ICON.close + '</button>' +
+  function movementTitle(draft) {
+    if (draft.id) return 'Editar movimiento';
+    if (draft.type === 'income') return 'Nuevo ingreso';
+    if (draft.type === 'expense') return 'Nuevo gasto';
+    return 'Nuevo movimiento';
+  }
+
+  function movementProgressHTML(step) {
+    let bars = '';
+    for (let i = 1; i <= 4; i += 1) {
+      bars += '<span class="' + (i < step ? 'done' : (i === step ? 'active' : '')) + '"></span>';
+    }
+    return '<div class="wizard-progress" aria-hidden="true">' + bars + '</div>';
+  }
+
+  function movementHeaderHTML(draft) {
+    return '<div class="modal-head wizard-head">' +
+      '<div class="wizard-head-title">' +
+        (draft.step > 1
+          ? '<button type="button" class="icon-btn sm wizard-back" data-action="movement-back" aria-label="Volver al paso anterior">' + ICON.arrowLeft + '</button>'
+          : '') +
+        '<div>' +
+          '<h2>' + movementTitle(draft) + '</h2>' +
+          '<span class="wizard-step-label">Paso ' + draft.step + ' de 4</span>' +
+        '</div>' +
       '</div>' +
-      '<form id="movementForm" novalidate>' +
-        '<div class="segmented" role="group" aria-label="Tipo de movimiento">' +
-          '<button type="button" class="' + (draft.type === 'expense' ? 'active expense' : '') + '" data-action="movement-type" data-type="expense">Gasto</button>' +
-          '<button type="button" class="' + (draft.type === 'income' ? 'active income' : '') + '" data-action="movement-type" data-type="income">Ingreso</button>' +
+      '<button type="button" class="icon-btn sm" data-action="close-modal" aria-label="Cerrar">' + ICON.close + '</button>' +
+    '</div>';
+  }
+
+  function movementTypeStepHTML(draft) {
+    return '<div class="wizard-body">' +
+        '<p class="wizard-question">¿Qué quieres registrar?</p>' +
+        '<p class="wizard-sub">Elige si es un gasto o un ingreso.</p>' +
+        '<div class="type-picker">' +
+          '<button type="button" class="type-card expense' + (draft.type === 'expense' ? ' active' : '') + '" data-action="movement-pick-type" data-type="expense">' +
+            '<span class="type-icon" aria-hidden="true">−</span>' +
+            '<b>Gasto</b>' +
+            '<small>Dinero que sale</small>' +
+          '</button>' +
+          '<button type="button" class="type-card income' + (draft.type === 'income' ? ' active' : '') + '" data-action="movement-pick-type" data-type="income">' +
+            '<span class="type-icon" aria-hidden="true">+</span>' +
+            '<b>Ingreso</b>' +
+            '<small>Dinero que entra</small>' +
+          '</button>' +
         '</div>' +
+      '</div>';
+  }
+
+  function movementNextHTML(draft, label, disabled) {
+    return '<div class="wizard-actions">' +
+      '<button type="button" class="btn ghost" data-action="movement-back">Atrás</button>' +
+      '<button type="button" class="btn" id="movNext" data-action="movement-next"' + (disabled ? ' disabled' : '') + '>' + label + '</button>' +
+    '</div>';
+  }
+
+  function movementAmountStepHTML(draft) {
+    const income = draft.type === 'income';
+    const amount = Number(draft.amount) || 0;
+    return '<div class="wizard-body">' +
+        '<p class="wizard-question">' + (income ? '¿Cuánto recibiste?' : '¿Cuánto fue?') + '</p>' +
+        '<p class="wizard-sub">' + (income ? 'Escribe el monto que entró a tu cuenta.' : 'Escribe el monto que salió de tu cuenta.') + '</p>' +
+        '<div class="wizard-amount">' +
+          amountFieldHTML('movAmount', amount, 'Monto') +
+          '<span class="wizard-amount-hint">Toca el monto para usar el teclado.</span>' +
+        '</div>' +
+      '</div>' +
+      movementNextHTML(draft, 'Continuar', amount <= 0);
+  }
+
+  function movementCategoryStepHTML(draft) {
+    const categories = state.categories.filter((category) => category.type === draft.type);
+    const income = draft.type === 'income';
+    const cards = categories.map((category) => {
+      const active = category.id === draft.categoryId;
+      return '<button type="button" class="wizard-cat' + (active ? ' active' : '') + '" data-action="movement-category" ' +
+          'data-category="' + esc(category.id) + '" aria-pressed="' + (active ? 'true' : 'false') + '">' +
+          '<span class="cat-ic">' + iconSVG(category.icon) + '</span>' +
+          '<span class="wizard-cat-name">' + esc(category.name) + '</span>' +
+          '<span class="wizard-cat-check" aria-hidden="true">' + ICON.check + '</span>' +
+        '</button>';
+    }).join('');
+    return '<div class="wizard-body">' +
+        '<p class="wizard-question">¿En qué categoría?</p>' +
+        '<p class="wizard-sub">' + (income ? 'Así sabrás de dónde vino el dinero.' : 'Así sabrás en qué se fue el dinero.') + '</p>' +
+        (categories.length
+          ? '<div class="wizard-categories">' + cards + '</div>'
+          : '<p class="wizard-empty">No hay categorías de ' + (income ? 'ingreso' : 'gasto') + '. Puedes crear una en Ajustes.</p>') +
+      '</div>' +
+      movementNextHTML(draft, 'Continuar', categories.length > 0 && !draft.categoryId);
+  }
+
+  function movementDetailsStepHTML(draft) {
+    const amount = Number(draft.amount) || 0;
+    const category = categoryById(draft.categoryId);
+    const accountCards = state.accounts.map((account) => {
+      const active = account.id === draft.accountId;
+      return '<button type="button" class="wizard-account' + (active ? ' active' : '') + '" data-action="movement-account" ' +
+          'data-id="' + esc(account.id) + '" aria-pressed="' + (active ? 'true' : 'false') + '">' +
+          accountAvatar(account) +
+          '<span class="wizard-account-text">' +
+            '<b>' + esc(account.name) + '</b>' +
+            '<span>' + esc(formatMoney(accountBalance(account.id))) + '</span>' +
+          '</span>' +
+          '<span class="wizard-account-check" aria-hidden="true">' + ICON.check + '</span>' +
+        '</button>';
+    }).join('');
+    return '<div class="wizard-body wizard-details">' +
+        '<div class="wizard-summary">' +
+          '<button type="button" class="wizard-summary-cell" data-action="movement-go" data-step="2">' +
+            '<span>Monto</span><b>' + esc(formatMoney(amount)) + '</b>' +
+            '<span class="wizard-summary-edit" aria-hidden="true">' + ICON.edit + '</span>' +
+          '</button>' +
+          '<button type="button" class="wizard-summary-cell" data-action="movement-go" data-step="3">' +
+            '<span>Categoría</span><b>' + esc(category ? category.name : 'Sin categoría') + '</b>' +
+            '<span class="wizard-summary-edit" aria-hidden="true">' + ICON.edit + '</span>' +
+          '</button>' +
+          '<button type="button" class="wizard-summary-cell" data-action="movement-go" data-step="1">' +
+            '<span>Tipo</span><b>' + (draft.type === 'income' ? 'Ingreso' : 'Gasto') + '</b>' +
+            '<span class="wizard-summary-edit" aria-hidden="true">' + ICON.edit + '</span>' +
+          '</button>' +
+        '</div>' +
+        '<p class="wizard-question">Últimos detalles</p>' +
+        '<p class="wizard-sub">Elige la cuenta y completa los datos.</p>' +
         '<div class="field">' +
-          '<label>Monto</label>' +
-          amountFieldHTML('movAmount', draft.amount, 'Monto') +
+          '<span class="field-label">Cuenta</span>' +
+          '<div class="wizard-accounts">' + accountCards + '</div>' +
         '</div>' +
-        '<label class="gmf-box">' +
-          '<input type="checkbox" id="movGmf"' + (draft.gmf ? ' checked' : '') + '>' +
-          '<span class="gmf-text">Aplicar 4x1000<small id="movGmfHint">' + esc(gmfHintText(draft.amount, draft.type, draft.gmf)) + '</small></span>' +
-        '</label>' +
-        '<div class="field">' +
-          '<label for="movDescription">Descripción</label>' +
-          '<input class="input" id="movDescription" maxlength="80" autocomplete="off" placeholder="Ej. Almuerzo, salario, mercado" value="' + esc(draft.description) + '">' +
-        '</div>' +
-        '<div class="grid-2">' +
-          '<div class="field"><label for="formCategory">Categoría</label><select class="select" id="formCategory">' + categoryOptions + '</select></div>' +
-          '<div class="field"><label for="formAccount">Cuenta</label><select class="select" id="formAccount">' + accountOptions + '</select></div>' +
-        '</div>' +
-        '<div class="grid-2">' +
+        '<div class="wizard-datetime">' +
           '<div class="field"><label for="movDate">Fecha</label><div class="date-shell"><input id="movDate" type="date" value="' + esc(draft.date) + '"></div></div>' +
           '<div class="field"><label for="movTime">Hora</label><div class="date-shell"><input id="movTime" type="time" value="' + esc(draft.time) + '"></div></div>' +
         '</div>' +
+        '<div class="field"><label for="movDescription">Descripción</label><input class="input" id="movDescription" maxlength="80" autocomplete="off" placeholder="Ej. Almuerzo, salario, mercado" value="' + esc(draft.description) + '"></div>' +
         '<div class="field"><label for="movNote">Nota (opcional)</label><input class="input" id="movNote" maxlength="140" autocomplete="off" placeholder="Detalle corto" value="' + esc(draft.note) + '"></div>' +
+        '<label class="gmf-box">' +
+          '<input type="checkbox" id="movGmf"' + (draft.gmf ? ' checked' : '') + '>' +
+          '<span class="gmf-text">Aplicar 4x1000<small id="movGmfHint">' + esc(gmfHintText(amount, draft.type, draft.gmf)) + '</small></span>' +
+        '</label>' +
         (draft.id ? '<button type="button" class="btn danger block" data-action="delete-movement" data-id="' + esc(draft.id) + '">' + ICON.trash + ' Eliminar movimiento</button>' : '') +
-        '<div class="modal-actions">' +
-          '<button type="button" class="btn ghost" data-action="close-modal">Cancelar</button>' +
-          '<button type="submit" class="btn">' + (draft.id ? 'Guardar cambios' : 'Guardar movimiento') + '</button>' +
-        '</div>' +
-      '</form>';
+      '</div>' +
+      '<div class="wizard-actions">' +
+        '<button type="button" class="btn ghost" data-action="movement-back">Atrás</button>' +
+        '<button type="submit" class="btn">' + (draft.id ? 'Guardar cambios' : 'Guardar ' + (draft.type === 'income' ? 'ingreso' : 'gasto')) + '</button>' +
+      '</div>';
+  }
+
+  function movementFormHTML() {
+    const draft = ui.movementDraft;
+    if (!draft) return '';
+    let stepHTML = movementTypeStepHTML(draft);
+    if (draft.step === 2) stepHTML = movementAmountStepHTML(draft);
+    else if (draft.step === 3) stepHTML = movementCategoryStepHTML(draft);
+    else if (draft.step >= 4) stepHTML = movementDetailsStepHTML(draft);
+    return movementHeaderHTML(draft) +
+      movementProgressHTML(draft.step) +
+      '<form id="movementForm" novalidate>' + stepHTML + '</form>';
   }
 
   function openMovementModal(id) {
@@ -2079,19 +2193,21 @@
       return;
     }
 
-    const type = existing ? existing.type : 'expense';
-    const firstCategory = state.categories.find((category) => category.type === type);
+    const type = existing ? (existing.type === 'income' ? 'income' : 'expense') : '';
+    const existingCategory = existing ? categoryById(existing.categoryId) : null;
+    const categoryId = existingCategory && existingCategory.type === type ? existingCategory.id : '';
     ui.movementDraft = {
       id: existing ? existing.id : null,
       type,
       amount: existing ? existing.amount : 0,
       description: existing ? existing.description : '',
-      categoryId: existing ? existing.categoryId : (firstCategory ? firstCategory.id : ''),
+      categoryId,
       accountId: existing ? existing.accountId : state.accounts[0].id,
       date: existing ? existing.date : todayISO(),
       time: existing ? (movementTime(existing) || currentTimeISO()) : currentTimeISO(),
       note: existing ? existing.note : '',
-      gmf: existing ? Boolean(existing.gmf) : false
+      gmf: existing ? Boolean(existing.gmf) : false,
+      step: existing ? 4 : 1
     };
     openModal(movementFormHTML(), { autoFocus: false });
   }
@@ -2102,8 +2218,6 @@
 
     const amount = $('#movAmount');
     const description = $('#movDescription');
-    const category = $('#formCategory');
-    const account = $('#formAccount');
     const date = $('#movDate');
     const time = $('#movTime');
     const note = $('#movNote');
@@ -2111,8 +2225,6 @@
 
     if (amount) draft.amount = Number(amount.dataset.raw || 0);
     if (description) draft.description = description.value;
-    if (category) draft.categoryId = category.value;
-    if (account) draft.accountId = account.value;
     if (date) draft.date = date.value;
     if (time) draft.time = time.value;
     if (note) draft.note = note.value;
@@ -2124,14 +2236,29 @@
     if (!draft) return;
     syncMovementDraftFromForm();
 
+    if (!draft.type) {
+      draft.step = 1;
+      refreshMovementForm();
+      toast('Elige si es un gasto o un ingreso.');
+      return;
+    }
+
     if (!draft.amount || draft.amount <= 0) {
+      draft.step = 2;
+      refreshMovementForm();
       toast('Escribe un monto mayor a cero.');
-      const amount = $('#movAmountField');
-      if (amount) { try { amount.focus({ preventScroll: true }); } catch (error) { /* ignorar */ } }
       return;
     }
 
     const category = categoryById(draft.categoryId);
+    const availableCategories = state.categories.filter((item) => item.type === draft.type);
+    if (availableCategories.length && (!category || category.type !== draft.type)) {
+      draft.step = 3;
+      refreshMovementForm();
+      toast('Elige una categoría.');
+      return;
+    }
+
     if (!draft.description.trim()) draft.description = category ? category.name : 'Movimiento';
     if (!accountById(draft.accountId)) {
       toast('Elige una cuenta válida.');
@@ -3330,17 +3457,89 @@
         deleteTransfer(id);
         break;
 
-      case 'movement-type': {
+      case 'movement-pick-type': {
         syncMovementDraftFromForm();
         const draft = ui.movementDraft;
         if (!draft) break;
         draft.type = button.dataset.type === 'income' ? 'income' : 'expense';
-        const category = categoryById(draft.categoryId);
-        if (!category || category.type !== draft.type) {
+        const currentCategory = categoryById(draft.categoryId);
+        if (!currentCategory || currentCategory.type !== draft.type) {
           const fallback = state.categories.find((item) => item.type === draft.type);
           draft.categoryId = fallback ? fallback.id : '';
         }
+        draft.step = 2;
         refreshMovementForm();
+        break;
+      }
+
+      case 'movement-next': {
+        const draft = ui.movementDraft;
+        if (!draft) break;
+        syncMovementDraftFromForm();
+        if (draft.step === 2) {
+          if (!draft.amount || draft.amount <= 0) {
+            toast('Escribe un monto mayor a cero.');
+            break;
+          }
+          draft.step = 3;
+        } else if (draft.step === 3) {
+          const available = state.categories.filter((item) => item.type === draft.type);
+          const selected = categoryById(draft.categoryId);
+          if (available.length && (!selected || selected.type !== draft.type)) {
+            toast('Elige una categoría.');
+            break;
+          }
+          draft.step = 4;
+        }
+        refreshMovementForm();
+        break;
+      }
+
+      case 'movement-back': {
+        const draft = ui.movementDraft;
+        if (!draft || draft.step <= 1) break;
+        syncMovementDraftFromForm();
+        draft.step -= 1;
+        refreshMovementForm();
+        break;
+      }
+
+      case 'movement-go': {
+        const draft = ui.movementDraft;
+        const target = Number(button.dataset.step);
+        if (!draft || !(target >= 1 && target <= 4)) break;
+        syncMovementDraftFromForm();
+        draft.step = target;
+        refreshMovementForm();
+        break;
+      }
+
+      case 'movement-category': {
+        const draft = ui.movementDraft;
+        if (!draft) break;
+        draft.categoryId = button.dataset.category || '';
+        $$('.wizard-cat', document).forEach((item) => {
+          const active = item.dataset.category === draft.categoryId;
+          item.classList.toggle('active', active);
+          item.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        const next = $('#movNext');
+        if (next) {
+          const available = state.categories.filter((item) => item.type === draft.type);
+          next.disabled = available.length > 0 && !draft.categoryId;
+        }
+        break;
+      }
+
+      case 'movement-account': {
+        const draft = ui.movementDraft;
+        if (!draft) break;
+        draft.accountId = button.dataset.id || draft.accountId;
+        $$('.wizard-account', document).forEach((item) => {
+          const active = item.dataset.id === draft.accountId;
+          item.classList.toggle('active', active);
+          item.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
         break;
       }
 
@@ -3377,7 +3576,11 @@
           currentLabel: fieldId === 'acctInitial' ? 'Saldo actual' : 'Monto actual',
           onDone: (raw) => {
             setAmountFieldValue(fieldId, raw);
-            if (fieldId === 'movAmount') updateGmfHint();
+            if (fieldId === 'movAmount') {
+              updateGmfHint();
+              const next = $('#movNext');
+              if (next) next.disabled = !(Number(raw) > 0);
+            }
           }
         });
         break;

@@ -9,6 +9,7 @@ Esta versión sincroniza tus datos con **Supabase**: inicias sesión con correo 
 - **Resumen mensual** con saldo total, ingresos, gastos, balance, promedio diario y mayor categoría de gasto.
 - **Consejo del día** con 1000 frases de educación financiera: una nueva en cada apertura.
 - **Movimientos** con búsqueda, filtros por mes, tipo y cuenta, y edición o eliminación.
+- **Agregar en pasos**: primero eliges gasto o ingreso, luego el monto, la categoría y los detalles.
 - **Cuentas** con saldo inicial, color y saldo calculado automáticamente.
 - **Categorías** de gasto e ingreso, con emoji, color y creación de categorías propias.
 - **Estadísticas** de los últimos 6 meses y desglose por categoría.
