@@ -3,7 +3,7 @@
    Guarda el shell de la app para que funcione sin conexiÃ³n.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v76';
+const CACHE_NAME = 'zent-v77';
 const APP_SHELL = [
   './',
   './index.html',
@@ -18,6 +18,7 @@ const APP_SHELL = [
   './fonts/redaction10-bold.woff2',
   './fonts/redaction10-italic.woff2',
   './app.js',
+  './vendor/supabase-js.js',
   './supabase-config.js',
   './sync.js',
   './manifest.webmanifest',
@@ -69,7 +70,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
-  // Supabase y el CDN van siempre a la red.
+  // Supabase va siempre a la red.
   if (url.origin !== self.location.origin) return;
 
   const isDocument = request.mode === 'navigate' ||
@@ -79,26 +80,36 @@ self.addEventListener('fetch', (event) => {
     request.destination === 'worker' ||
     url.pathname.endsWith('.webmanifest');
 
-  // NavegaciÃ³n y cÃ³digo: red primero para recibir las actualizaciones al instante.
+  // Navegacion y codigo: cache primero para que la app abra al instante
+  // incluso sin internet. En paralelo se actualiza la copia para la
+  // proxima apertura.
   if (isDocument || isCode) {
-    event.respondWith(
-      fetch(request, { cache: 'no-cache' })
-        .then((response) => {
-          if (response && response.ok && response.type === 'basic') {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request).then((cached) => {
-          if (cached) return cached;
-          if (isDocument) {
-            const fallback = url.pathname.endsWith('login.html') ? './login.html' : './index.html';
-            return caches.match(fallback);
-          }
-          return undefined;
-        }))
-    );
+    const update = fetch(request, { cache: 'no-cache' })
+      .then(async (response) => {
+        if (response && response.ok && response.type === 'basic') {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(request, response.clone());
+        }
+        return response;
+      })
+      .catch(() => null);
+
+    event.waitUntil(update.then(() => {}).catch(() => {}));
+
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+
+      const fresh = await update;
+      if (fresh) return fresh;
+
+      if (isDocument) {
+        const fallback = url.pathname.endsWith('login.html') ? './login.html' : './index.html';
+        const offline = await caches.match(fallback);
+        if (offline) return offline;
+      }
+      return new Response('', { status: 503, statusText: 'Sin conexion' });
+    })());
     return;
   }
 

@@ -1,7 +1,7 @@
 {
   "name": "Zent — Tus finanzas claras",
   "short_name": "Zent",
-  "description": "Controla tus ingresos, gastos y cuentas de forma simple. Tus datos se guardan solo en tu dispositivo.",
+  "description": "Controla tus ingresos, gastos y cuentas de forma simple. Abre al instante con tus datos guardados en el dispositivo.",
   "lang": "es",
   "dir": "ltr",
   "start_url": "./#/resumen",

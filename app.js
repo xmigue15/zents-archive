@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.0.0';
+  const APP_VERSION = '1.1.0';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -744,8 +744,11 @@
     }
   }
 
+  let hadLocalState = false;
+  try { hadLocalState = Boolean(localStorage.getItem(STORE_KEY)); } catch (error) { hadLocalState = false; }
+
   let state = loadState();
-  if (typeof window.zentCarga === 'function') window.zentCarga('Cargando tus cuentas…');
+  if (typeof window.zentCarga === 'function') window.zentCarga('Abriendo tus cuentas…');
 
   const ui = {
     movMonth: currentMonth(),
@@ -774,6 +777,14 @@
     }, 400);
   }
 
+  let offlineNoticeShown = false;
+
+  function notaSinConexion() {
+    if (offlineNoticeShown || navigator.onLine !== false) return;
+    offlineNoticeShown = true;
+    toast('Guardado en este dispositivo. Se subirá cuando vuelva la conexión.');
+  }
+
   function save() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
@@ -782,7 +793,9 @@
       toast('No se pudieron guardar los datos en este dispositivo.');
     }
     if (window.sync) {
+      if (navigator.onLine === false) notaSinConexion();
       Promise.resolve(sync.saveState(state)).catch(() => {});
+      updateSyncStatus();
     }
   }
 
@@ -1331,6 +1344,12 @@
 
   function viewAjustes() {
     const profile = state.profile || { name: '', photoData: '' };
+    const syncInfo = window.sync && typeof sync.status === 'function'
+      ? sync.status()
+      : { online: navigator.onLine !== false, pending: false, ready: false };
+    const syncState = (syncInfo.online === false || !syncInfo.ready)
+      ? 'offline'
+      : (syncInfo.pending ? 'pending' : 'ok');
     return '<div class="page-head"><div><p class="eyebrow">Preferencias</p><h1>Ajustes</h1></div></div>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Perfil</h3>' +
@@ -1373,6 +1392,15 @@
         '<h3 class="settings-title">Categorías</h3>' +
         '<p class="settings-desc">Personaliza el nombre y el icono de tus categorías, o crea nuevas.</p>' +
         '<button class="btn ghost" data-action="manage-categories">' + ICON.edit + ' Administrar categorías</button>' +
+      '</section>' +
+      '<section class="card settings-block">' +
+        '<h3 class="settings-title">Sincronización</h3>' +
+        '<p class="settings-desc">Zent abre al instante con lo que hay en este dispositivo. Internet solo se usa para subir tus cambios.</p>' +
+        '<p class="sync-status" id="syncStatus" data-state="' + syncState + '">' + esc(syncStatusText()) + '</p>' +
+        '<div class="data-actions">' +
+          '<button class="btn ghost" data-action="sync-now">' + ICON.upload + ' Subir cambios</button>' +
+          '<button class="btn ghost" data-action="pull-cloud">' + ICON.download + ' Traer de la nube</button>' +
+        '</div>' +
       '</section>' +
       '<section class="card settings-block">' +
         '<h3 class="settings-title">Datos</h3>' +
@@ -3396,6 +3424,39 @@
         break;
       }
 
+      case 'sync-now':
+        (async () => {
+          if (!window.sync) { toast('La nube no está disponible en este momento.'); return; }
+          if (navigator.onLine === false) { toast('Sin conexión. Se subirá cuando vuelva internet.'); return; }
+          const error = await sync.flushPending(true);
+          updateSyncStatus();
+          toast(error ? 'No se pudo subir todavía. Reintentaremos en un momento.' : 'Cambios subidos a la nube.');
+        })();
+        break;
+
+      case 'pull-cloud':
+        confirmDialog({
+          title: 'Traer datos de la nube',
+          message: 'Se reemplazarán los datos de este dispositivo con la copia más reciente de tu cuenta.',
+          sub: 'Úsalo solo si cambiaste de teléfono o quieres recuperar una copia anterior.',
+          confirmText: 'Traer datos',
+          onConfirm: () => {
+            closeModal();
+            (async () => {
+              if (!window.sync) { toast('La nube no está disponible en este momento.'); return; }
+              if (navigator.onLine === false) { toast('Sin conexión. Inténtalo cuando vuelva internet.'); return; }
+              const synced = await sync.loadStateFromSupabase();
+              if (!synced) { toast('No hay una copia nueva en la nube o no se pudo leer.'); return; }
+              state = normalizeState(synced);
+              guardarCopiaLocal();
+              sync.markLoaded();
+              render();
+              toast('Datos restaurados desde la nube.');
+            })();
+          }
+        });
+        break;
+
       case 'sign-out':
         (async () => {
           try {
@@ -3549,9 +3610,8 @@
   setupTabSwipe();
   registerServiceWorker();
 
-  /* La pantalla de carga avisa el paso real y se retira cuando la app
-     ya esta pintada y sincronizada (o como mucho, 1,2 s despues). */
-  const cargaPaso = typeof window.zentCarga === 'function' ? window.zentCarga : null;
+  /* La pantalla de carga se retira en cuanto la primera vista está
+     pintada. No espera a la red ni a Supabase. */
   const cargaLista = typeof window.zentListo === 'function' ? window.zentListo : null;
   let cargaCerrada = false;
   function cerrarCarga() {
@@ -3560,28 +3620,78 @@
     cargaLista();
   }
 
-  if (cargaPaso) cargaPaso('Sincronizando con la nube…');
-  if (cargaLista) setTimeout(cerrarCarga, 1200);
+  if (cargaLista) {
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(cerrarCarga, 90)));
+    setTimeout(cerrarCarga, 3000);
+  }
 
+  function guardarCopiaLocal() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.warn('Zent: no se pudo guardar la copia local.', error);
+    }
+  }
+
+  function syncStatusText() {
+    if (!window.sync) return 'La nube no está disponible en este momento.';
+    const info = typeof sync.status === 'function'
+      ? sync.status()
+      : { online: navigator.onLine !== false, pending: false, ready: false };
+    if (!info.online) return 'Sin conexión · tus datos están guardados en este dispositivo.';
+    if (info.pending) return 'Cambios guardados aquí, esperando subir a la nube…';
+    if (!info.ready) return 'Nube no disponible por ahora. Tus datos están seguros aquí.';
+    return 'Todo guardado en este dispositivo y en la nube.';
+  }
+
+  function updateSyncStatus() {
+    const element = document.getElementById('syncStatus');
+    if (!element) return;
+    const info = window.sync && typeof sync.status === 'function'
+      ? sync.status()
+      : { online: navigator.onLine !== false, pending: false, ready: false };
+    element.textContent = syncStatusText();
+    element.dataset.state = (info.online === false || !info.ready)
+      ? 'offline'
+      : (info.pending ? 'pending' : 'ok');
+  }
+
+  window.addEventListener('online', updateSyncStatus);
+  window.addEventListener('offline', updateSyncStatus);
+  window.addEventListener('zent-sync', updateSyncStatus);
+
+  /* Segunda fase, ya con la app en pantalla: nube y sesión.
+     - Dispositivo con datos: no se descarga nada; solo se suben
+       los cambios que hayan quedado pendientes.
+     - Dispositivo nuevo: se trae la copia de la nube una vez. */
   (async () => {
     if (!window.sync) return;
     try {
-      const synced = await sync.loadStateFromSupabase();
-      if (synced) {
-        state = normalizeState(synced);
-        try {
-          localStorage.setItem(STORE_KEY, JSON.stringify(state));
-        } catch (error) {
-          console.warn('Zent: no se pudo guardar la copia local.', error);
+      if (!hadLocalState) {
+        const synced = await sync.loadStateFromSupabase();
+        if (synced) {
+          state = normalizeState(synced);
+          guardarCopiaLocal();
+          render();
+          toast('Tus datos se cargaron desde la nube.');
         }
-        render();
-      } else if (state.movements.length > 0 || state.accounts.length > 0) {
-        // Primera vez con esta cuenta: sube lo que ya exista en este dispositivo.
-        await sync.saveState(state);
+      }
+      sync.markLoaded();
+      updateSyncStatus();
+    } catch (error) {
+      console.warn('Zent: no se pudo preparar la sincronización.', error);
+      try { sync.markLoaded(); } catch (fatal) { /* sin nube, la app sigue local */ }
+    }
+
+    /* Validar la sesión sin frenar la app: si no hay conexión, se
+       sigue usando la copia local. */
+    try {
+      const result = await sync.checkSession();
+      if (result && result.timedOut === false && !result.session) {
+        location.replace('login.html');
       }
     } catch (error) {
-      console.warn('Zent: no se pudo sincronizar con Supabase.', error);
+      /* sin conexión: se queda en la copia local */
     }
-    cerrarCarga();
   })();
 })();

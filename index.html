@@ -22,6 +22,10 @@
 <link rel="stylesheet" href="iconos.css">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="theme-nayda.css">
+<!-- Libreria de Supabase local (sin CDN). Se carga en paralelo y
+     nunca bloquea el arranque: la app abre con lo guardado en el
+     dispositivo y la nube entra en segundo plano. -->
+<script async src="vendor/supabase-js.js"></script>
 <script>
   var __zentTouchX = null;
   var __zentTouchY = null;
@@ -51,7 +55,7 @@
   /* ============================================================
      Pantalla de carga
      Va incrustada en el HTML para que aparezca de inmediato,
-     sin esperar a los CSS externos ni al CDN de Supabase.
+     sin esperar a los CSS externos ni a la librería de Supabase.
      ============================================================ */
   #boot {
     --boot-bg:
@@ -203,8 +207,8 @@
   }
 </style>
 <script>
-  /* La pantalla de carga se retira cuando la app avisa que ya esta lista.
-     Si algo falla, se retira sola para no dejar al usuario trapped. */
+  /* La pantalla de carga se retira cuando la app avisa que ya está lista.
+     Si algo falla, se retira sola para no dejar al usuario atascado. */
   (function () {
     function bootEl() { return document.getElementById('boot'); }
 
@@ -239,7 +243,7 @@
       aplicarTema();
     }
 
-    setTimeout(window.zentListo, 9000);
+    setTimeout(window.zentListo, 6000);
   })();
 </script>
 </head>
@@ -342,22 +346,28 @@
 
 <div id="modalRoot"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="sync.js"></script>
 <script>
-(async () => {
-  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
-    location.href = 'login.html';
+/* Comprobación local de la sesión: si hay un token guardado se abre
+   la app al instante, sin esperar a la red. La validación real se
+   hace en segundo plano desde app.js. */
+(function () {
+  var hasSession = false;
+  try {
+    for (var i = 0; i < localStorage.length; i += 1) {
+      var key = localStorage.key(i) || '';
+      if (key.indexOf('sb-') === 0 && key.indexOf('-auth-token') !== -1 && localStorage.getItem(key)) {
+        hasSession = true;
+        break;
+      }
+    }
+  } catch (error) { /* almacenamiento bloqueado */ }
+  if (!hasSession) {
+    location.replace('login.html');
     return;
   }
-  if (typeof window.zentCarga === 'function') window.zentCarga('Abriendo tu sesión…');
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) {
-    location.href = 'login.html';
-    return;
-  }
-  if (typeof window.zentCarga === 'function') window.zentCarga('Cargando tus cuentas…');
+  if (typeof window.zentCarga === 'function') window.zentCarga('Abriendo tus cuentas…');
 })();
 </script>
 <script src="icons/iconos.js"></script>

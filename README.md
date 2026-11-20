@@ -77,7 +77,9 @@ Luego, en **Authentication → Settings**, confirma que tienes habilitado **Emai
 
 ### Notas
 
-- Tus datos se guardan en `localStorage` como respaldo local y se suben a Supabase tras cada cambio.
+- Zent es **local primero**: abre al instante con lo guardado en `localStorage` del dispositivo, incluso sin internet. Supabase se usa para subir los cambios y como copia de seguridad.
+- Si no hay conexión, los cambios quedan en cola en el dispositivo y se suben solos cuando vuelve internet (verás el estado en **Ajustes → Sincronización**).
+- En un dispositivo nuevo la app trae la copia de la nube la primera vez. Después, usa **Ajustes → Traer de la nube** solo si quieres recuperar esa copia a mano.
 - Si cierras sesión, se borra la sesión actual pero los datos siguen en Supabase para la próxima vez que inicies sesión con la misma cuenta.
 - Usa **Ajustes → Exportar respaldo** para descargar una copia JSON de tus datos en cualquier momento.
 - **Ajustes → Borrar todo** elimina los datos de este dispositivo y los sube vacíos a Supabase (cuidado: esto sobrescribe en la nube).
@@ -87,7 +89,7 @@ Luego, en **Authentication → Settings**, confirma que tienes habilitado **Emai
 1. Despliega esta carpeta en un hosting con HTTPS (Netlify, Vercel, Cloudflare Pages, GitHub Pages, etc.).
 2. Abre la URL desde el navegador de tu celular.
 3. Regístrate o inicia sesión con tu correo y contraseña.
-4. Tus datos aparecen automáticamente en todos los dispositivos donde inicies sesión con la misma cuenta.
+4. La primera vez en un dispositivo nuevo, tus datos se traen de la nube automáticamente. A partir de ahí se guardan en el dispositivo y se suben a tu cuenta con cada cambio.
 
 ## Estructura
 
@@ -96,6 +98,8 @@ zent/
 ├── index.html              # Estructura de la app
 ├── styles.css              # Diseño responsive y temas
 ├── app.js                  # Lógica, cálculos y persistencia
+├── sync.js                 # Sincronización local primero con Supabase
+├── vendor/supabase-js.js   # Librería de Supabase servida desde el mismo dominio
 ├── manifest.webmanifest    # Configuración de la app instalable
 ├── sw.js                   # Service worker (modo sin conexión)
 └── icons/                  # Iconos SVG y PNG
@@ -103,7 +107,7 @@ zent/
 
 ## Notas técnicas
 
-- HTML, CSS y JavaScript sin dependencias ni proceso de compilación.
+- HTML, CSS y JavaScript sin proceso de compilación. La única librería externa es supabase-js, guardada en `vendor/` para no depender de un CDN al abrir la app.
 - Datos validados y normalizados al cargar o importar un respaldo.
 - Ruteo por hash (`#/resumen`, `#/movimientos`, etc.), así que funciona en cualquier hosting estático.
 - Si actualizas archivos y usas el service worker, cambia `CACHE_NAME` en `sw.js` para invalidar la caché anterior.
