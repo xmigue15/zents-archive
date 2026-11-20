@@ -3237,18 +3237,44 @@ textarea:focus {
 
 /* Entrada de cada vista al cambiar de pestaña */
 .view-enter {
-  animation: view-enter 0.2s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: view-in 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
-@keyframes view-enter {
+.view-enter.view-enter-atras {
+  animation-name: view-in-atras;
+}
+
+@keyframes view-in {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateX(30px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
+}
+
+@keyframes view-in-atras {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Pulsación de botones y tarjetas */
+.is-pressed,
+.is-pressed:active {
+  filter: brightness(0.92) !important;
+  transform: scale(0.95) !important;
+}
+
+.link:active {
+  opacity: 0.55;
 }
 
 /* Tarjetas informativas: el borde responde al puntero */

@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.6.0';
+  const APP_VERSION = '1.7.0';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -20,6 +20,7 @@
     estadisticas: { title: 'Estadísticas' },
     ajustes: { title: 'Ajustes' }
   };
+  const VIEW_ORDER = Object.keys(VIEW_META);
 
   const ICON = {
     plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
@@ -41,6 +42,7 @@
     logout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="m10 8-4 4 4 4M6 12h9"/></svg>',
     arrowLeft: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>',
     check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>',
+    refresh: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-4M4 5v5h5M4 13a8 8 0 0 0 14.9 4M20 19v-5h-5"/></svg>',
     sparkle: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3l1.7 4.8L17.5 9.5l-4.8 1.7L11 16l-1.7-4.8L4.5 9.5l4.8-1.7z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>'
   };
 
@@ -1518,6 +1520,13 @@
       '</section>' +
       '<p class="settings-note settings-note-center">Tus datos son solo tuyos: viven en este dispositivo y en tu cuenta.</p>' +
 
+      '<section class="card settings-list mt-16">' +
+        settingsRow({
+          action: 'force-update', icon: ICON.refresh, title: 'Buscar actualización',
+          sub: 'Descarga la última versión de Zent'
+        }) +
+      '</section>' +
+
       '<section class="card settings-list settings-account">' +
         settingsRow({
           action: 'sign-out', icon: ICON.logout, title: 'Cerrar sesión',
@@ -1775,7 +1784,7 @@
       }, Math.max(0, duration - 60));
     };
 
-    /* Cambia la vista al instante, sin animacion y sin llenar el historial. */
+    /* Cambia la vista con la transición de entrada, sin llenar el historial. */
     const switchView = (index) => {
       const target = views[index];
       if (!target || currentView() === target) return;
@@ -1952,18 +1961,21 @@
       runCounters(root);
     }
     if (ui.renderedView !== view) {
-      const cambiarDeVista = ui.renderedView !== null;
+      const vistaAnterior = ui.renderedView;
+      const cambiarDeVista = vistaAnterior !== null;
+      const haciaAtras = cambiarDeVista && VIEW_ORDER.indexOf(view) < VIEW_ORDER.indexOf(vistaAnterior);
       ui.renderedView = view;
       if (cambiarDeVista) {
-        root.classList.remove('view-enter');
+        root.classList.remove('view-enter', 'view-enter-atras');
         // Fuerza un reflow para que la animación vuelva a empezar.
         void root.offsetWidth;
         root.classList.add('view-enter');
+        if (haciaAtras) root.classList.add('view-enter-atras');
         if (viewAnimTimer) clearTimeout(viewAnimTimer);
         viewAnimTimer = setTimeout(() => {
           viewAnimTimer = null;
-          root.classList.remove('view-enter');
-        }, 260);
+          root.classList.remove('view-enter', 'view-enter-atras');
+        }, 340);
       }
       instantScrollTo(0);
     }
@@ -3485,6 +3497,23 @@
      Eventos
      ------------------------------------------------------------ */
 
+  /* Feedback de pulsación inmediato, también en Safari de iPhone. */
+  const PRESIONABLES = '.btn, .icon-btn, .chip, .category-card, .settings-row, .card-btn, .fab, ' +
+    '.type-card, .wizard-cat, .wizard-account, .wizard-manage, .month-pill, .gmf-box, .row';
+
+  document.addEventListener('pointerdown', (event) => {
+    const element = event.target && event.target.closest ? event.target.closest(PRESIONABLES) : null;
+    if (!element) return;
+    element.classList.add('is-pressed');
+    const soltar = () => {
+      element.classList.remove('is-pressed');
+      document.removeEventListener('pointerup', soltar);
+      document.removeEventListener('pointercancel', soltar);
+    };
+    document.addEventListener('pointerup', soltar);
+    document.addEventListener('pointercancel', soltar);
+  }, { passive: true });
+
   document.addEventListener('click', (event) => {
     if (event.target && event.target.matches && event.target.matches('[data-backdrop]')) {
       if (ui.categoriesReturn && document.querySelector('#modalRoot [data-categories-modal]')) {
@@ -3881,6 +3910,29 @@
         });
         break;
 
+      case 'force-update':
+        (async () => {
+          if (navigator.onLine === false) {
+            toast('Necesitas internet para buscar la actualización.');
+            return;
+          }
+          toast('Buscando la última versión…');
+          try {
+            if ('serviceWorker' in navigator) {
+              const regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map((reg) => reg.unregister()));
+            }
+            if (window.caches && typeof caches.keys === 'function') {
+              const keys = await caches.keys();
+              await Promise.all(keys.map((key) => caches.delete(key)));
+            }
+          } catch (error) {
+            /* Aunque falle algo, se intenta recargar. */
+          }
+          location.reload();
+        })();
+        break;
+
       case 'sign-out':
         confirmDialog({
           title: 'Cerrar sesión',
@@ -4037,7 +4089,10 @@
     if (location.protocol !== 'https:' && !isLocal) return;
     // updateViaCache: 'none' hace que el navegador revise sw.js en cada
     // apertura, así las actualizaciones llegan sin esperar 24 horas.
-    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch((error) => {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((registration) => {
+      // Fuerza una revisión de sw.js en cada apertura.
+      registration.update().catch(() => {});
+    }).catch((error) => {
       console.warn('Zent: no se pudo registrar el service worker.', error);
     });
   }
