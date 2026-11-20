@@ -151,13 +151,31 @@
     return sb.auth.signUp({ email, password });
   }
 
+  /* Cierra la sesión solo en este dispositivo: no depende de la red,
+     así nunca deja al usuario atrapado en la app sin poder salir. */
+  function clearLocalSession() {
+    try {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i) || '';
+        if (key.indexOf('sb-') === 0 && key.indexOf('-auth-token') !== -1) keys.push(key);
+      }
+      keys.forEach((key) => localStorage.removeItem(key));
+    } catch (error) {
+      /* almacenamiento bloqueado */
+    }
+  }
+
   async function signOut() {
     try {
       const sb = await ensureClient();
-      if (sb) await sb.auth.signOut();
+      if (sb) {
+        await withTimeout(sb.auth.signOut({ scope: 'local' }), 4000);
+      }
     } catch (error) {
       console.warn('Zent: error al cerrar sesión.', error);
     }
+    clearLocalSession();
     // La próxima sesión en este dispositivo empieza de cero y vuelve a
     // comprobar la nube antes de subir nada.
     setPending(false);

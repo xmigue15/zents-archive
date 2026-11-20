@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.1.1';
+  const APP_VERSION = '1.2.0';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -33,7 +33,12 @@
     download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 4 5-4M5 20h14"/></svg>',
     upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>',
     back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6H9l-6 6 6 6h11z"/><path d="M13 10l4 4M17 10l-4 4"/></svg>',
-    transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>'
+    transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg>',
+    chevron: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
+    tag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 12 22 2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>',
+    wallet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="13.5" r="1"/></svg>',
+    archive: '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>',
+    logout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="m10 8-4 4 4 4M6 12h9"/></svg>'
   };
 
   /* Iconos propios de Zent (reemplazan a los emojis) */
@@ -1342,87 +1347,134 @@
     '</button>';
   }
 
+  /* Inicial del perfil para el avatar cuando no hay foto. */
+  function profileInitial(name) {
+    const clean = String(name || '').trim();
+    return clean ? esc(clean.charAt(0).toUpperCase()) : '👤';
+  }
+
+  /* Fila de ajustes: icono, título, explicación y chevron. */
+  function settingsRow(options) {
+    return '<button class="settings-row' + (options.danger ? ' is-danger' : '') + '" data-action="' + options.action + '"' +
+      (options.view ? ' data-view="' + options.view + '"' : '') + '>' +
+      '<span class="settings-row-icon">' + options.icon + '</span>' +
+      '<span class="settings-row-text">' +
+        '<b>' + options.title + '</b>' +
+        (options.sub ? '<span>' + options.sub + '</span>' : '') +
+      '</span>' +
+      (options.value !== undefined ? '<span class="settings-row-value">' + options.value + '</span>' : '') +
+      (options.danger ? '' : '<span class="settings-row-chevron" aria-hidden="true">' + ICON.chevron + '</span>') +
+    '</button>';
+  }
+
   function viewAjustes() {
     const profile = state.profile || { name: '', photoData: '' };
+    const accounts = state.accounts || [];
+    const categories = state.categories || [];
+    const movements = state.movements || [];
     const syncInfo = window.sync && typeof sync.status === 'function'
       ? sync.status()
       : { online: navigator.onLine !== false, pending: false, ready: false };
     const syncState = (syncInfo.online === false || !syncInfo.ready)
       ? 'offline'
       : ((syncInfo.pending || syncInfo.blocked) ? 'pending' : 'ok');
+    const transparency = Number(state.barTransparency) || 0;
+
     return '<div class="page-head"><div><p class="eyebrow">Preferencias</p><h1>Ajustes</h1></div></div>' +
-      '<section class="card settings-block">' +
-        '<h3 class="settings-title">Perfil</h3>' +
-        '<div class="profile-row">' +
+
+      /* Tu perfil, con un vistazo rápido a lo que has construido. */
+      '<section class="card settings-hero">' +
+        '<div class="settings-hero-top">' +
           '<span class="profile-avatar">' +
             (profile.photoData
               ? '<img src="' + esc(profile.photoData) + '" alt="">'
-              : '👤') +
+              : profileInitial(profile.name)) +
           '</span>' +
-          '<div class="profile-info">' +
-            '<b>' + (profile.name ? esc(profile.name) : 'Sin nombre') + '</b>' +
-            '<span>' + (profile.name ? 'Tu perfil de Zent' : 'Agrega tu nombre y foto') + '</span>' +
+          '<div class="settings-hero-id">' +
+            '<b>' + (profile.name ? esc(profile.name) : 'Tu perfil') + '</b>' +
+            '<span>' + (profile.name ? 'Este es tu espacio en Zent' : 'Agrega tu nombre y una foto') + '</span>' +
           '</div>' +
-          '<button class="btn ghost sm" data-action="edit-profile">' + ICON.edit + ' Editar</button>' +
+          '<button class="icon-btn sm" data-action="edit-profile" aria-label="Editar perfil">' + ICON.edit + '</button>' +
+        '</div>' +
+        '<div class="settings-hero-stats">' +
+          '<div><b>' + accounts.length + '</b><span>Cuentas</span></div>' +
+          '<div><b>' + categories.length + '</b><span>Categorías</span></div>' +
+          '<div><b>' + movements.length + '</b><span>Movimientos</span></div>' +
         '</div>' +
       '</section>' +
+
+      '<p class="settings-group">Apariencia</p>' +
       '<section class="card settings-block">' +
-        '<h3 class="settings-title">Apariencia</h3>' +
-        '<p class="settings-desc">Elige cómo se ve Zent en este dispositivo.</p>' +
-        '<div class="theme-choices">' +
+        '<div class="theme-choices theme-seg" role="group" aria-label="Tema de la app">' +
           themeChoice('system', 'Sistema', ICON.monitor) +
           themeChoice('light', 'Claro', ICON.sun) +
           themeChoice('dark', 'Oscuro', ICON.moon) +
         '</div>' +
-        '<div class="field slider-field">' +
+        '<div class="field slider-field settings-slider">' +
           '<label id="barTransparencyLabel">Transparencia de la barra inferior</label>' +
           '<div class="slider-row">' +
             '<div class="range" id="barTransparency" role="slider" tabindex="0" ' +
-              'aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + (Number(state.barTransparency) || 0) + '" ' +
+              'aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + transparency + '" ' +
               'aria-labelledby="barTransparencyLabel" ' +
-              'style="--fill:' + (Number(state.barTransparency) || 0) + '%; --pos:' + ((Number(state.barTransparency) || 0) / 100) + '">' +
+              'style="--fill:' + transparency + '%; --pos:' + (transparency / 100) + '">' +
               '<span class="range-track"></span><span class="range-thumb"></span>' +
             '</div>' +
-            '<output class="slider-out" id="barTransparencyValue" for="barTransparency">' + (Number(state.barTransparency) || 0) + ' %</output>' +
+            '<output class="slider-out" id="barTransparencyValue" for="barTransparency">' + transparency + ' %</output>' +
           '</div>' +
-          '<p class="hint">0 % deja la barra opaca, 100 % la vuelve cristal. Arrastra la barra de abajo para ajustarlo también.</p>' +
+          '<p class="hint">0 % la deja opaca, 100 % la vuelve cristal. También puedes deslizar sobre la propia barra.</p>' +
         '</div>' +
       '</section>' +
-      '<section class="card settings-block">' +
-        '<h3 class="settings-title">Categorías</h3>' +
-        '<p class="settings-desc">Personaliza el nombre y el icono de tus categorías, o crea nuevas.</p>' +
-        '<button class="btn ghost" data-action="manage-categories">' + ICON.edit + ' Administrar categorías</button>' +
+
+      '<p class="settings-group">Organización</p>' +
+      '<section class="card settings-list">' +
+        settingsRow({
+          action: 'manage-categories', icon: ICON.tag, title: 'Categorías',
+          sub: 'Nombre e icono de cada categoría', value: categories.length
+        }) +
+        settingsRow({
+          action: 'nav', view: 'cuentas', icon: ICON.wallet, title: 'Cuentas y tarjetas',
+          sub: 'Saldos, colores y logos', value: accounts.length
+        }) +
       '</section>' +
-      '<section class="card settings-block">' +
-        '<h3 class="settings-title">Sincronización</h3>' +
-        '<p class="settings-desc">Zent abre al instante con lo que hay en este dispositivo. Internet solo se usa para subir tus cambios.</p>' +
+
+      '<p class="settings-group">Sincronización</p>' +
+      '<section class="card settings-block settings-sync">' +
         '<p class="sync-status" id="syncStatus" data-state="' + syncState + '">' + esc(syncStatusText()) + '</p>' +
-        '<div class="data-actions">' +
-          '<button class="btn ghost" data-action="sync-now">' + ICON.upload + ' Subir cambios</button>' +
-          '<button class="btn ghost" data-action="pull-cloud">' + ICON.download + ' Traer de la nube</button>' +
+        '<div class="settings-actions">' +
+          '<button class="btn ghost sm" data-action="sync-now">' + ICON.upload + ' Subir cambios</button>' +
+          '<button class="btn ghost sm" data-action="pull-cloud">' + ICON.download + ' Traer de la nube</button>' +
         '</div>' +
+        '<p class="settings-note">Zent abre al instante con lo que hay aquí. Internet solo se usa para respaldar tus cambios.</p>' +
       '</section>' +
-      '<section class="card settings-block">' +
-        '<h3 class="settings-title">Datos</h3>' +
-        '<p class="settings-desc">Zent guarda todo en este dispositivo y en tu cuenta. Exporta una copia en Excel cuando quieras.</p>' +
-        '<div class="data-actions">' +
-          '<button class="btn ghost" data-action="export-data">' + ICON.download + ' Exportar a Excel</button>' +
-          '<button class="btn ghost" data-action="import-data">' + ICON.upload + ' Importar respaldo</button>' +
-        '</div>' +
+
+      '<p class="settings-group">Datos</p>' +
+      '<section class="card settings-list">' +
+        settingsRow({
+          action: 'export-data', icon: ICON.download, title: 'Exportar a Excel',
+          sub: 'Una copia de todos tus movimientos'
+        }) +
+        settingsRow({
+          action: 'import-data', icon: ICON.archive, title: 'Importar respaldo',
+          sub: 'Restaura desde un archivo de Zent'
+        }) +
         '<input type="file" id="importFile" accept="application/json,.json" hidden>' +
       '</section>' +
-      '<section class="card settings-block">' +
-        '<h3 class="settings-title">Acerca de</h3>' +
-        '<div class="about-box">' +
-          '<img class="about-logo" src="icons/zent.svg" alt="Zent" width="46" height="46">' +
-          '<div><b>Zent</b><span>Versión ' + APP_VERSION + ' · Peso colombiano (COP)</span><span>Tus datos se sincronizan en Supabase.</span></div>' +
+
+      '<p class="settings-group">Acerca de</p>' +
+      '<section class="card about-card">' +
+        '<span class="about-seal" aria-hidden="true">Z</span>' +
+        '<div class="about-card-text">' +
+          '<b>Zent</b>' +
+          '<span>Versión ' + APP_VERSION + ' · Peso colombiano (COP)</span>' +
         '</div>' +
       '</section>' +
-      '<section class="card settings-block">' +
-        '<h3 class="settings-title">Cuenta</h3>' +
-        '<div class="data-actions">' +
-          '<button class="btn danger" data-action="sign-out">Cerrar sesión</button>' +
-        '</div>' +
+      '<p class="settings-note settings-note-center">Tus datos son solo tuyos: viven en este dispositivo y en tu cuenta.</p>' +
+
+      '<section class="card settings-list settings-account">' +
+        settingsRow({
+          action: 'sign-out', icon: ICON.logout, title: 'Cerrar sesión',
+          sub: 'Volver a la pantalla de entrada', danger: true
+        }) +
       '</section>';
   }
 
@@ -2548,7 +2600,7 @@
             '<span class="profile-avatar" id="profPhotoPreview">' +
               (profile.photoData
                 ? '<img src="' + esc(profile.photoData) + '" alt="">'
-                : '👤') +
+                : profileInitial(profile.name)) +
             '</span>' +
             '<div class="profile-editor-actions">' +
               '<button type="button" class="btn ghost sm" data-action="prof-photo-upload">' + ICON.upload + ' Subir foto</button>' +
@@ -2569,6 +2621,9 @@
         '</div>' +
       '</form>'
     );
+
+    const nameInput = $('#profName');
+    if (nameInput) nameInput.addEventListener('input', updateProfilePhotoPreview);
   }
 
   function updateProfilePhotoPreview() {
@@ -2579,7 +2634,9 @@
     if (data) {
       preview.innerHTML = '<img src="' + esc(data) + '" alt="">';
     } else {
-      preview.innerHTML = '👤';
+      const nameInput = $('#profName');
+      const name = nameInput ? nameInput.value : (state.profile && state.profile.name);
+      preview.innerHTML = profileInitial(name);
     }
   }
 
@@ -3459,19 +3516,30 @@
         break;
 
       case 'sign-out':
-        (async () => {
-          try {
-            if (window.sync) await sync.signOut();
-          } catch (error) {
-            console.warn('Zent: error al cerrar sesión.', error);
+        confirmDialog({
+          title: 'Cerrar sesión',
+          message: 'Se borrarán los datos guardados en este dispositivo. Tu copia de la nube no se toca.',
+          sub: (window.sync && sync.status().pending)
+            ? 'Tienes cambios sin subir: se perderían si cierras sesión ahora. Usa «Subir cambios» primero.'
+            : 'Podrás volver a entrar cuando quieras con tu correo y contraseña.',
+          confirmText: 'Cerrar sesión',
+          onConfirm: () => {
+            closeModal();
+            (async () => {
+              try {
+                if (window.sync) await sync.signOut();
+              } catch (error) {
+                console.warn('Zent: error al cerrar sesión.', error);
+              }
+              try {
+                localStorage.removeItem(STORE_KEY);
+              } catch (error) {
+                /* sin acceso a localStorage */
+              }
+              location.href = 'login.html';
+            })();
           }
-          try {
-            localStorage.removeItem(STORE_KEY);
-          } catch (error) {
-            /* sin acceso a localStorage */
-          }
-          location.href = 'login.html';
-        })();
+        });
         break;
 
       default:
