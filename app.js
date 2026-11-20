@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.5.0';
+  const APP_VERSION = '1.6.0';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -808,6 +808,7 @@
   };
 
   let saveTimer = null;
+  let viewAnimTimer = null;
 
   function scheduleSave() {
     if (saveTimer) clearTimeout(saveTimer);
@@ -1028,10 +1029,10 @@
   }
 
   function chartHTML(months, max) {
-    return '<div class="chart">' + months.map((month) => {
+    return '<div class="chart">' + months.map((month, index) => {
       const incomeHeight = Math.round((month.income / max) * 100);
       const expenseHeight = Math.round((month.expense / max) * 100);
-      return '<div class="chart-col">' +
+      return '<div class="chart-col" style="--i:' + index + '">' +
         '<div class="chart-bars">' +
           '<span class="bar income" style="height:' + Math.max(2, incomeHeight) + '%"></span>' +
           '<span class="bar expense" style="height:' + Math.max(2, expenseHeight) + '%"></span>' +
@@ -1951,7 +1952,19 @@
       runCounters(root);
     }
     if (ui.renderedView !== view) {
+      const cambiarDeVista = ui.renderedView !== null;
       ui.renderedView = view;
+      if (cambiarDeVista) {
+        root.classList.remove('view-enter');
+        // Fuerza un reflow para que la animación vuelva a empezar.
+        void root.offsetWidth;
+        root.classList.add('view-enter');
+        if (viewAnimTimer) clearTimeout(viewAnimTimer);
+        viewAnimTimer = setTimeout(() => {
+          viewAnimTimer = null;
+          root.classList.remove('view-enter');
+        }, 260);
+      }
       instantScrollTo(0);
     }
   }
