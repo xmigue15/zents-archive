@@ -2554,3 +2554,81 @@ textarea:focus {
   font-size: 11.5px;
   line-height: 1.45;
 }
+
+/* ============================================================
+   Consejo del día — Resumen
+   ============================================================ */
+
+.page-head-resumen {
+  margin-bottom: 12px;
+}
+
+.page-head-resumen .greeting-name {
+  overflow-wrap: anywhere;
+}
+
+.daily-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 13px 15px;
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+  background:
+    radial-gradient(130% 150% at 100% 0%, rgba(176, 141, 106, 0.14), transparent 58%),
+    var(--glass-2);
+  box-shadow: 0 8px 22px rgba(122, 102, 72, 0.08);
+}
+
+.daily-tip-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.daily-tip-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.daily-tip-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.daily-tip-label {
+  margin: 0;
+  color: var(--camel);
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.daily-tip-text {
+  margin: 3px 0 0;
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 14.5px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  line-height: 1.45;
+}
+
+@media (min-width: 640px) {
+  .daily-tip-text {
+    font-size: 15.5px;
+  }
+}

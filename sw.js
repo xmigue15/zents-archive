@@ -4,7 +4,7 @@
    abra al instante, incluso con internet lento o caído.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v82';
+const CACHE_NAME = 'zent-v83';
 const APP_SHELL = [
   './',
   './index.html',
@@ -18,6 +18,7 @@ const APP_SHELL = [
   './fonts/redaction10-regular.woff2',
   './fonts/redaction10-bold.woff2',
   './fonts/redaction10-italic.woff2',
+  './frases.js',
   './app.js',
   './vendor/supabase-js.js',
   './supabase-config.js',

@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.2.0';
+  const APP_VERSION = '1.3.0';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -38,7 +38,8 @@
     tag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 12 22 2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>',
     wallet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="13.5" r="1"/></svg>',
     archive: '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>',
-    logout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="m10 8-4 4 4 4M6 12h9"/></svg>'
+    logout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="m10 8-4 4 4 4M6 12h9"/></svg>',
+    sparkle: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3l1.7 4.8L17.5 9.5l-4.8 1.7L11 16l-1.7-4.8L4.5 9.5l4.8-1.7z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>'
   };
 
   /* Iconos propios de Zent (reemplazan a los emojis) */
@@ -537,12 +538,41 @@
     return 'Buenas noches';
   }
 
-  /* El saludo lleva el nombre del usuario, con el mismo formato */
-  function saludoHTML() {
-    const saludo = esc(greeting());
-    const nombre = String((state.profile && state.profile.name) || '').trim();
-    if (!nombre) return saludo;
-    return saludo + ', ' + esc(nombre);
+  /* Si frases.js no alcanza a cargar, la app igual muestra un consejo. */
+  const FRASES_RESPALDO = [
+    'Anota cada gasto el mismo día: lo que no se registra, se olvida.',
+    'Ahorra primero y gasta después, no al revés.',
+    'Espera 24 horas antes de comprar algo que no tenías planeado.',
+    'Paga primero la deuda con la tasa de interés más alta.',
+    'Revisa tus suscripciones y cancela las que no usas.',
+    'Escribe tus metas con número y fecha.',
+    'No compares tus finanzas con las de las redes sociales.',
+    'Empieza hoy con un solo cambio pequeño y sostenible.'
+  ];
+
+  /* Elige una frase nueva en cada apertura de la app y guarda cuál
+     sigue, para no repetirla hasta agotar el banco de mil. */
+  function elegirFrase() {
+    const banco = Array.isArray(window.ZENT_FRASES) && window.ZENT_FRASES.length
+      ? window.ZENT_FRASES
+      : FRASES_RESPALDO;
+    let index = Math.floor(Math.random() * banco.length);
+    try {
+      const guardado = parseInt(localStorage.getItem('zent.frase'), 10);
+      if (isFinite(guardado) && guardado >= 0) index = guardado % banco.length;
+      localStorage.setItem('zent.frase', String((index + 1) % banco.length));
+    } catch (error) {
+      /* sin almacenamiento: se queda con una frase al azar */
+    }
+    return banco[index];
+  }
+
+  function fraseDelDia() {
+    if (!ui.frase) {
+      ui.frase = elegirFrase();
+      ui.fraseVistaEn = Date.now();
+    }
+    return ui.frase;
   }
 
   function initial(name) {
@@ -769,7 +799,9 @@
     renderedView: null,
     countersShown: {},
     walletOpen: false,
-    walletFocus: ''
+    walletFocus: '',
+    frase: '',
+    fraseVistaEn: 0
   };
 
   let saveTimer = null;
@@ -1017,6 +1049,8 @@
     const recent = sortedMovements().slice(0, 5);
     const topExpenses = categoryBreakdown('expense', ym).slice(0, 3);
     const average = averageDailyExpense(ym);
+    const nombre = String((state.profile && state.profile.name) || '').trim();
+    const frase = fraseDelDia();
 
     const accountsSorted = state.accounts
       .slice()
@@ -1098,10 +1132,20 @@
         }).join('')
       : '<p class="hint">Todavía no hay gastos este mes.</p>';
 
-    return '<div class="page-head">' +
-        '<div><p class="eyebrow">' + saludoHTML() + '</p><h1>Tu resumen</h1></div>' +
+    return '<div class="page-head page-head-resumen">' +
+        '<div>' +
+          '<p class="eyebrow">' + esc(greeting()) + '</p>' +
+          '<h1 class="greeting-name">' + (nombre ? esc(nombre) : 'Tu resumen') + '</h1>' +
+        '</div>' +
         '<button class="btn ghost sm" data-action="add-movement">' + ICON.plus + ' Agregar</button>' +
       '</div>' +
+      '<aside class="daily-tip" aria-label="Consejo del día">' +
+        '<span class="daily-tip-icon" aria-hidden="true">' + ICON.sparkle + '</span>' +
+        '<div class="daily-tip-body">' +
+          '<p class="daily-tip-label">Consejo del día</p>' +
+          '<p class="daily-tip-text">' + esc(frase) + '</p>' +
+        '</div>' +
+      '</aside>' +
       '<section class="hero">' +
         '<p class="hero-label">Saldo total</p>' +
         '<div class="hero-amount" data-count="' + totalBalance() + '">' + formatMoney(totalBalance()) + '</div>' +
@@ -3678,6 +3722,17 @@
   render();
   setupTabSwipe();
   registerServiceWorker();
+
+  /* La app instalada suele quedar en segundo plano. Si se vuelve a
+     abrir después de un rato, se muestra otro consejo del día. */
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    if (!ui.frase || Date.now() - ui.fraseVistaEn < 30 * 60 * 1000) return;
+    ui.frase = elegirFrase();
+    ui.fraseVistaEn = Date.now();
+    const texto = document.querySelector('.daily-tip-text');
+    if (texto) texto.textContent = ui.frase;
+  });
 
   /* La pantalla de carga se retira en cuanto la primera vista está
      pintada. No espera a la red ni a Supabase. */
