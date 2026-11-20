@@ -1,10 +1,10 @@
-﻿/* ============================================================
+/* ============================================================
    Zent — service worker
    Guarda el shell de la app para que funcione sin conexión y
    abra al instante, incluso con internet lento o caído.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v78';
+const CACHE_NAME = 'zent-v79';
 const APP_SHELL = [
   './',
   './index.html',
