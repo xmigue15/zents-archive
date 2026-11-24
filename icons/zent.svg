@@ -1,11 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Zent">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Zent"><title>Zent</title>
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#4f46e5"/>
-      <stop offset="0.55" stop-color="#7c3aed"/>
-      <stop offset="1" stop-color="#a855f7"/>
-    </linearGradient>
+    <clipPath id="zentClip"><rect width="512" height="512" rx="112"/></clipPath>
+    <radialGradient id="zentBg" cx="33%" cy="20%" r="94%">
+      <stop offset="0" stop-color="#285e50"/>
+      <stop offset=".52" stop-color="#173f35"/>
+      <stop offset="1" stop-color="#092621"/>
+    </radialGradient>
+    <radialGradient id="zentPaper" cx="38%" cy="28%" r="82%">
+      <stop offset="0" stop-color="#fbf7ef"/>
+      <stop offset=".62" stop-color="#f1e8d9"/>
+      <stop offset="1" stop-color="#e4d7c5"/>
+    </radialGradient>
+    <filter id="zentGrain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .05 0"/>
+    </filter>
+    <filter id="zentDisc" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="12" stdDeviation="13" flood-color="#03110e" flood-opacity=".42"/>
+    </filter>
+    <filter id="zentZ" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#061713" flood-opacity=".18"/>
+    </filter>
   </defs>
-  <rect width="512" height="512" rx="116" fill="url(#g)"/>
-  <path d="M148 150h216l-140 146h144v66H146l140-146H148z" fill="#fff"/>
-</svg>
+<rect width="512" height="512" rx="112" fill="url(#zentBg)"/>
+<g clip-path="url(#zentClip)"><rect x="7" y="7" width="498" height="498" rx="106" fill="none" stroke="#ffffff" stroke-opacity=".14" stroke-width="2"/>
+    <!-- Roseta grabada en el campo verde -->
+    <g fill="none" stroke="#8eb69b" stroke-opacity=".24" stroke-width="1.2">
+      <ellipse cx="256" cy="256" rx="246" ry="88"/>
+      <ellipse cx="256" cy="256" rx="246" ry="88" transform="rotate(30 256 256)"/>
+      <ellipse cx="256" cy="256" rx="246" ry="88" transform="rotate(60 256 256)"/>
+      <ellipse cx="256" cy="256" rx="246" ry="88" transform="rotate(90 256 256)"/>
+      <ellipse cx="256" cy="256" rx="246" ry="88" transform="rotate(120 256 256)"/>
+      <ellipse cx="256" cy="256" rx="246" ry="88" transform="rotate(150 256 256)"/>
+    </g>
+    <g fill="none" stroke="#b08d6a" stroke-opacity=".17" stroke-width="1">
+      <ellipse cx="256" cy="256" rx="250" ry="56" transform="rotate(15 256 256)"/>
+      <ellipse cx="256" cy="256" rx="250" ry="56" transform="rotate(45 256 256)"/>
+      <ellipse cx="256" cy="256" rx="250" ry="56" transform="rotate(75 256 256)"/>
+      <ellipse cx="256" cy="256" rx="250" ry="56" transform="rotate(105 256 256)"/>
+      <ellipse cx="256" cy="256" rx="250" ry="56" transform="rotate(135 256 256)"/>
+      <ellipse cx="256" cy="256" rx="250" ry="56" transform="rotate(165 256 256)"/>
+    </g>
+
+    <!-- Esquinas de billete -->
+    <g fill="none" stroke="#daf1de" stroke-opacity=".17" stroke-width="2" stroke-linecap="round">
+      <path d="M45 92V45h47"/><path d="M420 45h47v47"/>
+      <path d="M467 420v47h-47"/><path d="M92 467H45v-47"/>
+    </g>
+
+    <!-- Medallón de papel -->
+    <circle cx="256" cy="256" r="164" fill="url(#zentPaper)" filter="url(#zentDisc)"/>
+    <circle cx="256" cy="256" r="164" fill="none" stroke="#b08d6a" stroke-width="2.5" stroke-opacity=".8"/>
+    <circle cx="256" cy="256" r="151" fill="none" stroke="#163b32" stroke-opacity=".2" stroke-width="1.2"/>
+    <circle cx="256" cy="256" r="142" fill="none" stroke="#8eb69b" stroke-opacity=".45" stroke-width="2" stroke-dasharray="1 5"/>
+
+    <!-- Z de Georgia convertida a trazado -->
+    <g transform="translate(185.7090 336.3730) scale(0.11328125 -0.11328125)">
+      <path d="M1214 443 1167 0H27V35L920 1340H593Q536 1340 497.5 1338.0Q459 1336 427 1330Q361 1317 278.5 1221.0Q196 1125 154 1018H84L127 1419H1190V1384L297 79H634Q719 79 815.0 91.0Q911 103 940 132Q1005 194 1061.0 284.0Q1117 374 1144 443Z" fill="#163b32" filter="url(#zentZ)"/>
+    </g>
+
+    <!-- Punto del sello -->
+    <circle cx="256" cy="92" r="4.5" fill="#b08d6a"/>
+
+    <rect width="512" height="512" filter="url(#zentGrain)"/>
+</g></svg>

@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.7.0';
+  const APP_VERSION = '1.8.0';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
