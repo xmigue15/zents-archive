@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#b08d6a">
+<meta name="theme-color" content="#163b32">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Zent — Iniciar sesión</title>
 <link rel="icon" href="icons/zent.svg?v=1.8.1" type="image/svg+xml">
 <link rel="preload" href="fonts/inter-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -36,82 +37,540 @@
 </script>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: radial-gradient(900px 520px at 12% -6%, rgba(255, 252, 244, 0.92), transparent 62%), radial-gradient(760px 460px at 92% 4%, rgba(142, 182, 155, 0.3), transparent 60%), radial-gradient(700px 520px at 70% 100%, rgba(176, 141, 106, 0.22), transparent 62%), linear-gradient(168deg, #efe7da 0%, #e6dccd 48%, #ded2c1 100%); background-attachment: fixed; color: #1d2a25; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: pan-y; overflow-x: hidden; overflow-x: clip; overscroll-behavior-x: none; }
-  .card { width: min(92vw, 400px); padding: 32px 24px; border-radius: 28px; background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(255, 255, 255, 0.74); box-shadow: 0 20px 50px rgba(122, 102, 72, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.65); backdrop-filter: blur(22px) saturate(115%); -webkit-backdrop-filter: blur(22px) saturate(115%); }
-  h1 { margin: 0 0 8px; font-size: 26px; font-weight: 400; letter-spacing: -0.015em; font-family: "Redaction", Georgia, "Times New Roman", serif; }
-  p { margin: 0 0 24px; color: #7b7568; font-size: 14px; }
-  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; text-decoration: none; color: inherit; }
-  .mark { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #163b32, #0b2b26); color: #fff; font-weight: 900; font-size: 20px; display: grid; place-items: center; box-shadow: 0 10px 24px rgba(22, 59, 50, 0.28); }
-  label { display: block; font-size: 12.5px; font-weight: 700; color: #7b7568; margin-bottom: 6px; margin-top: 16px; }
-  input { width: 100%; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, 0.72); border-radius: 14px; background: rgba(255, 255, 255, 0.55); font-size: 16px; margin-bottom: 8px; outline: none; -webkit-user-select: text; user-select: text; }
-  input:focus { border-color: #b08d6a; box-shadow: 0 0 0 3px rgba(176, 141, 106, 0.16); }
-  .btn { width: 100%; padding: 12px; border: 0; border-radius: 999px; background: #b08d6a; color: #fff; font-size: 15px; font-weight: 650; cursor: pointer; margin-top: 20px; box-shadow: 0 10px 24px rgba(176, 141, 106, 0.32); }
-  .btn:hover { filter: brightness(1.05); }
-  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 11px; border: 1px solid rgba(255, 255, 255, 0.72); border-radius: 14px; background: rgba(255, 255, 255, 0.55); color: #1d2a25; font-size: 14.5px; font-weight: 700; cursor: pointer; }
-  .google-btn:hover { background: rgba(255, 255, 255, 0.78); }
-  .google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .google-btn svg { width: 18px; height: 18px; flex: none; }
-  .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; font-size: 12px; color: #8d8676; }
-  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(122, 110, 88, 0.18); }
-  .link { background: none; border: 0; color: #b08d6a; font-size: 13.5px; font-weight: 700; cursor: pointer; text-align: center; width: 100%; padding: 10px; }
+  :root {
+    --forest: #163b32;
+    --forest-2: #0b2b26;
+    --sage: #8eb69b;
+    --camel: #b08d6a;
+    --cream: #f6f0e6;
+    --ink: #1d2a25;
+    --muted: #7b7568;
+    --line: rgba(122, 110, 88, .2);
+    --serif: "Redaction", Georgia, "Times New Roman", serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    min-height: 100dvh;
+    font-family: var(--sans);
+    background: var(--cream);
+    color: var(--ink);
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: pan-y;
+    overflow-x: hidden;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+  }
+  a { color: inherit; }
+  .shell {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- Cabecera bosque ---------- */
+  .bosque-top {
+    position: relative;
+    flex: none;
+    min-height: 340px;
+    overflow: hidden;
+    padding-top: max(0px, env(safe-area-inset-top));
+    color: #f5f0e6;
+    background:
+      radial-gradient(340px 260px at 18% 8%, rgba(142, 182, 155, .26), transparent 64%),
+      radial-gradient(360px 300px at 96% 88%, rgba(176, 141, 106, .2), transparent 66%),
+      linear-gradient(150deg, #214c40, #0c2c26 58%, #071d19);
+  }
+  .rosette {
+    position: absolute;
+    top: -46px;
+    right: -70px;
+    width: 340px;
+    height: 340px;
+    opacity: .28;
+    pointer-events: none;
+  }
+  .rosette ellipse, .rosette circle {
+    fill: none;
+    stroke: #daf1de;
+    stroke-width: 1;
+  }
+  .brand {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: fit-content;
+    margin: 18px 24px 0;
+    text-decoration: none;
+  }
+  .seal {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1.5px solid rgba(176, 141, 106, .9);
+    border-radius: 50%;
+    background: #f7f1e7;
+    color: var(--forest);
+    font-family: var(--serif);
+    font-size: 27px;
+    line-height: 1;
+    box-shadow: 0 9px 20px rgba(3, 17, 14, .32), inset 0 0 0 3px rgba(142, 182, 155, .18);
+  }
+  .wordmark {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -.01em;
+  }
+  .bosque-copy {
+    position: relative;
+    z-index: 2;
+    padding: 44px 26px 0;
+  }
+  .eyebrow {
+    margin: 0 0 9px;
+    color: #c3a17f;
+    font-size: 9.5px;
+    font-weight: 750;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+  .bosque-copy h1 {
+    max-width: 310px;
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 36px;
+    font-weight: 400;
+    letter-spacing: -.028em;
+    line-height: 1.02;
+  }
+  .top-sub {
+    margin: 9px 0 0;
+    color: rgba(218, 241, 222, .72);
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+
+  /* ---------- Hoja del formulario ---------- */
+  .bosque-sheet {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 24px calc(24px + env(safe-area-inset-bottom));
+    border-radius: 34px 34px 0 0;
+    background:
+      radial-gradient(420px 260px at 100% 0%, rgba(255, 255, 255, .62), transparent 60%),
+      var(--cream);
+    box-shadow: 0 -16px 34px rgba(5, 25, 20, .16);
+  }
+  .auth-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid rgba(122, 110, 88, .16);
+    border-radius: 999px;
+    background: #e9dfd1;
+  }
+  .auth-tab {
+    flex: 1;
+    padding: 8px 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #8a8274;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+  }
+  .auth-tab.active {
+    background: #fffaf2;
+    color: var(--forest);
+    box-shadow: 0 4px 10px rgba(122, 102, 72, .12);
+  }
+  .auth-tab:focus-visible {
+    outline: 2px solid var(--camel);
+    outline-offset: 2px;
+  }
+  .google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    height: 46px;
+    margin-top: 16px;
+    border: 1px solid rgba(122, 110, 88, .18);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .62);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(122, 102, 72, .06);
+    transition: background .18s ease, border-color .18s ease, transform .12s ease;
+  }
+  .google:hover { background: rgba(255, 255, 255, .82); }
+  .google:active { transform: scale(.985); }
+  .google:disabled { opacity: .6; cursor: not-allowed; }
+  .google svg { width: 17px; height: 17px; flex: none; }
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    color: #8a8274;
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-top: 11px; }
+  .field label {
+    color: var(--muted);
+    font-size: 9.5px;
+    font-weight: 750;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+  }
+  .input-shell {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    height: 46px;
+    padding: 0 13px;
+    border: 1px solid rgba(122, 110, 88, .16);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .68);
+    color: var(--muted);
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .input-shell:focus-within {
+    border-color: var(--camel);
+    background: rgba(255, 255, 255, .86);
+    box-shadow: 0 0 0 3px rgba(176, 141, 106, .14);
+  }
+  .input-shell > svg {
+    flex: none;
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .input-shell input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  .input-shell input::placeholder { color: #9a9385; }
+  .eye {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #928b7d;
+    cursor: pointer;
+    transition: color .15s ease, background .15s ease;
+  }
+  .eye:hover { background: rgba(176, 141, 106, .12); color: var(--camel); }
+  .eye.on { color: var(--camel); }
+  .eye svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .primary {
+    width: 100%;
+    height: 48px;
+    margin-top: 17px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #235348, var(--forest-2));
+    color: #f5f0e6;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 14px 26px rgba(11, 43, 38, .28);
+    transition: filter .15s ease, transform .12s ease;
+  }
+  .primary:hover { filter: brightness(1.07); }
+  .primary:active { transform: scale(.985); }
+  .primary:disabled { opacity: .6; cursor: not-allowed; }
+  .link {
+    display: block;
+    width: 100%;
+    padding: 10px 0 0;
+    border: 0;
+    background: none;
+    color: var(--camel);
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+  }
   .link:hover { text-decoration: underline; }
-  .error { margin-top: 12px; color: #a65d4a; font-size: 13px; font-weight: 600; display: none; line-height: 1.45; }
-  .error.ok { color: #4f7f63; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 12px 18px; border-radius: 999px; background: #163b32; color: #daf1de; font-size: 13.5px; font-weight: 650; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; text-align: center; }
-  .toast.on { opacity: 1; }
-  .hint { font-size: 12px; color: #8d8676; margin-top: 10px; text-align: center; line-height: 1.5; }
+  .hint {
+    margin: 8px 0 0;
+    color: #8d8676;
+    font-size: 10.5px;
+    line-height: 1.5;
+    text-align: center;
+  }
+  .error {
+    display: none;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(166, 93, 74, .18);
+    border-radius: 12px;
+    background: rgba(166, 93, 74, .09);
+    color: #a65d4a;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+  .error.ok {
+    border-color: rgba(79, 127, 99, .18);
+    background: rgba(79, 127, 99, .1);
+    color: #4f7f63;
+  }
+  .secure {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: auto 0 0;
+    padding-top: 12px;
+    color: #979081;
+    font-size: 10px;
+    text-align: center;
+  }
+  .secure svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    z-index: 20;
+    max-width: min(90vw, 420px);
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: var(--forest);
+    color: #daf1de;
+    font-size: 13px;
+    font-weight: 650;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 8px);
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---------- Pantallas cortas ---------- */
+  @media (max-height: 700px) and (max-width: 899px) {
+    .bosque-top { min-height: 280px; }
+    .bosque-copy { padding-top: 30px; }
+    .bosque-copy h1 { font-size: 31px; }
+    .bosque-sheet { padding-top: 16px; }
+  }
+
+  @media (min-width: 600px) and (max-width: 899px) {
+    .bosque-sheet { align-items: center; }
+    .bosque-sheet > * { width: 100%; max-width: 460px; }
+    .bosque-sheet .secure { margin-top: auto; }
+  }
+
+  /* ---------- Escritorio ---------- */
+  @media (min-width: 900px) {
+    body {
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      background:
+        radial-gradient(900px 600px at 12% 0%, rgba(255, 252, 244, .85), transparent 62%),
+        radial-gradient(900px 700px at 100% 100%, rgba(142, 182, 155, .24), transparent 62%),
+        linear-gradient(168deg, #efe7da 0%, #e6dccd 48%, #ded2c1 100%);
+    }
+    .shell {
+      width: min(1040px, 100%);
+      min-height: 680px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      border-radius: 36px;
+      box-shadow: 0 40px 80px rgba(66, 50, 30, .22), 0 4px 14px rgba(66, 50, 30, .1);
+    }
+    .bosque-top {
+      min-height: 100%;
+      padding-top: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .brand { margin: 38px 42px 0; }
+    .bosque-copy { margin-top: auto; margin-bottom: auto; padding: 0 44px; }
+    .bosque-copy h1 { font-size: 48px; max-width: 370px; }
+    .top-sub { font-size: 13px; }
+    .rosette { top: -30px; right: -90px; width: 430px; height: 430px; }
+    .bosque-sheet {
+      justify-content: center;
+      padding: 46px 46px calc(30px + env(safe-area-inset-bottom));
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .bosque-sheet .secure { margin-top: 20px; }
+    .toast { bottom: 24px; }
+  }
 </style>
 </head>
 <body>
-<div class="card">
-  <a class="brand" href="index.html">
-    <span class="mark" aria-hidden="true">Z</span>
-    <span style="font-size: 21px; font-family: 'Redaction', Georgia, 'Times New Roman', serif; letter-spacing: -0.01em;">Zent</span>
-  </a>
-  <h1>Zent</h1>
-  <p>Inicia sesión para sincronizar tus finanzas en todos tus dispositivos.</p>
-
-  <button class="google-btn" id="btnGoogle" type="button">
-    <svg viewBox="0 0 48 48" aria-hidden="true">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="g-google" viewBox="0 0 48 48">
       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
       <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
       <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </symbol>
+    <symbol id="g-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+    <symbol id="g-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="g-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+    <symbol id="g-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.5 0 10 6 10 6a17.6 17.6 0 0 1-3.1 3.8"/><path d="M6.2 6.9A17.5 17.5 0 0 0 2 12s3.5 6 10 6a10.6 10.6 0 0 0 4.2-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  </defs>
+</svg>
+
+<main class="shell">
+  <section class="bosque-top">
+    <svg class="rosette" viewBox="0 0 340 340" aria-hidden="true">
+      <g transform="translate(170 170)">
+        <ellipse rx="160" ry="58"/><ellipse rx="160" ry="58" transform="rotate(30)"/>
+        <ellipse rx="160" ry="58" transform="rotate(60)"/><ellipse rx="160" ry="58" transform="rotate(90)"/>
+        <ellipse rx="160" ry="58" transform="rotate(120)"/><ellipse rx="160" ry="58" transform="rotate(150)"/>
+        <circle r="118"/><circle r="150" stroke-dasharray="1 6"/>
+      </g>
     </svg>
-    <span>Continuar con Google</span>
-  </button>
 
-  <div class="divider">o con tu correo</div>
+    <a class="brand" href="index.html" aria-label="Zent">
+      <span class="seal" aria-hidden="true">Z</span>
+      <span class="wordmark">Zent</span>
+    </a>
 
-  <div id="mode-login">
-    <label for="loginEmail">Correo electrónico</label>
-    <input id="loginEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
-    <label for="loginPassword">Contraseña</label>
-    <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
-    <button class="btn" id="btnLogin" data-label="Iniciar sesión" type="button">Iniciar sesión</button>
-    <button class="link" id="resendLink" type="button" style="display:none">Reenviar correo de confirmación</button>
-  </div>
+    <div class="bosque-copy">
+      <p class="eyebrow" id="authEyebrow">Bienvenido de nuevo</p>
+      <h1 id="authTitle">Tus finanzas,<br>con calma.</h1>
+      <p class="top-sub" id="authSubtitle">Entra y sigue donde dejaste.</p>
+    </div>
+  </section>
 
-  <div class="divider">o</div>
+  <section class="bosque-sheet">
+    <div class="auth-tabs" role="tablist" aria-label="Acceso a Zent">
+      <button class="auth-tab active" id="tabLogin" type="button" role="tab" aria-selected="true" aria-controls="mode-login">Entrar</button>
+      <button class="auth-tab" id="tabSignup" type="button" role="tab" aria-selected="false" aria-controls="mode-signup">Crear cuenta</button>
+    </div>
 
-  <div id="mode-signup" style="display:none">
-    <label for="signupEmail">Correo electrónico</label>
-    <input id="signupEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
-    <label for="signupPassword">Contraseña</label>
-    <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-    <button class="btn" id="btnSignup" data-label="Crear cuenta" type="button">Crear cuenta</button>
-    <p class="hint">Te enviaremos un correo para confirmar la cuenta.</p>
-  </div>
+    <button class="google" id="btnGoogle" type="button">
+      <svg><use href="#g-google"/></svg>
+      <span>Continuar con Google</span>
+    </button>
 
-  <button class="link" id="toggleMode" type="button">¿No tienes cuenta? Regístrate</button>
-  <button class="link" id="toggleLogin" type="button" style="display:none">¿Ya tienes cuenta? Inicia sesión</button>
+    <div class="divider">o con tu correo</div>
 
-  <div id="error" class="error" role="alert" aria-live="assertive"></div>
-</div>
+    <div id="mode-login" role="tabpanel" aria-labelledby="tabLogin">
+      <div class="field">
+        <label for="loginEmail">Correo electrónico</label>
+        <div class="input-shell">
+          <svg><use href="#g-mail"/></svg>
+          <input id="loginEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
+        </div>
+      </div>
+      <div class="field">
+        <label for="loginPassword">Contraseña</label>
+        <div class="input-shell">
+          <svg><use href="#g-lock"/></svg>
+          <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+          <button class="eye" type="button" data-eye="loginPassword" aria-label="Mostrar contraseña">
+            <svg><use href="#g-eye"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="primary" id="btnLogin" data-label="Entrar" type="button">Entrar</button>
+      <button class="link" id="resendLink" type="button" style="display:none">Reenviar correo de confirmación</button>
+    </div>
+
+    <div id="mode-signup" role="tabpanel" aria-labelledby="tabSignup" style="display:none">
+      <div class="field">
+        <label for="signupEmail">Correo electrónico</label>
+        <div class="input-shell">
+          <svg><use href="#g-mail"/></svg>
+          <input id="signupEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
+        </div>
+      </div>
+      <div class="field">
+        <label for="signupPassword">Contraseña</label>
+        <div class="input-shell">
+          <svg><use href="#g-lock"/></svg>
+          <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+          <button class="eye" type="button" data-eye="signupPassword" aria-label="Mostrar contraseña">
+            <svg><use href="#g-eye"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="primary" id="btnSignup" data-label="Crear cuenta" type="button">Crear cuenta</button>
+      <p class="hint">Te enviaremos un correo para confirmar la cuenta.</p>
+    </div>
+
+    <div id="error" class="error" role="alert" aria-live="assertive"></div>
+
+    <p class="secure">
+      <svg><use href="#g-lock"/></svg>
+      Tus datos están seguros en este dispositivo
+    </p>
+  </section>
+</main>
+
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<!-- La librería se carga al final para que la tarjeta de inicio de
+<!-- La librería se carga al final para que la hoja de inicio de
      sesión aparezca de inmediato. -->
 <script src="vendor/supabase-js.js"></script>
 <script src="supabase-config.js"></script>
@@ -122,10 +581,13 @@
 
   const btnLogin = document.getElementById('btnLogin');
   const btnSignup = document.getElementById('btnSignup');
-  const toggleMode = document.getElementById('toggleMode');
-  const toggleLogin = document.getElementById('toggleLogin');
+  const tabLogin = document.getElementById('tabLogin');
+  const tabSignup = document.getElementById('tabSignup');
   const modeLogin = document.getElementById('mode-login');
   const modeSignup = document.getElementById('mode-signup');
+  const authEyebrow = document.getElementById('authEyebrow');
+  const authTitle = document.getElementById('authTitle');
+  const authSubtitle = document.getElementById('authSubtitle');
   const errorBox = document.getElementById('error');
   const toastEl = document.getElementById('toast');
   const resendLink = document.getElementById('resendLink');
@@ -149,6 +611,52 @@
     errorBox.textContent = msg;
     errorBox.style.display = msg ? 'block' : 'none';
     errorBox.classList.toggle('ok', Boolean(ok));
+  }
+
+  function setMode(mode) {
+    const signup = mode === 'signup';
+    modeLogin.style.display = signup ? 'none' : 'block';
+    modeSignup.style.display = signup ? 'block' : 'none';
+    tabLogin.classList.toggle('active', !signup);
+    tabSignup.classList.toggle('active', signup);
+    tabLogin.setAttribute('aria-selected', signup ? 'false' : 'true');
+    tabSignup.setAttribute('aria-selected', signup ? 'true' : 'false');
+    authEyebrow.textContent = signup ? 'Tu primer paso' : 'Bienvenido de nuevo';
+    authTitle.innerHTML = signup ? 'Empieza con<br>calma.' : 'Tus finanzas,<br>con calma.';
+    authSubtitle.textContent = signup ? 'Crea tu cuenta y ordena tu dinero.' : 'Entra y sigue donde dejaste.';
+    showResend(false);
+    showError('');
+  }
+
+  tabLogin.addEventListener('click', () => setMode('login'));
+  tabSignup.addEventListener('click', () => setMode('signup'));
+
+  document.querySelectorAll('[data-eye]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = document.getElementById(button.dataset.eye);
+      if (!input) return;
+      const visible = input.type === 'password';
+      input.type = visible ? 'text' : 'password';
+      button.classList.toggle('on', visible);
+      button.setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+      const use = button.querySelector('use');
+      if (use) {
+        const icon = visible ? '#g-eye-off' : '#g-eye';
+        use.setAttribute('href', icon);
+        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', icon);
+      }
+    });
+  });
+
+  // La página de acceso también registra el service worker: así queda
+  // disponible sin conexión y las próximas aperturas son instantáneas.
+  if ('serviceWorker' in navigator) {
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (location.protocol === 'https:' || isLocal) {
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .then((registration) => registration.update().catch(() => {}))
+        .catch((error) => console.warn('Zent: no se pudo registrar el service worker.', error));
+    }
   }
 
   function setLoading(el, loading) {
@@ -201,23 +709,6 @@
       showError(translateError(err));
       btnGoogle.disabled = false;
     }
-  });
-
-  toggleMode.addEventListener('click', () => {
-    modeLogin.style.display = 'none';
-    modeSignup.style.display = 'block';
-    toggleMode.style.display = 'none';
-    toggleLogin.style.display = 'block';
-    showResend(false);
-    showError('');
-  });
-
-  toggleLogin.addEventListener('click', () => {
-    modeSignup.style.display = 'none';
-    modeLogin.style.display = 'block';
-    toggleMode.style.display = 'block';
-    toggleLogin.style.display = 'none';
-    showError('');
   });
 
   async function handleLogin() {
