@@ -4,7 +4,7 @@
    abra al instante, incluso con internet lento o caído.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v88';
+const CACHE_NAME = 'zent-v89';
 const APP_SHELL = [
   './',
   './index.html',
@@ -24,11 +24,11 @@ const APP_SHELL = [
   './supabase-config.js',
   './sync.js',
   './manifest.webmanifest',
-  './icons/zent.svg',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png',
+  './icons/zent.svg?v=1.8.1',
+  './icons/icon-192.png?v=1.8.1',
+  './icons/icon-512.png?v=1.8.1',
+  './icons/icon-maskable-512.png?v=1.8.1',
+  './icons/apple-touch-icon.png?v=1.8.1',
   './logos/nequi.png',
   './logos/daviplata.png',
   './logos/bancolombia.png',
