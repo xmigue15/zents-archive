@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#163b32">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Zent â€” Iniciar sesiÃ³n</title>
+<title>Zent — Iniciar sesión</title>
 <link rel="icon" href="icons/zent.svg?v=1.8.1" type="image/svg+xml">
 <link rel="preload" href="fonts/inter-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/redaction10-regular.woff2" as="font" type="font/woff2" crossorigin>
@@ -49,7 +49,15 @@
     --serif: "Redaction", Georgia, "Times New Roman", serif;
     --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  html, body { margin: 0; padding: 0; min-height: 100%; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    overscroll-behavior-y: none;
+  }
+  html {
+    background: linear-gradient(180deg, #0c2c26 0%, #0c2c26 50%, #f6f0e6 50%, #f6f0e6 100%);
+  }
   body {
     min-height: 100dvh;
     font-family: var(--sans);
@@ -583,40 +591,40 @@
 
     <div id="mode-login" role="tabpanel" aria-labelledby="tabLogin">
       <div class="field">
-        <label for="loginEmail">Correo electrÃ³nico</label>
+        <label for="loginEmail">Correo electrónico</label>
         <div class="input-shell">
           <svg><use href="#g-mail"/></svg>
           <input id="loginEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
         </div>
       </div>
       <div class="field">
-        <label for="loginPassword">ContraseÃ±a</label>
+        <label for="loginPassword">Contraseña</label>
         <div class="input-shell">
           <svg><use href="#g-lock"/></svg>
-          <input id="loginPassword" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password">
-          <button class="eye" type="button" data-eye="loginPassword" aria-label="Mostrar contraseÃ±a">
+          <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+          <button class="eye" type="button" data-eye="loginPassword" aria-label="Mostrar contraseña">
             <svg><use href="#g-eye"/></svg>
           </button>
         </div>
       </div>
       <button class="primary" id="btnLogin" data-label="Entrar" type="button">Entrar</button>
-      <button class="link" id="resendLink" type="button" style="display:none">Reenviar correo de confirmaciÃ³n</button>
+      <button class="link" id="resendLink" type="button" style="display:none">Reenviar correo de confirmación</button>
     </div>
 
     <div id="mode-signup" role="tabpanel" aria-labelledby="tabSignup" style="display:none">
       <div class="field">
-        <label for="signupEmail">Correo electrÃ³nico</label>
+        <label for="signupEmail">Correo electrónico</label>
         <div class="input-shell">
           <svg><use href="#g-mail"/></svg>
           <input id="signupEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
         </div>
       </div>
       <div class="field">
-        <label for="signupPassword">ContraseÃ±a</label>
+        <label for="signupPassword">Contraseña</label>
         <div class="input-shell">
           <svg><use href="#g-lock"/></svg>
-          <input id="signupPassword" type="password" placeholder="MÃ­nimo 6 caracteres" autocomplete="new-password">
-          <button class="eye" type="button" data-eye="signupPassword" aria-label="Mostrar contraseÃ±a">
+          <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+          <button class="eye" type="button" data-eye="signupPassword" aria-label="Mostrar contraseña">
             <svg><use href="#g-eye"/></svg>
           </button>
         </div>
@@ -629,15 +637,15 @@
 
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
-      Tus datos estÃ¡n seguros en este dispositivo
+      Tus datos están seguros en este dispositivo
     </p>
   </section>
 </main>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<!-- La librerÃ­a se carga al final para que la hoja de inicio de
-     sesiÃ³n aparezca de inmediato. -->
+<!-- La librería se carga al final para que la hoja de inicio de
+     sesión aparezca de inmediato. -->
 <script src="vendor/supabase-js.js"></script>
 <script src="supabase-config.js"></script>
 <script src="sync.js"></script>
@@ -780,7 +788,7 @@
   tabLogin.addEventListener('click', () => setMode('login'));
   tabSignup.addEventListener('click', () => setMode('signup'));
 
-  /* En iPhone el teclado flota sobre la pÃ¡gina: al enfocar un campo,
+  /* En iPhone el teclado flota sobre la página: al enfocar un campo,
      se compacta la cabecera y se reserva espacio para poder desplazar
      el campo por encima del teclado. */
   const vv = window.visualViewport;
@@ -845,7 +853,7 @@
       const visible = input.type === 'password';
       input.type = visible ? 'text' : 'password';
       button.classList.toggle('on', visible);
-      button.setAttribute('aria-label', visible ? 'Ocultar contraseÃ±a' : 'Mostrar contraseÃ±a');
+      button.setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
       const use = button.querySelector('use');
       if (use) {
         const icon = visible ? '#g-eye-off' : '#g-eye';
@@ -855,8 +863,8 @@
     });
   });
 
-  // La pÃ¡gina de acceso tambiÃ©n registra el service worker: asÃ­ queda
-  // disponible sin conexiÃ³n y las prÃ³ximas aperturas son instantÃ¡neas.
+  // La página de acceso también registra el service worker: así queda
+  // disponible sin conexión y las próximas aperturas son instantáneas.
   if ('serviceWorker' in navigator) {
     const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if (location.protocol === 'https:' || isLocal) {
@@ -868,29 +876,29 @@
 
   function setLoading(el, loading) {
     el.disabled = loading;
-    el.textContent = loading ? 'Procesandoâ€¦' : el.dataset.label;
+    el.textContent = loading ? 'Procesando…' : el.dataset.label;
   }
 
   function translateError(err) {
     const msg = (err && err.message ? err.message : String(err || '')).toLowerCase();
 
-    if (msg.includes('invalid login credentials')) return 'Correo o contraseÃ±a incorrectos.';
-    if (msg.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesiÃ³n. Revisa tu bandeja de entrada (y spam).';
-    if (msg.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Inicia sesiÃ³n.';
-    if (msg.includes('password should be at least')) return 'La contraseÃ±a debe tener al menos 6 caracteres.';
-    if (msg.includes('unable to validate email') || msg.includes('invalid email')) return 'El correo no es vÃ¡lido.';
-    if (msg.includes('rate limit') || msg.includes('too many requests')) return 'Demasiados intentos. Espera unos minutos e intÃ©ntalo de nuevo.';
-    if (msg.includes('signups not allowed')) return 'El registro estÃ¡ deshabilitado en Supabase.';
-    if (msg.includes('provider is not enabled') || msg.includes('unsupported provider')) return 'El inicio de sesiÃ³n con Google no estÃ¡ habilitado en Supabase.';
-    if (msg.includes('access_denied') || msg.includes('canceled') || msg.includes('cancelled')) return 'Cancelaste el inicio de sesiÃ³n con Google.';
-    if (msg.includes('failed to fetch') || msg.includes('networkerror')) return 'No hay conexiÃ³n con el servidor. Revisa tu internet e intÃ©ntalo de nuevo.';
-    if (msg.includes('email address') && msg.includes('invalid')) return 'El correo no es vÃ¡lido.';
-    return (err && err.message) ? err.message : 'OcurriÃ³ un error inesperado.';
+    if (msg.includes('invalid login credentials')) return 'Correo o contraseña incorrectos.';
+    if (msg.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y spam).';
+    if (msg.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Inicia sesión.';
+    if (msg.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
+    if (msg.includes('unable to validate email') || msg.includes('invalid email')) return 'El correo no es válido.';
+    if (msg.includes('rate limit') || msg.includes('too many requests')) return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+    if (msg.includes('signups not allowed')) return 'El registro está deshabilitado en Supabase.';
+    if (msg.includes('provider is not enabled') || msg.includes('unsupported provider')) return 'El inicio de sesión con Google no está habilitado en Supabase.';
+    if (msg.includes('access_denied') || msg.includes('canceled') || msg.includes('cancelled')) return 'Cancelaste el inicio de sesión con Google.';
+    if (msg.includes('failed to fetch') || msg.includes('networkerror')) return 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.';
+    if (msg.includes('email address') && msg.includes('invalid')) return 'El correo no es válido.';
+    return (err && err.message) ? err.message : 'Ocurrió un error inesperado.';
   }
 
   function client() {
     if (typeof supabaseClient === 'undefined' || !supabaseClient) {
-      showError('No se pudo conectar con Supabase. Revisa tu conexiÃ³n y recarga la pÃ¡gina.');
+      showError('No se pudo conectar con Supabase. Revisa tu conexión y recarga la página.');
       return null;
     }
     return supabaseClient;
@@ -921,7 +929,7 @@
   async function handleLogin() {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
-    if (!email || !password) { showError('Completa correo y contraseÃ±a.'); return; }
+    if (!email || !password) { showError('Completa correo y contraseña.'); return; }
 
     const sb = client();
     if (!sb) return;
@@ -937,7 +945,7 @@
         showResend(/confirmar tu correo/i.test(message));
         return;
       }
-      showToast('SesiÃ³n iniciada.');
+      showToast('Sesión iniciada.');
       setTimeout(() => { location.href = 'index.html'; }, 500);
     } catch (err) {
       showError(translateError(err));
@@ -949,8 +957,8 @@
   async function handleSignup() {
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
-    if (!email || !password) { showError('Completa correo y contraseÃ±a.'); return; }
-    if (password.length < 6) { showError('La contraseÃ±a debe tener al menos 6 caracteres.'); return; }
+    if (!email || !password) { showError('Completa correo y contraseña.'); return; }
+    if (password.length < 6) { showError('La contraseña debe tener al menos 6 caracteres.'); return; }
 
     const sb = client();
     if (!sb) return;
@@ -966,12 +974,12 @@
       if (error) { showError(translateError(error)); return; }
 
       if (data && data.session) {
-        showToast('Cuenta creada. Entrandoâ€¦');
+        showToast('Cuenta creada. Entrando…');
         setTimeout(() => { location.href = 'index.html'; }, 700);
         return;
       }
 
-      showError('Cuenta creada. Revisa tu correo (' + email + ') y haz clic en el enlace de confirmaciÃ³n. DespuÃ©s inicia sesiÃ³n aquÃ­.', true);
+      showError('Cuenta creada. Revisa tu correo (' + email + ') y haz clic en el enlace de confirmación. Después inicia sesión aquí.', true);
       document.getElementById('signupPassword').value = '';
     } catch (err) {
       showError(translateError(err));
@@ -993,7 +1001,7 @@
   resendLink.addEventListener('click', async () => {
     const email = document.getElementById('loginEmail').value.trim();
     if (!email) {
-      showError('Escribe tu correo en el campo de arriba para reenviar la confirmaciÃ³n.');
+      showError('Escribe tu correo en el campo de arriba para reenviar la confirmación.');
       return;
     }
     const sb = client();
@@ -1019,9 +1027,9 @@
   // Escribe la cabecera inicial y vuelve a escribirla al cambiar de modo.
   typeCopy('login');
 
-  // Si ya hay una sesiÃ³n activa, ir directo a la app.
+  // Si ya hay una sesión activa, ir directo a la app.
   (async () => {
-    // Errores que Supabase devuelve al volver del enlace de confirmaciÃ³n.
+    // Errores que Supabase devuelve al volver del enlace de confirmación.
     if (location.hash) {
       const params = new URLSearchParams(location.hash.replace(/^#/, ''));
       const message = params.get('error_description') || params.get('error');
@@ -1032,14 +1040,14 @@
     }
 
     if (typeof supabaseClient === 'undefined' || !supabaseClient) {
-      showError('No se pudo cargar Supabase. Revisa tu conexiÃ³n, desactiva bloqueadores y recarga la pÃ¡gina.');
+      showError('No se pudo cargar Supabase. Revisa tu conexión, desactiva bloqueadores y recarga la página.');
       return;
     }
     try {
       const { data } = await supabaseClient.auth.getSession();
       if (data && data.session) location.replace('index.html');
     } catch (err) {
-      console.warn('Zent: no se pudo comprobar la sesiÃ³n.', err);
+      console.warn('Zent: no se pudo comprobar la sesión.', err);
     }
   })();
 })();
