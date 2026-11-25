@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#163b32">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Zent — Iniciar sesión</title>
+<title>Zent â€” Iniciar sesiÃ³n</title>
 <link rel="icon" href="icons/zent.svg?v=1.8.1" type="image/svg+xml">
 <link rel="preload" href="fonts/inter-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/redaction10-regular.woff2" as="font" type="font/woff2" crossorigin>
@@ -82,6 +82,7 @@
       radial-gradient(340px 260px at 18% 8%, rgba(142, 182, 155, .26), transparent 64%),
       radial-gradient(360px 300px at 96% 88%, rgba(176, 141, 106, .2), transparent 66%),
       linear-gradient(150deg, #214c40, #0c2c26 58%, #071d19);
+    transition: min-height .25s ease;
   }
   .rosette {
     position: absolute;
@@ -131,8 +132,10 @@
     position: relative;
     z-index: 2;
     padding: 44px 26px 0;
+    transition: opacity .2s ease, transform .25s ease;
   }
   .eyebrow {
+    min-height: 1.2em;
     margin: 0 0 9px;
     color: #c3a17f;
     font-size: 9.5px;
@@ -141,6 +144,7 @@
     text-transform: uppercase;
   }
   .bosque-copy h1 {
+    min-height: 2.04em;
     max-width: 310px;
     margin: 0;
     font-family: var(--serif);
@@ -148,12 +152,26 @@
     font-weight: 400;
     letter-spacing: -.028em;
     line-height: 1.02;
+    white-space: pre-line;
   }
   .top-sub {
+    min-height: 1.5em;
     margin: 9px 0 0;
     color: rgba(218, 241, 222, .72);
     font-size: 11.5px;
     line-height: 1.5;
+  }
+  .type-cursor {
+    display: inline-block;
+    width: 2px;
+    height: .92em;
+    margin-left: 2px;
+    background: currentColor;
+    vertical-align: -.08em;
+    animation: cursor-blink .75s steps(1) infinite;
+  }
+  @keyframes cursor-blink {
+    50% { opacity: 0; }
   }
 
   /* ---------- Hoja del formulario ---------- */
@@ -170,14 +188,34 @@
     box-shadow: 0 -16px 34px rgba(5, 25, 20, .16);
   }
   .auth-tabs {
+    position: relative;
     display: flex;
     gap: 4px;
     padding: 4px;
+    overflow: hidden;
     border: 1px solid rgba(122, 110, 88, .16);
     border-radius: 999px;
     background: #e9dfd1;
   }
+  .auth-tab-pill {
+    position: absolute;
+    z-index: 0;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 6px);
+    border-radius: 999px;
+    background: #fffaf2;
+    box-shadow: 0 4px 10px rgba(122, 102, 72, .12);
+    pointer-events: none;
+    transition: transform .32s cubic-bezier(.22, .9, .28, 1.12);
+  }
+  .auth-tabs[data-mode="signup"] .auth-tab-pill {
+    transform: translateX(calc(100% + 4px));
+  }
   .auth-tab {
+    position: relative;
+    z-index: 1;
     flex: 1;
     padding: 8px 0;
     border: 0;
@@ -188,16 +226,14 @@
     font-size: 11.5px;
     font-weight: 700;
     cursor: pointer;
-    transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+    transition: color .2s ease;
   }
   .auth-tab.active {
-    background: #fffaf2;
     color: var(--forest);
-    box-shadow: 0 4px 10px rgba(122, 102, 72, .12);
   }
   .auth-tab:focus-visible {
     outline: 2px solid var(--camel);
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
   .google {
     display: flex;
@@ -421,6 +457,35 @@
     .bosque-sheet .secure { margin-top: auto; }
   }
 
+  /* Al escribir en el iPhone, el teclado no debe tapar los campos:
+     la cabecera se compacta y la hoja gana espacio para desplazarse. */
+  input { scroll-margin-bottom: 26px; }
+
+  @media (max-width: 899px) {
+    body.typing .bosque-top { min-height: 88px; }
+    body.typing .bosque-copy {
+      position: absolute;
+      inset: auto 0 0;
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+    }
+    body.typing .bosque-sheet {
+      padding-bottom: calc(24px + env(safe-area-inset-bottom) + var(--keyboard-height, 0px));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-tab-pill,
+    .auth-tab,
+    .bosque-top,
+    .bosque-copy {
+      transition: none !important;
+    }
+    .type-cursor { animation: none; }
+  }
+
   /* ---------- Escritorio ---------- */
   @media (min-width: 900px) {
     body {
@@ -496,14 +561,15 @@
     </a>
 
     <div class="bosque-copy">
-      <p class="eyebrow" id="authEyebrow">Bienvenido de nuevo</p>
-      <h1 id="authTitle">Tus finanzas,<br>con calma.</h1>
-      <p class="top-sub" id="authSubtitle">Entra y sigue donde dejaste.</p>
+      <p class="eyebrow" id="authEyebrow"></p>
+      <h1 id="authTitle"></h1>
+      <p class="top-sub" id="authSubtitle"></p>
     </div>
   </section>
 
   <section class="bosque-sheet">
-    <div class="auth-tabs" role="tablist" aria-label="Acceso a Zent">
+    <div class="auth-tabs" id="authTabs" data-mode="login" role="tablist" aria-label="Acceso a Zent">
+      <span class="auth-tab-pill" aria-hidden="true"></span>
       <button class="auth-tab active" id="tabLogin" type="button" role="tab" aria-selected="true" aria-controls="mode-login">Entrar</button>
       <button class="auth-tab" id="tabSignup" type="button" role="tab" aria-selected="false" aria-controls="mode-signup">Crear cuenta</button>
     </div>
@@ -517,40 +583,40 @@
 
     <div id="mode-login" role="tabpanel" aria-labelledby="tabLogin">
       <div class="field">
-        <label for="loginEmail">Correo electrónico</label>
+        <label for="loginEmail">Correo electrÃ³nico</label>
         <div class="input-shell">
           <svg><use href="#g-mail"/></svg>
           <input id="loginEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
         </div>
       </div>
       <div class="field">
-        <label for="loginPassword">Contraseña</label>
+        <label for="loginPassword">ContraseÃ±a</label>
         <div class="input-shell">
           <svg><use href="#g-lock"/></svg>
-          <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
-          <button class="eye" type="button" data-eye="loginPassword" aria-label="Mostrar contraseña">
+          <input id="loginPassword" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password">
+          <button class="eye" type="button" data-eye="loginPassword" aria-label="Mostrar contraseÃ±a">
             <svg><use href="#g-eye"/></svg>
           </button>
         </div>
       </div>
       <button class="primary" id="btnLogin" data-label="Entrar" type="button">Entrar</button>
-      <button class="link" id="resendLink" type="button" style="display:none">Reenviar correo de confirmación</button>
+      <button class="link" id="resendLink" type="button" style="display:none">Reenviar correo de confirmaciÃ³n</button>
     </div>
 
     <div id="mode-signup" role="tabpanel" aria-labelledby="tabSignup" style="display:none">
       <div class="field">
-        <label for="signupEmail">Correo electrónico</label>
+        <label for="signupEmail">Correo electrÃ³nico</label>
         <div class="input-shell">
           <svg><use href="#g-mail"/></svg>
           <input id="signupEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
         </div>
       </div>
       <div class="field">
-        <label for="signupPassword">Contraseña</label>
+        <label for="signupPassword">ContraseÃ±a</label>
         <div class="input-shell">
           <svg><use href="#g-lock"/></svg>
-          <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-          <button class="eye" type="button" data-eye="signupPassword" aria-label="Mostrar contraseña">
+          <input id="signupPassword" type="password" placeholder="MÃ­nimo 6 caracteres" autocomplete="new-password">
+          <button class="eye" type="button" data-eye="signupPassword" aria-label="Mostrar contraseÃ±a">
             <svg><use href="#g-eye"/></svg>
           </button>
         </div>
@@ -563,15 +629,15 @@
 
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
-      Tus datos están seguros en este dispositivo
+      Tus datos estÃ¡n seguros en este dispositivo
     </p>
   </section>
 </main>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<!-- La librería se carga al final para que la hoja de inicio de
-     sesión aparezca de inmediato. -->
+<!-- La librerÃ­a se carga al final para que la hoja de inicio de
+     sesiÃ³n aparezca de inmediato. -->
 <script src="vendor/supabase-js.js"></script>
 <script src="supabase-config.js"></script>
 <script src="sync.js"></script>
@@ -583,6 +649,7 @@
   const btnSignup = document.getElementById('btnSignup');
   const tabLogin = document.getElementById('tabLogin');
   const tabSignup = document.getElementById('tabSignup');
+  const authTabs = document.getElementById('authTabs');
   const modeLogin = document.getElementById('mode-login');
   const modeSignup = document.getElementById('mode-signup');
   const authEyebrow = document.getElementById('authEyebrow');
@@ -613,23 +680,163 @@
     errorBox.classList.toggle('ok', Boolean(ok));
   }
 
+  const COPY = {
+    login: {
+      eyebrow: 'Bienvenido de nuevo',
+      title: 'Tus finanzas,\ncon calma.',
+      sub: 'Entra y sigue donde dejaste.'
+    },
+    signup: {
+      eyebrow: 'Tu primer paso',
+      title: 'Empieza con\ncalma.',
+      sub: 'Crea tu cuenta y ordena tu dinero.'
+    }
+  };
+
+  let modeActual = 'login';
+  let typeToken = 0;
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function clearTypeCursors() {
+    document.querySelectorAll('.type-cursor').forEach((cursor) => cursor.remove());
+  }
+
+  function typeInto(element, text, token, speed) {
+    return new Promise((resolve) => {
+      if (token !== typeToken) { resolve(); return; }
+      element.textContent = '';
+      const cursor = document.createElement('span');
+      cursor.className = 'type-cursor';
+      cursor.setAttribute('aria-hidden', 'true');
+      element.appendChild(cursor);
+
+      let index = 0;
+      const step = () => {
+        if (token !== typeToken) {
+          cursor.remove();
+          resolve();
+          return;
+        }
+        if (index >= text.length) {
+          cursor.remove();
+          resolve();
+          return;
+        }
+        const char = text.charAt(index);
+        index += 1;
+        cursor.insertAdjacentText('beforebegin', char);
+        let delay = speed;
+        if (char === '\n') delay += 90;
+        else if (char === ' ' || char === ',' || char === '.') delay += 18;
+        setTimeout(step, delay);
+      };
+      step();
+    });
+  }
+
+  async function typeCopy(mode) {
+    const token = typeToken + 1;
+    typeToken = token;
+    clearTypeCursors();
+    const data = COPY[mode];
+
+    if (reduceMotion) {
+      authEyebrow.textContent = data.eyebrow;
+      authTitle.textContent = data.title;
+      authSubtitle.textContent = data.sub;
+      return;
+    }
+
+    authEyebrow.textContent = '';
+    authTitle.textContent = '';
+    authSubtitle.textContent = '';
+
+    await typeInto(authEyebrow, data.eyebrow, token, 12);
+    if (token !== typeToken) return;
+    await typeInto(authTitle, data.title, token, 15);
+    if (token !== typeToken) return;
+    await typeInto(authSubtitle, data.sub, token, 9);
+  }
+
   function setMode(mode) {
-    const signup = mode === 'signup';
+    const next = mode === 'signup' ? 'signup' : 'login';
+    if (next === modeActual) return;
+    modeActual = next;
+    const signup = next === 'signup';
+
     modeLogin.style.display = signup ? 'none' : 'block';
     modeSignup.style.display = signup ? 'block' : 'none';
     tabLogin.classList.toggle('active', !signup);
     tabSignup.classList.toggle('active', signup);
     tabLogin.setAttribute('aria-selected', signup ? 'false' : 'true');
     tabSignup.setAttribute('aria-selected', signup ? 'true' : 'false');
-    authEyebrow.textContent = signup ? 'Tu primer paso' : 'Bienvenido de nuevo';
-    authTitle.innerHTML = signup ? 'Empieza con<br>calma.' : 'Tus finanzas,<br>con calma.';
-    authSubtitle.textContent = signup ? 'Crea tu cuenta y ordena tu dinero.' : 'Entra y sigue donde dejaste.';
+    authTabs.dataset.mode = signup ? 'signup' : 'login';
+
     showResend(false);
     showError('');
+    typeCopy(next);
   }
 
   tabLogin.addEventListener('click', () => setMode('login'));
   tabSignup.addEventListener('click', () => setMode('signup'));
+
+  /* En iPhone el teclado flota sobre la pÃ¡gina: al enfocar un campo,
+     se compacta la cabecera y se reserva espacio para poder desplazar
+     el campo por encima del teclado. */
+  const vv = window.visualViewport;
+  let baseViewportHeight = vv ? vv.height : Math.max(window.innerHeight, document.documentElement.clientHeight);
+  let keyboardTimer = null;
+
+  function scrollFocusedInput() {
+    const input = document.activeElement;
+    if (!input || !input.matches || !input.matches('input')) return;
+    try {
+      input.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+    } catch (error) { /* ignorar */ }
+  }
+
+  function updateKeyboardLayout() {
+    if (!vv) return;
+    const keyboard = Math.max(0, baseViewportHeight - vv.height);
+    document.documentElement.style.setProperty('--keyboard-height', Math.round(keyboard) + 'px');
+    const open = keyboard > 90;
+    document.body.classList.toggle('typing', open);
+    if (open) {
+      clearTimeout(keyboardTimer);
+      keyboardTimer = setTimeout(scrollFocusedInput, 280);
+    }
+  }
+
+  if (vv) {
+    vv.addEventListener('resize', updateKeyboardLayout);
+    vv.addEventListener('scroll', updateKeyboardLayout);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        if (!document.body.classList.contains('typing')) baseViewportHeight = vv.height;
+      }, 350);
+    });
+  }
+
+  const touchDevice = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || navigator.maxTouchPoints > 0;
+  if (touchDevice && window.matchMedia && window.matchMedia('(max-width: 899px)').matches) {
+    document.querySelectorAll('input').forEach((input) => {
+      input.addEventListener('focus', () => {
+        document.body.classList.add('typing');
+        clearTimeout(keyboardTimer);
+        keyboardTimer = setTimeout(scrollFocusedInput, 320);
+      });
+      input.addEventListener('blur', () => {
+        setTimeout(() => {
+          const active = document.activeElement;
+          if (active && active.matches && active.matches('input')) return;
+          if (!vv || vv.height >= baseViewportHeight - 80) {
+            document.body.classList.remove('typing');
+            document.documentElement.style.setProperty('--keyboard-height', '0px');
+          }
+        }, 300);
+      });
+    });
+  }
 
   document.querySelectorAll('[data-eye]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -638,7 +845,7 @@
       const visible = input.type === 'password';
       input.type = visible ? 'text' : 'password';
       button.classList.toggle('on', visible);
-      button.setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+      button.setAttribute('aria-label', visible ? 'Ocultar contraseÃ±a' : 'Mostrar contraseÃ±a');
       const use = button.querySelector('use');
       if (use) {
         const icon = visible ? '#g-eye-off' : '#g-eye';
@@ -648,8 +855,8 @@
     });
   });
 
-  // La página de acceso también registra el service worker: así queda
-  // disponible sin conexión y las próximas aperturas son instantáneas.
+  // La pÃ¡gina de acceso tambiÃ©n registra el service worker: asÃ­ queda
+  // disponible sin conexiÃ³n y las prÃ³ximas aperturas son instantÃ¡neas.
   if ('serviceWorker' in navigator) {
     const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if (location.protocol === 'https:' || isLocal) {
@@ -661,29 +868,29 @@
 
   function setLoading(el, loading) {
     el.disabled = loading;
-    el.textContent = loading ? 'Procesando…' : el.dataset.label;
+    el.textContent = loading ? 'Procesandoâ€¦' : el.dataset.label;
   }
 
   function translateError(err) {
     const msg = (err && err.message ? err.message : String(err || '')).toLowerCase();
 
-    if (msg.includes('invalid login credentials')) return 'Correo o contraseña incorrectos.';
-    if (msg.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y spam).';
-    if (msg.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Inicia sesión.';
-    if (msg.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
-    if (msg.includes('unable to validate email') || msg.includes('invalid email')) return 'El correo no es válido.';
-    if (msg.includes('rate limit') || msg.includes('too many requests')) return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
-    if (msg.includes('signups not allowed')) return 'El registro está deshabilitado en Supabase.';
-    if (msg.includes('provider is not enabled') || msg.includes('unsupported provider')) return 'El inicio de sesión con Google no está habilitado en Supabase.';
-    if (msg.includes('access_denied') || msg.includes('canceled') || msg.includes('cancelled')) return 'Cancelaste el inicio de sesión con Google.';
-    if (msg.includes('failed to fetch') || msg.includes('networkerror')) return 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.';
-    if (msg.includes('email address') && msg.includes('invalid')) return 'El correo no es válido.';
-    return (err && err.message) ? err.message : 'Ocurrió un error inesperado.';
+    if (msg.includes('invalid login credentials')) return 'Correo o contraseÃ±a incorrectos.';
+    if (msg.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesiÃ³n. Revisa tu bandeja de entrada (y spam).';
+    if (msg.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Inicia sesiÃ³n.';
+    if (msg.includes('password should be at least')) return 'La contraseÃ±a debe tener al menos 6 caracteres.';
+    if (msg.includes('unable to validate email') || msg.includes('invalid email')) return 'El correo no es vÃ¡lido.';
+    if (msg.includes('rate limit') || msg.includes('too many requests')) return 'Demasiados intentos. Espera unos minutos e intÃ©ntalo de nuevo.';
+    if (msg.includes('signups not allowed')) return 'El registro estÃ¡ deshabilitado en Supabase.';
+    if (msg.includes('provider is not enabled') || msg.includes('unsupported provider')) return 'El inicio de sesiÃ³n con Google no estÃ¡ habilitado en Supabase.';
+    if (msg.includes('access_denied') || msg.includes('canceled') || msg.includes('cancelled')) return 'Cancelaste el inicio de sesiÃ³n con Google.';
+    if (msg.includes('failed to fetch') || msg.includes('networkerror')) return 'No hay conexiÃ³n con el servidor. Revisa tu internet e intÃ©ntalo de nuevo.';
+    if (msg.includes('email address') && msg.includes('invalid')) return 'El correo no es vÃ¡lido.';
+    return (err && err.message) ? err.message : 'OcurriÃ³ un error inesperado.';
   }
 
   function client() {
     if (typeof supabaseClient === 'undefined' || !supabaseClient) {
-      showError('No se pudo conectar con Supabase. Revisa tu conexión y recarga la página.');
+      showError('No se pudo conectar con Supabase. Revisa tu conexiÃ³n y recarga la pÃ¡gina.');
       return null;
     }
     return supabaseClient;
@@ -714,7 +921,7 @@
   async function handleLogin() {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
-    if (!email || !password) { showError('Completa correo y contraseña.'); return; }
+    if (!email || !password) { showError('Completa correo y contraseÃ±a.'); return; }
 
     const sb = client();
     if (!sb) return;
@@ -730,7 +937,7 @@
         showResend(/confirmar tu correo/i.test(message));
         return;
       }
-      showToast('Sesión iniciada.');
+      showToast('SesiÃ³n iniciada.');
       setTimeout(() => { location.href = 'index.html'; }, 500);
     } catch (err) {
       showError(translateError(err));
@@ -742,8 +949,8 @@
   async function handleSignup() {
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
-    if (!email || !password) { showError('Completa correo y contraseña.'); return; }
-    if (password.length < 6) { showError('La contraseña debe tener al menos 6 caracteres.'); return; }
+    if (!email || !password) { showError('Completa correo y contraseÃ±a.'); return; }
+    if (password.length < 6) { showError('La contraseÃ±a debe tener al menos 6 caracteres.'); return; }
 
     const sb = client();
     if (!sb) return;
@@ -759,12 +966,12 @@
       if (error) { showError(translateError(error)); return; }
 
       if (data && data.session) {
-        showToast('Cuenta creada. Entrando…');
+        showToast('Cuenta creada. Entrandoâ€¦');
         setTimeout(() => { location.href = 'index.html'; }, 700);
         return;
       }
 
-      showError('Cuenta creada. Revisa tu correo (' + email + ') y haz clic en el enlace de confirmación. Después inicia sesión aquí.', true);
+      showError('Cuenta creada. Revisa tu correo (' + email + ') y haz clic en el enlace de confirmaciÃ³n. DespuÃ©s inicia sesiÃ³n aquÃ­.', true);
       document.getElementById('signupPassword').value = '';
     } catch (err) {
       showError(translateError(err));
@@ -786,7 +993,7 @@
   resendLink.addEventListener('click', async () => {
     const email = document.getElementById('loginEmail').value.trim();
     if (!email) {
-      showError('Escribe tu correo en el campo de arriba para reenviar la confirmación.');
+      showError('Escribe tu correo en el campo de arriba para reenviar la confirmaciÃ³n.');
       return;
     }
     const sb = client();
@@ -809,9 +1016,12 @@
     }
   });
 
-  // Si ya hay una sesión activa, ir directo a la app.
+  // Escribe la cabecera inicial y vuelve a escribirla al cambiar de modo.
+  typeCopy('login');
+
+  // Si ya hay una sesiÃ³n activa, ir directo a la app.
   (async () => {
-    // Errores que Supabase devuelve al volver del enlace de confirmación.
+    // Errores que Supabase devuelve al volver del enlace de confirmaciÃ³n.
     if (location.hash) {
       const params = new URLSearchParams(location.hash.replace(/^#/, ''));
       const message = params.get('error_description') || params.get('error');
@@ -822,17 +1032,18 @@
     }
 
     if (typeof supabaseClient === 'undefined' || !supabaseClient) {
-      showError('No se pudo cargar Supabase. Revisa tu conexión, desactiva bloqueadores y recarga la página.');
+      showError('No se pudo cargar Supabase. Revisa tu conexiÃ³n, desactiva bloqueadores y recarga la pÃ¡gina.');
       return;
     }
     try {
       const { data } = await supabaseClient.auth.getSession();
       if (data && data.session) location.replace('index.html');
     } catch (err) {
-      console.warn('Zent: no se pudo comprobar la sesión.', err);
+      console.warn('Zent: no se pudo comprobar la sesiÃ³n.', err);
     }
   })();
 })();
 </script>
 </body>
 </html>
+
