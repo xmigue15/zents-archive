@@ -84,6 +84,9 @@
      el rebote siempre enseña el color correcto. */
   @media (max-width: 899px) {
     html {
+      position: fixed;
+      inset: 0;
+      width: 100%;
       height: 100%;
       overflow: hidden;
       background: var(--cream);
@@ -461,6 +464,13 @@
     stroke-linecap: round;
     stroke-linejoin: round;
   }
+  .login-version {
+    color: rgba(123, 117, 104, .62);
+    font-size: 9px;
+    font-weight: 650;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
   .toast {
     position: fixed;
     left: 50%;
@@ -511,6 +521,14 @@
       transform: translateY(-8px);
       pointer-events: none;
     }
+  }
+
+  /* Compactación instantánea al tocar un campo: iOS decide si debe
+     desplazar la página justo al enfocar, así que la cabecera ya tiene
+     que estar en su sitio final. */
+  body.snap .bosque-top,
+  body.snap .bosque-copy {
+    transition: none !important;
   }
 
   /* Solo en pantallas bajas hace falta reservar recorrido para subir el
@@ -676,6 +694,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
+      <span class="login-version" id="loginVersion">· v1.9.5</span>
     </p>
   </section>
 </main>
@@ -832,12 +851,47 @@
   const vv = window.visualViewport;
   let baseViewportHeight = vv ? vv.height : Math.max(window.innerHeight, document.documentElement.clientHeight);
   let keyboardTimer = null;
+  let keyboardWasOpen = false;
   // La reserva extra de scroll solo tiene sentido en pantallas bajas;
   // se decide con la altura real del dispositivo, no con la que deja el
   // teclado abierto.
   document.body.classList.toggle('short-screen', baseViewportHeight <= 700);
 
+  function compactHeaderNow() {
+    // Compacta la cabecera antes de que iOS decida si debe desplazar la
+    // página al enfocar. Sin animación, para que el campo ya esté arriba.
+    document.body.classList.add('typing', 'snap');
+    void document.body.offsetHeight;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => document.body.classList.remove('snap'));
+    });
+  }
+
+  function preScrollFocusedInput(input) {
+    const shell = document.querySelector('.shell');
+    if (!shell) return;
+    const rect = input.getBoundingClientRect();
+    const full = baseViewportHeight || Math.round(window.innerHeight) || 0;
+    let keyboard = vv ? Math.max(0, baseViewportHeight - vv.height) : 0;
+    if (keyboard < 90) keyboard = Math.min(380, Math.round(full * 0.44));
+    const bottomLimit = full - keyboard - 16;
+    if (rect.bottom <= bottomLimit) return;
+    const target = shell.scrollTop + (rect.bottom - bottomLimit);
+    const maxScroll = Math.max(0, shell.scrollHeight - shell.clientHeight);
+    shell.scrollTop = Math.max(0, Math.min(target, maxScroll));
+  }
+
+  function resetDocumentScroll() {
+    // iOS puede desplazar el documento al abrir el teclado aunque el
+    // body esté fijo; si ocurre, lo devolvemos a cero.
+    if (window.scrollY || document.documentElement.scrollTop) {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+    }
+  }
+
   function scrollFocusedInput() {
+    resetDocumentScroll();
     const input = document.activeElement;
     if (!input || !input.matches || !input.matches('input')) return;
     const shell = document.querySelector('.shell');
@@ -868,6 +922,14 @@
     const keyboard = Math.max(0, baseViewportHeight - vv.height);
     document.documentElement.style.setProperty('--keyboard-height', Math.round(keyboard) + 'px');
     const open = keyboard > 90;
+    if (keyboardWasOpen && !open) {
+      // Al cerrar el teclado, la hoja vuelve arriba del todo para que no
+      // se quede desplazada enseñando el hueco de abajo.
+      const shell = document.querySelector('.shell');
+      if (shell) shell.scrollTo({ top: 0, behavior: 'auto' });
+      resetDocumentScroll();
+    }
+    keyboardWasOpen = open;
     document.body.classList.toggle('typing', open);
     if (open) {
       clearTimeout(keyboardTimer);
@@ -891,8 +953,15 @@
   const touchDevice = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || navigator.maxTouchPoints > 0;
   if (touchDevice && window.matchMedia && window.matchMedia('(max-width: 899px)').matches) {
     document.querySelectorAll('input').forEach((input) => {
+      // Al tocar (antes del foco) la cabecera ya se compacta: iOS evalúa
+      // el desplazamiento en el mismo instante del foco.
+      input.addEventListener('pointerdown', () => {
+        if (document.activeElement !== input) compactHeaderNow();
+      }, { passive: true });
+
       input.addEventListener('focus', () => {
-        document.body.classList.add('typing');
+        compactHeaderNow();
+        preScrollFocusedInput(input);
         clearTimeout(keyboardTimer);
         keyboardTimer = setTimeout(scrollFocusedInput, 320);
       });
@@ -903,6 +972,9 @@
           if (!vv || vv.height >= baseViewportHeight - 80) {
             document.body.classList.remove('typing');
             document.documentElement.style.setProperty('--keyboard-height', '0px');
+            const shell = document.querySelector('.shell');
+            if (shell) shell.scrollTo({ top: 0, behavior: 'auto' });
+            resetDocumentScroll();
           }
         }, 300);
       });
@@ -929,6 +1001,16 @@
   // La página de acceso también registra el service worker: así queda
   // disponible sin conexión y las próximas aperturas son instantáneas.
   if ('serviceWorker' in navigator) {
+    // Si entra una versión nueva del service worker, recargamos una sola
+    // vez para que el login use el HTML nuevo y no se quede con el viejo.
+    // En la primera visita no hace falta: la página ya viene de la red.
+    const hadController = !!navigator.serviceWorker.controller;
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
     const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if (location.protocol === 'https:' || isLocal) {
       navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })

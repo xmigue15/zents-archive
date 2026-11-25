@@ -4,7 +4,7 @@
    abra al instante, incluso con internet lento o caído.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v94';
+const CACHE_NAME = 'zent-v95';
 const APP_SHELL = [
   './',
   './index.html',
@@ -82,11 +82,26 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(
+    caches.keys().then((keys) => {
+      const hadOldCache = keys.some((key) => key !== CACHE_NAME);
+      return Promise.all(
         keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      ))
-      .then(() => self.clients.claim())
+      )
+        .then(() => self.clients.claim())
+        .then(() => {
+          if (!hadOldCache) return;
+          return self.clients.matchAll({ type: 'window' })
+            .then((clients) => Promise.allSettled(clients.map((client) => {
+              // Si el login estaba abierto con una versión vieja, lo recargamos
+              // para que reciba el HTML nuevo en cuanto entra esta actualización.
+              try {
+                const url = new URL(client.url);
+                if (/\/login(\.html)?$/.test(url.pathname)) return client.navigate(client.url);
+              } catch (error) { /* ignorar */ }
+              return null;
+            })));
+        });
+    })
   );
 });
 
