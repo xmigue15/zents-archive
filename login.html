@@ -427,6 +427,71 @@
     line-height: 1.5;
     text-align: center;
   }
+  .verify-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    margin: 2px auto 10px;
+    border-radius: 50%;
+    background: #e8efe7;
+    color: var(--forest);
+  }
+  .verify-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .verify-copy {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.55;
+    text-align: center;
+  }
+  .verify-copy strong {
+    display: block;
+    margin-top: 3px;
+    color: var(--ink);
+    font-weight: 650;
+    word-break: break-all;
+  }
+  .code-input {
+    display: block;
+    width: 100%;
+    height: 54px;
+    padding: 0 8px;
+    border: 1px solid rgba(122, 110, 88, .28);
+    border-radius: 14px;
+    background: #fffdf8;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 24px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .42em;
+    text-indent: .42em;
+    text-align: center;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .code-input::placeholder {
+    color: #c9c1b3;
+    opacity: .7;
+  }
+  .code-input:focus {
+    border-color: var(--camel);
+    box-shadow: 0 0 0 3px rgba(176, 141, 106, .14);
+  }
+  #changeEmail {
+    color: #8d8676;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
   .error {
     display: none;
     margin-top: 14px;
@@ -668,25 +733,41 @@
     </div>
 
     <div id="mode-signup" role="tabpanel" aria-labelledby="tabSignup" style="display:none">
-      <div class="field">
-        <label for="signupEmail">Correo electrónico</label>
-        <div class="input-shell">
+      <div id="signupForm">
+        <div class="field">
+          <label for="signupEmail">Correo electrónico</label>
+          <div class="input-shell">
+            <svg><use href="#g-mail"/></svg>
+            <input id="signupEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
+          </div>
+        </div>
+        <div class="field">
+          <label for="signupPassword">Contraseña</label>
+          <div class="input-shell">
+            <svg><use href="#g-lock"/></svg>
+            <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+            <button class="eye" type="button" data-eye="signupPassword" aria-label="Mostrar contraseña">
+              <svg><use href="#g-eye"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="primary" id="btnSignup" data-label="Crear cuenta" type="button">Crear cuenta</button>
+        <p class="hint">Te enviaremos un código de 6 dígitos para confirmar la cuenta.</p>
+      </div>
+
+      <div id="signupVerify" style="display:none">
+        <div class="verify-icon" aria-hidden="true">
           <svg><use href="#g-mail"/></svg>
-          <input id="signupEmail" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
         </div>
+        <p class="verify-copy">
+          Escribe el código de 6 dígitos que enviamos a
+          <strong id="verifyEmail"></strong>
+        </p>
+        <input class="code-input" id="verifyCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-label="Código de confirmación de 6 dígitos">
+        <button class="primary" id="btnVerify" data-label="Confirmar cuenta" type="button" disabled>Confirmar cuenta</button>
+        <button class="link" id="resendCode" type="button">Reenviar código</button>
+        <button class="link" id="changeEmail" type="button">Usar otro correo</button>
       </div>
-      <div class="field">
-        <label for="signupPassword">Contraseña</label>
-        <div class="input-shell">
-          <svg><use href="#g-lock"/></svg>
-          <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-          <button class="eye" type="button" data-eye="signupPassword" aria-label="Mostrar contraseña">
-            <svg><use href="#g-eye"/></svg>
-          </button>
-        </div>
-      </div>
-      <button class="primary" id="btnSignup" data-label="Crear cuenta" type="button">Crear cuenta</button>
-      <p class="hint">Te enviaremos un correo para confirmar la cuenta.</p>
     </div>
 
     <div id="error" class="error" role="alert" aria-live="assertive"></div>
@@ -694,7 +775,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.5</span>
+      <span class="login-version" id="loginVersion">· v1.9.6</span>
     </p>
   </section>
 </main>
@@ -724,6 +805,15 @@
   const toastEl = document.getElementById('toast');
   const resendLink = document.getElementById('resendLink');
   const btnGoogle = document.getElementById('btnGoogle');
+  const signupForm = document.getElementById('signupForm');
+  const signupVerify = document.getElementById('signupVerify');
+  const verifyEmail = document.getElementById('verifyEmail');
+  const verifyCode = document.getElementById('verifyCode');
+  const btnVerify = document.getElementById('btnVerify');
+  const resendCode = document.getElementById('resendCode');
+  const changeEmail = document.getElementById('changeEmail');
+  let pendingEmail = '';
+  let verifying = false;
 
   function redirectTo() {
     return new URL('login.html', location.href).href;
@@ -755,6 +845,11 @@
       eyebrow: 'Tu primer paso',
       title: 'Empieza con\ncalma.',
       sub: 'Crea tu cuenta y ordena tu dinero.'
+    },
+    verify: {
+      eyebrow: 'Un último paso',
+      title: 'Revisa tu\ncorreo.',
+      sub: 'Escribe el código de 6 dígitos que te enviamos.'
     }
   };
 
@@ -823,6 +918,38 @@
     await typeInto(authSubtitle, data.sub, token, 9);
   }
 
+  function resetSignupForm() {
+    pendingEmail = '';
+    verifying = false;
+    signupForm.style.display = 'block';
+    signupVerify.style.display = 'none';
+    verifyCode.value = '';
+    btnVerify.disabled = true;
+    btnVerify.textContent = btnVerify.dataset.label;
+    showError('');
+    showResend(false);
+  }
+
+  function enterVerify(email) {
+    if (modeActual !== 'signup') setMode('signup');
+    pendingEmail = email;
+    verifying = true;
+    signupForm.style.display = 'none';
+    signupVerify.style.display = 'block';
+    verifyEmail.textContent = email;
+    verifyCode.value = '';
+    btnVerify.disabled = true;
+    btnVerify.textContent = btnVerify.dataset.label;
+    const signupEmail = document.getElementById('signupEmail');
+    if (signupEmail) signupEmail.value = email;
+    showError('');
+    showResend(false);
+    typeCopy('verify');
+    setTimeout(() => {
+      try { verifyCode.focus({ preventScroll: true }); } catch (error) { /* ignorar */ }
+    }, 180);
+  }
+
   function setMode(mode) {
     const next = mode === 'signup' ? 'signup' : 'login';
     if (next === modeActual) return;
@@ -837,13 +964,23 @@
     tabSignup.setAttribute('aria-selected', signup ? 'true' : 'false');
     authTabs.dataset.mode = signup ? 'signup' : 'login';
 
-    showResend(false);
-    showError('');
+    resetSignupForm();
     typeCopy(next);
   }
 
-  tabLogin.addEventListener('click', () => setMode('login'));
-  tabSignup.addEventListener('click', () => setMode('signup'));
+  tabLogin.addEventListener('click', () => {
+    if (modeActual === 'login') return;
+    setMode('login');
+  });
+  tabSignup.addEventListener('click', () => {
+    if (modeActual !== 'signup') {
+      setMode('signup');
+      return;
+    }
+    if (!verifying) return;
+    resetSignupForm();
+    typeCopy('signup');
+  });
 
   /* En iPhone el teclado flota sobre la página: al enfocar un campo,
      se compacta la cabecera y se coloca el campo con el mínimo
@@ -1029,9 +1166,11 @@
 
     if (msg.includes('invalid login credentials')) return 'Correo o contraseña incorrectos.';
     if (msg.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y spam).';
+    if (msg.includes('token has expired') || msg.includes('invalid token') || msg.includes('invalid otp') || msg.includes('otp_expired')) return 'El código no es válido o ya expiró. Pide uno nuevo.';
     if (msg.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Inicia sesión.';
     if (msg.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
     if (msg.includes('unable to validate email') || msg.includes('invalid email')) return 'El correo no es válido.';
+    if (msg.includes('security purposes') || msg.includes('only request this after')) return 'Espera unos segundos antes de pedir otro código.';
     if (msg.includes('rate limit') || msg.includes('too many requests')) return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
     if (msg.includes('signups not allowed')) return 'El registro está deshabilitado en Supabase.';
     if (msg.includes('provider is not enabled') || msg.includes('unsupported provider')) return 'El inicio de sesión con Google no está habilitado en Supabase.';
@@ -1086,8 +1225,11 @@
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) {
         const message = translateError(error);
+        if (/confirmar tu correo/i.test(message)) {
+          enterVerify(email);
+          return;
+        }
         showError(message);
-        showResend(/confirmar tu correo/i.test(message));
         return;
       }
       showToast('Sesión iniciada.');
@@ -1124,8 +1266,20 @@
         return;
       }
 
-      showError('Cuenta creada. Revisa tu correo (' + email + ') y haz clic en el enlace de confirmación. Después inicia sesión aquí.', true);
+      if (!data || !data.user) {
+        showError('No se pudo crear la cuenta. Inténtalo de nuevo.');
+        return;
+      }
+
+      // Supabase devuelve un usuario "falso" sin identidades cuando el
+      // correo ya está registrado, para no revelar qué cuentas existen.
+      if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        showError('Ya existe una cuenta con ese correo. Inicia sesión.');
+        return;
+      }
+
       document.getElementById('signupPassword').value = '';
+      enterVerify(email);
     } catch (err) {
       showError(translateError(err));
     } finally {
@@ -1133,8 +1287,98 @@
     }
   }
 
+  async function handleVerify() {
+    const token = verifyCode.value.replace(/\D/g, '').slice(0, 6);
+    if (token.length !== 6) {
+      showError('Escribe el código de 6 dígitos.');
+      verifyCode.focus();
+      return;
+    }
+    if (!pendingEmail) {
+      showError('Vuelve a crear la cuenta o inicia sesión.');
+      return;
+    }
+    const sb = client();
+    if (!sb) return;
+
+    showError('');
+    setLoading(btnVerify, true);
+    try {
+      const { data, error } = await sb.auth.verifyOtp({
+        email: pendingEmail,
+        token,
+        type: 'signup'
+      });
+      if (error) {
+        showError(translateError(error));
+        return;
+      }
+      if (data && data.session) {
+        showToast('Cuenta confirmada. Entrando…');
+        setTimeout(() => { location.href = 'index.html'; }, 650);
+        return;
+      }
+      showError('No se pudo confirmar la cuenta. Pide un código nuevo.');
+    } catch (err) {
+      showError(translateError(err));
+    } finally {
+      setLoading(btnVerify, false);
+      btnVerify.disabled = verifyCode.value.replace(/\D/g, '').length !== 6;
+    }
+  }
+
+  verifyCode.addEventListener('input', () => {
+    const digits = verifyCode.value.replace(/\D/g, '').slice(0, 6);
+    if (verifyCode.value !== digits) verifyCode.value = digits;
+    btnVerify.disabled = digits.length !== 6;
+  });
+  verifyCode.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleVerify();
+  });
+
+  resendCode.addEventListener('click', async () => {
+    if (!pendingEmail) {
+      showError('Vuelve a crear la cuenta o inicia sesión.');
+      return;
+    }
+    const sb = client();
+    if (!sb) return;
+
+    showError('');
+    resendCode.disabled = true;
+    resendCode.textContent = 'Enviando…';
+    try {
+      const { error } = await sb.auth.resend({
+        type: 'signup',
+        email: pendingEmail,
+        options: { emailRedirectTo: redirectTo() }
+      });
+      if (error) { showError(translateError(error)); return; }
+      showToast('Código reenviado. Revisa tu correo.');
+      verifyCode.value = '';
+      btnVerify.disabled = true;
+      verifyCode.focus();
+    } catch (err) {
+      showError(translateError(err));
+    } finally {
+      resendCode.disabled = false;
+      resendCode.textContent = 'Reenviar código';
+    }
+  });
+
+  changeEmail.addEventListener('click', () => {
+    resetSignupForm();
+    typeCopy('signup');
+    const input = document.getElementById('signupEmail');
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  });
+
   btnLogin.addEventListener('click', handleLogin);
   btnSignup.addEventListener('click', handleSignup);
+  btnVerify.addEventListener('click', handleVerify);
 
   document.getElementById('loginPassword').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleLogin();
