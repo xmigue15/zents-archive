@@ -752,7 +752,7 @@
           </div>
         </div>
         <button class="primary" id="btnSignup" data-label="Crear cuenta" type="button">Crear cuenta</button>
-        <p class="hint">Te enviaremos un código de 6 dígitos para confirmar la cuenta.</p>
+        <p class="hint">Te enviaremos un código de confirmación al correo.</p>
       </div>
 
       <div id="signupVerify" style="display:none">
@@ -760,10 +760,10 @@
           <svg><use href="#g-mail"/></svg>
         </div>
         <p class="verify-copy">
-          Escribe el código de 6 dígitos que enviamos a
+          Escribe el código que enviamos a
           <strong id="verifyEmail"></strong>
         </p>
-        <input class="code-input" id="verifyCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-label="Código de confirmación de 6 dígitos">
+        <input class="code-input" id="verifyCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="one-time-code" placeholder="00000000" aria-label="Código de confirmación">
         <button class="primary" id="btnVerify" data-label="Confirmar cuenta" type="button" disabled>Confirmar cuenta</button>
         <button class="link" id="resendCode" type="button">Reenviar código</button>
         <button class="link" id="changeEmail" type="button">Usar otro correo</button>
@@ -775,7 +775,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.7</span>
+      <span class="login-version" id="loginVersion">· v1.9.8</span>
     </p>
   </section>
 </main>
@@ -849,7 +849,7 @@
     verify: {
       eyebrow: 'Un último paso',
       title: 'Revisa tu\ncorreo.',
-      sub: 'Escribe el código de 6 dígitos que te enviamos.'
+      sub: 'Escribe el código que te enviamos al correo.'
     }
   };
 
@@ -1288,9 +1288,9 @@
   }
 
   async function handleVerify() {
-    const token = verifyCode.value.replace(/\D/g, '').slice(0, 6);
-    if (token.length !== 6) {
-      showError('Escribe el código de 6 dígitos.');
+    const token = verifyCode.value.replace(/\D/g, '').slice(0, 8);
+    if (token.length < 6) {
+      showError('Escribe el código completo que te llegó al correo.');
       verifyCode.focus();
       return;
     }
@@ -1323,14 +1323,14 @@
       showError(translateError(err));
     } finally {
       setLoading(btnVerify, false);
-      btnVerify.disabled = verifyCode.value.replace(/\D/g, '').length !== 6;
+      btnVerify.disabled = verifyCode.value.replace(/\D/g, '').length < 6;
     }
   }
 
   verifyCode.addEventListener('input', () => {
-    const digits = verifyCode.value.replace(/\D/g, '').slice(0, 6);
+    const digits = verifyCode.value.replace(/\D/g, '').slice(0, 8);
     if (verifyCode.value !== digits) verifyCode.value = digits;
-    btnVerify.disabled = digits.length !== 6;
+    btnVerify.disabled = digits.length < 6;
   });
   verifyCode.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleVerify();
