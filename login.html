@@ -496,8 +496,8 @@
     .bosque-sheet .secure { margin-top: auto; }
   }
 
-  /* Al escribir en el iPhone, el teclado no debe tapar los campos:
-     la cabecera se compacta y la hoja gana espacio para desplazarse. */
+  /* Al escribir en el iPhone, la cabecera se compacta para que los
+     campos queden por encima del teclado sin mover la hoja. */
   input { scroll-margin-bottom: 26px; }
 
   @media (max-width: 899px) {
@@ -511,8 +511,14 @@
       transform: translateY(-8px);
       pointer-events: none;
     }
-    body.typing .bosque-sheet {
-      padding-bottom: calc(24px + env(safe-area-inset-bottom) + var(--keyboard-height, 0px));
+  }
+
+  /* Solo en pantallas bajas hace falta reservar recorrido para subir el
+     campo por encima del teclado. En móviles altos la cabecera compacta
+     ya deja los campos visibles y no debe quedar un hueco crema. */
+  @media (max-width: 899px) {
+    body.typing.short-screen .bosque-sheet {
+      padding-bottom: calc(24px + env(safe-area-inset-bottom) + min(160px, var(--keyboard-height, 0px)));
     }
   }
 
@@ -821,24 +827,40 @@
   tabSignup.addEventListener('click', () => setMode('signup'));
 
   /* En iPhone el teclado flota sobre la página: al enfocar un campo,
-     se compacta la cabecera y se reserva espacio para poder desplazar
-     el campo por encima del teclado. */
+     se compacta la cabecera y se coloca el campo con el mínimo
+     desplazamiento necesario para que quede por encima del teclado. */
   const vv = window.visualViewport;
   let baseViewportHeight = vv ? vv.height : Math.max(window.innerHeight, document.documentElement.clientHeight);
   let keyboardTimer = null;
+  // La reserva extra de scroll solo tiene sentido en pantallas bajas;
+  // se decide con la altura real del dispositivo, no con la que deja el
+  // teclado abierto.
+  document.body.classList.toggle('short-screen', baseViewportHeight <= 700);
 
   function scrollFocusedInput() {
     const input = document.activeElement;
     if (!input || !input.matches || !input.matches('input')) return;
+    const shell = document.querySelector('.shell');
+    if (!shell) return;
+
     const rect = input.getBoundingClientRect();
     const viewTop = vv ? vv.offsetTop : 0;
     const viewBottom = vv ? vv.offsetTop + vv.height : (window.innerHeight || document.documentElement.clientHeight);
-    // Si el campo ya se ve por encima del teclado, no movemos nada:
-    // así la cabecera compacta permanece a la vista.
-    if (rect.top >= viewTop + 12 && rect.bottom <= viewBottom - 20) return;
-    try {
-      input.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
-    } catch (error) { /* ignorar */ }
+    const maxBottom = viewBottom - 20;
+    // Posición del campo dentro del contenido desplazable.
+    const contentTop = rect.top + shell.scrollTop;
+    const contentBottom = rect.bottom + shell.scrollTop;
+
+    // Si el campo ya cabe con la hoja arriba del todo, no la movemos:
+    // así se queda la cabecera compacta a la vista y no aparece hueco.
+    let target = 0;
+    if (contentBottom > maxBottom) target = contentBottom - maxBottom;
+    else if (contentTop < viewTop + 12) target = contentTop - (viewTop + 12);
+
+    const maxScroll = Math.max(0, shell.scrollHeight - shell.clientHeight);
+    target = Math.max(0, Math.min(target, maxScroll));
+    if (Math.abs(shell.scrollTop - target) < 2) return;
+    shell.scrollTo({ top: target, behavior: 'auto' });
   }
 
   function updateKeyboardLayout() {
@@ -858,7 +880,10 @@
     vv.addEventListener('scroll', updateKeyboardLayout);
     window.addEventListener('orientationchange', () => {
       setTimeout(() => {
-        if (!document.body.classList.contains('typing')) baseViewportHeight = vv.height;
+        if (!document.body.classList.contains('typing')) {
+          baseViewportHeight = vv.height;
+          document.body.classList.toggle('short-screen', baseViewportHeight <= 700);
+        }
       }, 350);
     });
   }
