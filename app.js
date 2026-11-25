@@ -11,7 +11,7 @@
      ------------------------------------------------------------ */
 
   const STORE_KEY = 'zent.state.v1';
-  const APP_VERSION = '1.9.6';
+  const APP_VERSION = '1.9.7';
 
   const VIEW_META = {
     resumen: { title: 'Resumen' },
@@ -1532,7 +1532,12 @@
           action: 'sign-out', icon: ICON.logout, title: 'Cerrar sesión',
           sub: 'Volver a la pantalla de entrada', danger: true
         }) +
-      '</section>';
+        settingsRow({
+          action: 'delete-user-account', icon: ICON.trash, title: 'Eliminar cuenta',
+          sub: 'Borra tu cuenta y todos tus datos para siempre', danger: true
+        }) +
+      '</section>' +
+      '<p class="settings-note settings-note-center">Eliminar la cuenta también borra tu copia en la nube. No se puede deshacer.</p>';
   }
 
   const RENDERERS = {
@@ -3955,6 +3960,48 @@
                 /* sin acceso a localStorage */
               }
               location.href = 'login.html';
+            })();
+          }
+        });
+        break;
+
+      case 'delete-user-account':
+        confirmDialog({
+          title: 'Eliminar cuenta',
+          message: 'Se borrará tu cuenta de Zent, tu copia en la nube y los datos de este dispositivo. Esta acción no se puede deshacer.',
+          sub: 'Si solo quieres salir, usa «Cerrar sesión».',
+          confirmText: 'Eliminar cuenta',
+          onConfirm: () => {
+            closeModal();
+            (async () => {
+              toast('Eliminando tu cuenta…');
+              try {
+                const sb = window.sync ? await sync.ensureClient() : null;
+                if (!sb) throw new Error('sin-cliente');
+                // La función de Supabase borra primero el estado y luego
+                // el usuario de auth; solo puede borrar el suyo.
+                const { error } = await sb.rpc('delete_own_account');
+                if (error) throw error;
+                try {
+                  await sync.signOut();
+                } catch (error) {
+                  console.warn('Zent: error al limpiar la sesión.', error);
+                }
+                try {
+                  localStorage.removeItem(STORE_KEY);
+                } catch (error) {
+                  /* sin acceso a localStorage */
+                }
+                try {
+                  sessionStorage.setItem('zent.accountDeleted', '1');
+                } catch (error) {
+                  /* sin acceso a sessionStorage */
+                }
+                location.href = 'login.html';
+              } catch (error) {
+                console.warn('Zent: no se pudo eliminar la cuenta.', error);
+                toast('No se pudo eliminar la cuenta. Revisa tu conexión e inténtalo de nuevo.');
+              }
             })();
           }
         });

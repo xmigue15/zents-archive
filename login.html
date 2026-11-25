@@ -775,7 +775,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.6</span>
+      <span class="login-version" id="loginVersion">· v1.9.7</span>
     </p>
   </section>
 </main>
@@ -1412,6 +1412,14 @@
       resendLink.disabled = false;
     }
   });
+
+  // Mensaje si se acaba de eliminar la cuenta desde Ajustes.
+  try {
+    if (sessionStorage.getItem('zent.accountDeleted') === '1') {
+      sessionStorage.removeItem('zent.accountDeleted');
+      showError('Tu cuenta se eliminó correctamente.', true);
+    }
+  } catch (error) { /* sin acceso a sessionStorage */ }
 
   // Escribe la cabecera inicial y vuelve a escribirla al cambiar de modo.
   typeCopy('login');
