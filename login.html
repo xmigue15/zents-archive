@@ -78,6 +78,36 @@
     flex-direction: column;
   }
 
+  /* En iPhone el documento no debe rebotar: si lo hace, Safari descubre
+     el lienzo blanco por arriba y por abajo. El desplazamiento vive
+     dentro de .shell, cuyo fondo es verde arriba y crema abajo, así que
+     el rebote siempre enseña el color correcto. */
+  @media (max-width: 899px) {
+    html {
+      height: 100%;
+      overflow: hidden;
+      background: var(--cream);
+    }
+    body {
+      position: fixed;
+      inset: 0;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--cream);
+    }
+    .shell {
+      --top-h: 340px;
+      height: 100%;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      background: linear-gradient(180deg, #0c2c26 0 var(--top-h), var(--cream) var(--top-h));
+    }
+  }
+
   /* ---------- Cabecera bosque ---------- */
   .bosque-top {
     position: relative;
@@ -453,6 +483,7 @@
 
   /* ---------- Pantallas cortas ---------- */
   @media (max-height: 700px) and (max-width: 899px) {
+    .shell { --top-h: 280px; }
     .bosque-top { min-height: 280px; }
     .bosque-copy { padding-top: 30px; }
     .bosque-copy h1 { font-size: 31px; }
@@ -470,7 +501,8 @@
   input { scroll-margin-bottom: 26px; }
 
   @media (max-width: 899px) {
-    body.typing .bosque-top { min-height: 88px; }
+    body.typing .shell { --top-h: max(88px, calc(env(safe-area-inset-top) + 74px)); }
+    body.typing .bosque-top { min-height: max(88px, calc(env(safe-area-inset-top) + 74px)); }
     body.typing .bosque-copy {
       position: absolute;
       inset: auto 0 0;
@@ -798,6 +830,12 @@
   function scrollFocusedInput() {
     const input = document.activeElement;
     if (!input || !input.matches || !input.matches('input')) return;
+    const rect = input.getBoundingClientRect();
+    const viewTop = vv ? vv.offsetTop : 0;
+    const viewBottom = vv ? vv.offsetTop + vv.height : (window.innerHeight || document.documentElement.clientHeight);
+    // Si el campo ya se ve por encima del teclado, no movemos nada:
+    // así la cabecera compacta permanece a la vista.
+    if (rect.top >= viewTop + 12 && rect.bottom <= viewBottom - 20) return;
     try {
       input.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
     } catch (error) { /* ignorar */ }

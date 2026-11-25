@@ -4,7 +4,7 @@
    abra al instante, incluso con internet lento o caído.
    ============================================================ */
 
-const CACHE_NAME = 'zent-v92';
+const CACHE_NAME = 'zent-v93';
 const APP_SHELL = [
   './',
   './index.html',
