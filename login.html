@@ -587,9 +587,12 @@
       transform: translateY(-8px);
       pointer-events: none;
     }
-    /* Al escribir, el botón de Google y el separador se ocultan y la
-       hoja sube: iOS no necesita centrar el campo al cambiar entre
-       correo y contraseña. */
+    /* Al escribir, el botón de Google y el separador se ocultan. La hoja
+       baja un poco también con el teclado abierto para que el formulario
+       no quede pegado al borde superior. */
+    body.typing .bosque-sheet {
+      padding-top: calc(20px + 48px);
+    }
     body.typing .google,
     body.typing .divider {
       display: none;
@@ -842,7 +845,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.17</span>
+      <span class="login-version" id="loginVersion">· v1.9.18</span>
     </p>
   </section>
 </main>
