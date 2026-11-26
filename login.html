@@ -276,6 +276,17 @@
     outline: 2px solid var(--camel);
     outline-offset: -2px;
   }
+
+  /* La recuperación es un flujo aparte: no mostramos las pestañas
+     Entrar / Crear cuenta, pero conservamos el espacio para que el
+     contenido no salte. */
+  body.recovery-active .auth-tabs {
+    display: none;
+  }
+  #recoveryRequest,
+  #recoveryReset {
+    padding-top: 40px;
+  }
   .google {
     display: flex;
     align-items: center;
@@ -588,10 +599,10 @@
       pointer-events: none;
     }
     /* Al escribir, el botón de Google y el separador se ocultan. La hoja
-       baja un poco también con el teclado abierto para que el formulario
-       no quede pegado al borde superior. */
+       baja solo lo justo: más espacio hace que iOS centre la contraseña
+       y vuelva el rebote al cambiar de campo. */
     body.typing .bosque-sheet {
-      padding-top: calc(20px + 48px);
+      padding-top: calc(20px + 16px);
     }
     body.typing .google,
     body.typing .divider {
@@ -845,7 +856,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.18</span>
+      <span class="login-version" id="loginVersion">· v1.9.19</span>
     </p>
   </section>
 </main>
@@ -1049,6 +1060,7 @@
   function resetRecovery() {
     recoveryEmailValue = '';
     recoveryStep = '';
+    document.body.classList.remove('recovery-active');
     loginForm.style.display = 'block';
     recoveryRequest.style.display = 'none';
     recoveryReset.style.display = 'none';
@@ -1075,6 +1087,7 @@
   function showRecoveryRequest() {
     resetRecovery();
     recoveryStep = 'request';
+    document.body.classList.add('recovery-active');
     loginForm.style.display = 'none';
     recoveryRequest.style.display = 'block';
     const email = document.getElementById('loginEmail').value.trim();
@@ -1088,6 +1101,7 @@
   function showRecoveryReset(email) {
     recoveryEmailValue = email;
     recoveryStep = 'reset';
+    document.body.classList.add('recovery-active');
     loginForm.style.display = 'none';
     recoveryRequest.style.display = 'none';
     recoveryReset.style.display = 'block';
