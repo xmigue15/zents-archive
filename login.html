@@ -836,7 +836,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.13</span>
+      <span class="login-version" id="loginVersion">· v1.9.14</span>
     </p>
   </section>
 </main>
@@ -1287,20 +1287,55 @@
     });
   }
 
+  function togglePasswordVisibility(button) {
+    const input = document.getElementById(button.dataset.eye);
+    if (!input) return;
+
+    // Guardamos el foco y la posición del cursor para devolverlos después
+    // de cambiar el tipo del campo.
+    const wasFocused = document.activeElement === input;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const visible = input.type === 'password';
+
+    input.type = visible ? 'text' : 'password';
+    button.classList.toggle('on', visible);
+    button.setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    const use = button.querySelector('use');
+    if (use) {
+      const icon = visible ? '#g-eye-off' : '#g-eye';
+      use.setAttribute('href', icon);
+      use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', icon);
+    }
+
+    if (wasFocused) {
+      try {
+        input.focus({ preventScroll: true });
+        if (start !== null && end !== null && input.setSelectionRange) {
+          input.setSelectionRange(start, end);
+        }
+      } catch (error) { /* ignorar */ }
+    }
+  }
+
   document.querySelectorAll('[data-eye]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const input = document.getElementById(button.dataset.eye);
-      if (!input) return;
-      const visible = input.type === 'password';
-      input.type = visible ? 'text' : 'password';
-      button.classList.toggle('on', visible);
-      button.setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
-      const use = button.querySelector('use');
-      if (use) {
-        const icon = visible ? '#g-eye-off' : '#g-eye';
-        use.setAttribute('href', icon);
-        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', icon);
+    // En iOS, tocar un botón dentro del campo hace que el campo pierda el
+    // foco y el teclado se cierre. Al evitar el comportamiento por
+    // defecto del pointerdown/mousedown, el foco se queda en la contraseña.
+    const keepFocus = (event) => { event.preventDefault(); };
+    button.addEventListener('pointerdown', (event) => {
+      keepFocus(event);
+      button.dataset.eyeHandled = '1';
+      togglePasswordVisibility(button);
+      setTimeout(() => { delete button.dataset.eyeHandled; }, 500);
+    });
+    button.addEventListener('mousedown', keepFocus);
+    button.addEventListener('click', (event) => {
+      if (button.dataset.eyeHandled) {
+        event.preventDefault();
+        return;
       }
+      togglePasswordVisibility(button);
     });
   });
 
