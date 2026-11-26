@@ -576,8 +576,9 @@
   input { scroll-margin-bottom: 26px; }
 
   @media (max-width: 899px) {
-    body.typing .shell { --top-h: max(88px, calc(env(safe-area-inset-top) + 74px)); }
-    body.typing .bosque-top { min-height: max(88px, calc(env(safe-area-inset-top) + 74px)); }
+    body.typing .shell { --top-h: env(safe-area-inset-top); }
+    body.typing .bosque-top { min-height: env(safe-area-inset-top); }
+    body.typing .brand { display: none; }
     body.typing .bosque-copy {
       position: absolute;
       inset: auto 0 0;
@@ -586,8 +587,9 @@
       transform: translateY(-8px);
       pointer-events: none;
     }
-    /* Al escribir, los campos suben a la zona alta de la hoja. Así iOS
-       no tiene que desplazar la página al pasar de un campo a otro. */
+    /* Al escribir, el botón de Google y el separador se ocultan y la
+       hoja sube: iOS no necesita centrar el campo al cambiar entre
+       correo y contraseña. */
     body.typing .google,
     body.typing .divider {
       display: none;
@@ -834,7 +836,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.12</span>
+      <span class="login-version" id="loginVersion">· v1.9.13</span>
     </p>
   </section>
 </main>
