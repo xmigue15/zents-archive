@@ -594,6 +594,12 @@
     body.typing .divider {
       display: none;
     }
+    /* Si el teclado se cerró pero el campo sigue enfocado (la barra de
+       arriba/abajo del teclado sigue visible), bajamos la hoja para que
+       el formulario no quede pegado al borde superior. */
+    body.typing.keyboard-closed .bosque-sheet {
+      padding-top: calc(20px + 56px);
+    }
   }
 
   /* Compactación instantánea al tocar un campo: iOS decide si debe
@@ -836,7 +842,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.14</span>
+      <span class="login-version" id="loginVersion">· v1.9.15</span>
     </p>
   </section>
 </main>
@@ -1224,19 +1230,26 @@
     if (open) {
       clearTimeout(keyboardCloseTimer);
       keyboardCloseTimer = null;
-    } else if (keyboardWasOpen && !inputFocused) {
-      // No movemos nada de inmediato: iOS a veces informa un cierre
-      // momentáneo al cambiar de campo o de tipo de teclado. Esperamos a
-      // que el cierre sea real para no producir un rebote.
+      document.body.classList.remove('keyboard-closed');
+    } else if (keyboardWasOpen) {
+      // Esperamos a que el cierre sea real. Si el campo sigue enfocado,
+      // añadimos keyboard-closed para bajar la hoja; si no, restauramos
+      // el formulario normal.
       clearTimeout(keyboardCloseTimer);
       keyboardCloseTimer = setTimeout(() => {
         if (vv && vv.height < baseViewportHeight - 80) return;
         const active = document.activeElement;
-        if (active && active.matches && active.matches('input')) return;
+        const stillFocused = active && active.matches && active.matches('input');
+        if (stillFocused) {
+          document.body.classList.add('keyboard-closed');
+          return;
+        }
+        document.body.classList.remove('typing');
+        document.body.classList.remove('keyboard-closed');
         const shell = document.querySelector('.shell');
         if (shell) shell.scrollTo({ top: 0, behavior: 'auto' });
         resetDocumentScroll();
-      }, 280);
+      }, 600);
     }
     keyboardWasOpen = open;
     document.body.classList.toggle('typing', open || Boolean(inputFocused));
@@ -1266,6 +1279,7 @@
       // tocarlo: si se mueve antes, iOS a veces pierde el toque y no abre
       // el teclado.
       input.addEventListener('focus', () => {
+        document.body.classList.remove('keyboard-closed');
         if (!document.body.classList.contains('typing')) compactHeaderNow();
         preScrollFocusedInput(input);
         clearTimeout(keyboardTimer);
@@ -1277,6 +1291,7 @@
           if (active && active.matches && active.matches('input')) return;
           if (!vv || vv.height >= baseViewportHeight - 80) {
             document.body.classList.remove('typing');
+            document.body.classList.remove('keyboard-closed');
             document.documentElement.style.setProperty('--keyboard-height', '0px');
             const shell = document.querySelector('.shell');
             if (shell) shell.scrollTo({ top: 0, behavior: 'auto' });
