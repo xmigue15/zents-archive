@@ -277,16 +277,20 @@
     outline-offset: -2px;
   }
 
-  /* La recuperación es un flujo aparte: no mostramos las pestañas
-     Entrar / Crear cuenta, pero conservamos el espacio para que el
-     contenido no salte. */
+  /* La recuperación y la confirmación por código son flujos aparte:
+     no mostramos las pestañas Entrar / Crear cuenta. Conservamos el
+     espacio para que el contenido no salte. */
   body.recovery-active .auth-tabs,
   body.recovery-active .google,
-  body.recovery-active .divider {
+  body.recovery-active .divider,
+  body.verify-active .auth-tabs,
+  body.verify-active .google,
+  body.verify-active .divider {
     display: none;
   }
   #recoveryRequest,
-  #recoveryReset {
+  #recoveryReset,
+  #signupVerify {
     padding-top: 40px;
   }
   .google {
@@ -850,6 +854,7 @@
         <button class="primary" id="btnVerify" data-label="Confirmar cuenta" type="button" disabled>Confirmar cuenta</button>
         <button class="link" id="resendCode" type="button">Reenviar código</button>
         <button class="link" id="changeEmail" type="button">Usar otro correo</button>
+        <button class="link" id="verifyBackToLogin" type="button">Volver a entrar</button>
       </div>
     </div>
 
@@ -858,7 +863,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.20</span>
+      <span class="login-version" id="loginVersion">· v1.9.21</span>
     </p>
   </section>
 </main>
@@ -895,6 +900,7 @@
   const btnVerify = document.getElementById('btnVerify');
   const resendCode = document.getElementById('resendCode');
   const changeEmail = document.getElementById('changeEmail');
+  const verifyBackToLogin = document.getElementById('verifyBackToLogin');
   const loginForm = document.getElementById('loginForm');
   const forgotPassword = document.getElementById('forgotPassword');
   const recoveryRequest = document.getElementById('recoveryRequest');
@@ -1030,6 +1036,7 @@
   function resetSignupForm() {
     pendingEmail = '';
     verifying = false;
+    document.body.classList.remove('verify-active');
     signupForm.style.display = 'block';
     signupVerify.style.display = 'none';
     verifyCode.value = '';
@@ -1043,8 +1050,14 @@
     if (modeActual !== 'signup') setMode('signup');
     pendingEmail = email;
     verifying = true;
+    document.body.classList.add('verify-active');
+    document.body.classList.remove('keyboard-closed');
     signupForm.style.display = 'none';
     signupVerify.style.display = 'block';
+    // Entramos ya en modo enfoque, para que la pantalla no se mueva
+    // cuando el campo del código reciba el foco automáticamente.
+    document.body.classList.add('typing');
+    compactHeaderNow();
     verifyEmail.textContent = email;
     verifyCode.value = '';
     btnVerify.disabled = true;
@@ -1078,6 +1091,7 @@
   }
 
   function showLoginForm() {
+    resetSignupForm();
     resetRecovery();
     typeCopy('login');
     const email = document.getElementById('loginEmail');
@@ -1270,7 +1284,8 @@
         const active = document.activeElement;
         const stillFocused = active && active.matches && active.matches('input');
         if (stillFocused) {
-          if (!document.body.classList.contains('recovery-active')) {
+          if (!document.body.classList.contains('recovery-active') &&
+              !document.body.classList.contains('verify-active')) {
             document.body.classList.add('keyboard-closed');
           }
           return;
@@ -1319,7 +1334,8 @@
         // bajamos la hoja para que el formulario no quede pegado arriba.
         clearTimeout(focusSettleTimer);
         focusSettleTimer = setTimeout(() => {
-          if (document.body.classList.contains('recovery-active')) return;
+          if (document.body.classList.contains('recovery-active') ||
+              document.body.classList.contains('verify-active')) return;
           const active = document.activeElement;
           if (!active || !active.matches || !active.matches('input')) return;
           const keyboardOpen = vv && vv.height < baseViewportHeight - 80;
@@ -1759,6 +1775,8 @@
       input.select();
     }
   });
+
+  verifyBackToLogin.addEventListener('click', () => setMode('login'));
 
   btnLogin.addEventListener('click', handleLogin);
   btnSignup.addEventListener('click', handleSignup);
