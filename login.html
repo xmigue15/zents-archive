@@ -586,6 +586,12 @@
       transform: translateY(-8px);
       pointer-events: none;
     }
+    /* Al escribir, los campos suben a la zona alta de la hoja. Así iOS
+       no tiene que desplazar la página al pasar de un campo a otro. */
+    body.typing .google,
+    body.typing .divider {
+      display: none;
+    }
   }
 
   /* Compactación instantánea al tocar un campo: iOS decide si debe
@@ -828,7 +834,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.11</span>
+      <span class="login-version" id="loginVersion">· v1.9.12</span>
     </p>
   </section>
 </main>
@@ -1134,6 +1140,7 @@
   const vv = window.visualViewport;
   let baseViewportHeight = vv ? vv.height : Math.max(window.innerHeight, document.documentElement.clientHeight);
   let keyboardTimer = null;
+  let keyboardCloseTimer = null;
   let keyboardWasOpen = false;
   // La reserva extra de scroll solo tiene sentido en pantallas bajas;
   // se decide con la altura real del dispositivo, no con la que deja el
@@ -1212,12 +1219,22 @@
     // durante las alturas intermedias del teclado: eso causaba el rebote.
     const inputFocused = document.activeElement &&
       document.activeElement.matches && document.activeElement.matches('input');
-    if (keyboardWasOpen && !open) {
-      // Al cerrar el teclado, la hoja vuelve arriba del todo para que no
-      // se quede desplazada enseñando el hueco de abajo.
-      const shell = document.querySelector('.shell');
-      if (shell) shell.scrollTo({ top: 0, behavior: 'auto' });
-      resetDocumentScroll();
+    if (open) {
+      clearTimeout(keyboardCloseTimer);
+      keyboardCloseTimer = null;
+    } else if (keyboardWasOpen && !inputFocused) {
+      // No movemos nada de inmediato: iOS a veces informa un cierre
+      // momentáneo al cambiar de campo o de tipo de teclado. Esperamos a
+      // que el cierre sea real para no producir un rebote.
+      clearTimeout(keyboardCloseTimer);
+      keyboardCloseTimer = setTimeout(() => {
+        if (vv && vv.height < baseViewportHeight - 80) return;
+        const active = document.activeElement;
+        if (active && active.matches && active.matches('input')) return;
+        const shell = document.querySelector('.shell');
+        if (shell) shell.scrollTo({ top: 0, behavior: 'auto' });
+        resetDocumentScroll();
+      }, 280);
     }
     keyboardWasOpen = open;
     document.body.classList.toggle('typing', open || Boolean(inputFocused));
