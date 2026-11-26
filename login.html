@@ -828,7 +828,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.10</span>
+      <span class="login-version" id="loginVersion">· v1.9.11</span>
     </p>
   </section>
 </main>
@@ -1188,9 +1188,12 @@
     const contentTop = rect.top + shell.scrollTop;
     const contentBottom = rect.bottom + shell.scrollTop;
 
-    // Si el campo ya cabe con la hoja arriba del todo, no la movemos:
-    // así se queda la cabecera compacta a la vista y no aparece hueco.
-    let target = 0;
+    // Si el campo ya se ve, no tocamos el scroll. Al pasar de correo a
+    // contraseña el teclado ya está abierto y cualquier ajuste se nota
+    // como un rebote.
+    if (rect.top >= viewTop + 12 && rect.bottom <= maxBottom) return;
+
+    let target = shell.scrollTop;
     if (contentBottom > maxBottom) target = contentBottom - maxBottom;
     else if (contentTop < viewTop + 12) target = contentTop - (viewTop + 12);
 
@@ -1244,7 +1247,7 @@
       // tocarlo: si se mueve antes, iOS a veces pierde el toque y no abre
       // el teclado.
       input.addEventListener('focus', () => {
-        compactHeaderNow();
+        if (!document.body.classList.contains('typing')) compactHeaderNow();
         preScrollFocusedInput(input);
         clearTimeout(keyboardTimer);
         keyboardTimer = setTimeout(scrollFocusedInput, 320);
