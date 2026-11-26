@@ -828,7 +828,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.9</span>
+      <span class="login-version" id="loginVersion">· v1.9.10</span>
     </p>
   </section>
 </main>
@@ -1205,6 +1205,10 @@
     const keyboard = Math.max(0, baseViewportHeight - vv.height);
     document.documentElement.style.setProperty('--keyboard-height', Math.round(keyboard) + 'px');
     const open = keyboard > 90;
+    // Mientras haya un campo enfocado, la cabecera no debe expandirse
+    // durante las alturas intermedias del teclado: eso causaba el rebote.
+    const inputFocused = document.activeElement &&
+      document.activeElement.matches && document.activeElement.matches('input');
     if (keyboardWasOpen && !open) {
       // Al cerrar el teclado, la hoja vuelve arriba del todo para que no
       // se quede desplazada enseñando el hueco de abajo.
@@ -1213,7 +1217,7 @@
       resetDocumentScroll();
     }
     keyboardWasOpen = open;
-    document.body.classList.toggle('typing', open);
+    document.body.classList.toggle('typing', open || Boolean(inputFocused));
     if (open) {
       clearTimeout(keyboardTimer);
       keyboardTimer = setTimeout(scrollFocusedInput, 280);
@@ -1236,12 +1240,9 @@
   const touchDevice = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || navigator.maxTouchPoints > 0;
   if (touchDevice && window.matchMedia && window.matchMedia('(max-width: 899px)').matches) {
     document.querySelectorAll('input').forEach((input) => {
-      // Al tocar (antes del foco) la cabecera ya se compacta: iOS evalúa
-      // el desplazamiento en el mismo instante del foco.
-      input.addEventListener('pointerdown', () => {
-        if (document.activeElement !== input) compactHeaderNow();
-      }, { passive: true });
-
+      // La cabecera se compacta cuando el campo ya tiene el foco, no al
+      // tocarlo: si se mueve antes, iOS a veces pierde el toque y no abre
+      // el teclado.
       input.addEventListener('focus', () => {
         compactHeaderNow();
         preScrollFocusedInput(input);
