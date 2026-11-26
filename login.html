@@ -842,7 +842,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.16</span>
+      <span class="login-version" id="loginVersion">· v1.9.17</span>
     </p>
   </section>
 </main>
@@ -1149,6 +1149,7 @@
   let baseViewportHeight = vv ? vv.height : Math.max(window.innerHeight, document.documentElement.clientHeight);
   let keyboardTimer = null;
   let keyboardCloseTimer = null;
+  let focusSettleTimer = null;
   let keyboardWasOpen = false;
   // La reserva extra de scroll solo tiene sentido en pantallas bajas;
   // se decide con la altura real del dispositivo, no con la que deja el
@@ -1229,6 +1230,7 @@
       document.activeElement.matches && document.activeElement.matches('input');
     if (open) {
       clearTimeout(keyboardCloseTimer);
+      clearTimeout(focusSettleTimer);
       keyboardCloseTimer = null;
       document.body.classList.remove('keyboard-closed');
     } else if (keyboardWasOpen) {
@@ -1284,8 +1286,18 @@
         preScrollFocusedInput(input);
         clearTimeout(keyboardTimer);
         keyboardTimer = setTimeout(scrollFocusedInput, 320);
+        // Si el campo sigue enfocado y el teclado no llegó a abrirse,
+        // bajamos la hoja para que el formulario no quede pegado arriba.
+        clearTimeout(focusSettleTimer);
+        focusSettleTimer = setTimeout(() => {
+          const active = document.activeElement;
+          if (!active || !active.matches || !active.matches('input')) return;
+          const keyboardOpen = vv && vv.height < baseViewportHeight - 80;
+          if (!keyboardOpen) document.body.classList.add('keyboard-closed');
+        }, 900);
       });
       input.addEventListener('blur', () => {
+        clearTimeout(focusSettleTimer);
         setTimeout(() => {
           const active = document.activeElement;
           if (active && active.matches && active.matches('input')) return;
