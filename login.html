@@ -280,7 +280,9 @@
   /* La recuperación es un flujo aparte: no mostramos las pestañas
      Entrar / Crear cuenta, pero conservamos el espacio para que el
      contenido no salte. */
-  body.recovery-active .auth-tabs {
+  body.recovery-active .auth-tabs,
+  body.recovery-active .google,
+  body.recovery-active .divider {
     display: none;
   }
   #recoveryRequest,
@@ -856,7 +858,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.19</span>
+      <span class="login-version" id="loginVersion">· v1.9.20</span>
     </p>
   </section>
 </main>
@@ -1088,8 +1090,13 @@
     resetRecovery();
     recoveryStep = 'request';
     document.body.classList.add('recovery-active');
+    document.body.classList.remove('keyboard-closed');
     loginForm.style.display = 'none';
     recoveryRequest.style.display = 'block';
+    // Entramos ya en modo enfoque para que la pantalla no se mueva
+    // cuando el campo de correo reciba el foco automáticamente.
+    document.body.classList.add('typing');
+    compactHeaderNow();
     const email = document.getElementById('loginEmail').value.trim();
     if (email) recoveryEmail.value = email;
     typeCopy('recovery');
@@ -1102,9 +1109,12 @@
     recoveryEmailValue = email;
     recoveryStep = 'reset';
     document.body.classList.add('recovery-active');
+    document.body.classList.remove('keyboard-closed');
     loginForm.style.display = 'none';
     recoveryRequest.style.display = 'none';
     recoveryReset.style.display = 'block';
+    document.body.classList.add('typing');
+    compactHeaderNow();
     recoveryEmailLabel.textContent = email;
     recoveryCode.value = '';
     recoveryPassword.value = '';
@@ -1260,7 +1270,9 @@
         const active = document.activeElement;
         const stillFocused = active && active.matches && active.matches('input');
         if (stillFocused) {
-          document.body.classList.add('keyboard-closed');
+          if (!document.body.classList.contains('recovery-active')) {
+            document.body.classList.add('keyboard-closed');
+          }
           return;
         }
         document.body.classList.remove('typing');
@@ -1307,6 +1319,7 @@
         // bajamos la hoja para que el formulario no quede pegado arriba.
         clearTimeout(focusSettleTimer);
         focusSettleTimer = setTimeout(() => {
+          if (document.body.classList.contains('recovery-active')) return;
           const active = document.activeElement;
           if (!active || !active.matches || !active.matches('input')) return;
           const keyboardOpen = vv && vv.height < baseViewportHeight - 80;
