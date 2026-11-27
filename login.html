@@ -788,34 +788,45 @@
         <div class="verify-icon" aria-hidden="true">
           <svg><use href="#g-lock"/></svg>
         </div>
-        <p class="verify-copy">
-          Escribe el código que enviamos a
-          <strong id="recoveryEmailLabel"></strong>
-        </p>
-        <input class="code-input" id="recoveryCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="one-time-code" placeholder="000000" aria-label="Código de recuperación">
-        <div class="field">
-          <label for="recoveryPassword">Nueva contraseña</label>
-          <div class="input-shell">
-            <svg><use href="#g-lock"/></svg>
-            <input id="recoveryPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-            <button class="eye" type="button" data-eye="recoveryPassword" aria-label="Mostrar contraseña">
-              <svg><use href="#g-eye"/></svg>
-            </button>
-          </div>
+
+        <div id="recoveryCodeStep">
+          <p class="verify-copy">
+            Escribe el código que enviamos a
+            <strong id="recoveryEmailLabel"></strong>
+          </p>
+          <input class="code-input" id="recoveryCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="one-time-code" placeholder="000000" aria-label="Código de recuperación">
+          <button class="primary" id="btnCheckRecoveryCode" data-label="Continuar" type="button" disabled>Continuar</button>
+          <button class="link" id="resendRecovery" type="button">Reenviar código</button>
+          <button class="link" id="backToLogin2" type="button">Volver a entrar</button>
         </div>
-        <div class="field">
-          <label for="recoveryConfirm">Repite la contraseña</label>
-          <div class="input-shell">
-            <svg><use href="#g-lock"/></svg>
-            <input id="recoveryConfirm" type="password" placeholder="Repite la contraseña" autocomplete="new-password">
-            <button class="eye" type="button" data-eye="recoveryConfirm" aria-label="Mostrar contraseña">
-              <svg><use href="#g-eye"/></svg>
-            </button>
+
+        <div id="recoveryPasswordStep" style="display:none">
+          <p class="verify-copy">
+            Elige una nueva contraseña para
+            <strong id="recoveryPasswordEmail"></strong>
+          </p>
+          <div class="field">
+            <label for="recoveryPassword">Nueva contraseña</label>
+            <div class="input-shell">
+              <svg><use href="#g-lock"/></svg>
+              <input id="recoveryPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+              <button class="eye" type="button" data-eye="recoveryPassword" aria-label="Mostrar contraseña">
+                <svg><use href="#g-eye"/></svg>
+              </button>
+            </div>
           </div>
+          <div class="field">
+            <label for="recoveryConfirm">Repite la contraseña</label>
+            <div class="input-shell">
+              <svg><use href="#g-lock"/></svg>
+              <input id="recoveryConfirm" type="password" placeholder="Repite la contraseña" autocomplete="new-password">
+              <button class="eye" type="button" data-eye="recoveryConfirm" aria-label="Mostrar contraseña">
+                <svg><use href="#g-eye"/></svg>
+              </button>
+            </div>
+          </div>
+          <button class="primary" id="btnResetPassword" data-label="Cambiar contraseña" type="button" disabled>Cambiar contraseña</button>
         </div>
-        <button class="primary" id="btnResetPassword" data-label="Cambiar contraseña" type="button" disabled>Cambiar contraseña</button>
-        <button class="link" id="resendRecovery" type="button">Reenviar código</button>
-        <button class="link" id="backToLogin2" type="button">Volver a entrar</button>
       </div>
     </div>
 
@@ -863,7 +874,7 @@
     <p class="secure">
       <svg><use href="#g-lock"/></svg>
       Tus datos están seguros en este dispositivo
-      <span class="login-version" id="loginVersion">· v1.9.22</span>
+      <span class="login-version" id="loginVersion">· v1.9.23</span>
     </p>
   </section>
 </main>
@@ -905,12 +916,16 @@
   const forgotPassword = document.getElementById('forgotPassword');
   const recoveryRequest = document.getElementById('recoveryRequest');
   const recoveryReset = document.getElementById('recoveryReset');
+  const recoveryCodeStep = document.getElementById('recoveryCodeStep');
+  const recoveryPasswordStep = document.getElementById('recoveryPasswordStep');
   const recoveryEmail = document.getElementById('recoveryEmail');
   const recoveryEmailLabel = document.getElementById('recoveryEmailLabel');
+  const recoveryPasswordEmail = document.getElementById('recoveryPasswordEmail');
   const recoveryCode = document.getElementById('recoveryCode');
   const recoveryPassword = document.getElementById('recoveryPassword');
   const recoveryConfirm = document.getElementById('recoveryConfirm');
   const btnSendRecovery = document.getElementById('btnSendRecovery');
+  const btnCheckRecoveryCode = document.getElementById('btnCheckRecoveryCode');
   const btnResetPassword = document.getElementById('btnResetPassword');
   const resendRecovery = document.getElementById('resendRecovery');
   const backToLogin = document.getElementById('backToLogin');
@@ -964,7 +979,7 @@
     reset: {
       eyebrow: 'Casi listo',
       title: 'Elige una nueva\ncontraseña.',
-      sub: 'Escribe el código y tu nueva contraseña.'
+      sub: 'Escribe tu nueva contraseña y repítela.'
     }
   };
 
@@ -1079,11 +1094,15 @@
     loginForm.style.display = 'block';
     recoveryRequest.style.display = 'none';
     recoveryReset.style.display = 'none';
+    recoveryCodeStep.style.display = 'block';
+    recoveryPasswordStep.style.display = 'none';
     recoveryCode.value = '';
     recoveryPassword.value = '';
     recoveryConfirm.value = '';
     btnSendRecovery.disabled = false;
     btnSendRecovery.textContent = btnSendRecovery.dataset.label;
+    btnCheckRecoveryCode.disabled = true;
+    btnCheckRecoveryCode.textContent = btnCheckRecoveryCode.dataset.label;
     btnResetPassword.disabled = true;
     btnResetPassword.textContent = btnResetPassword.dataset.label;
     showError('');
@@ -1121,16 +1140,36 @@
 
   function showRecoveryReset(email) {
     recoveryEmailValue = email;
-    recoveryStep = 'reset';
+    recoveryStep = 'code';
     document.body.classList.add('recovery-active');
     document.body.classList.remove('keyboard-closed');
     loginForm.style.display = 'none';
     recoveryRequest.style.display = 'none';
     recoveryReset.style.display = 'block';
+    recoveryCodeStep.style.display = 'block';
+    recoveryPasswordStep.style.display = 'none';
     document.body.classList.add('typing');
     compactHeaderNow();
     recoveryEmailLabel.textContent = email;
+    recoveryPasswordEmail.textContent = email;
     recoveryCode.value = '';
+    recoveryPassword.value = '';
+    recoveryConfirm.value = '';
+    btnCheckRecoveryCode.disabled = true;
+    btnCheckRecoveryCode.textContent = btnCheckRecoveryCode.dataset.label;
+    btnResetPassword.disabled = true;
+    btnResetPassword.textContent = btnResetPassword.dataset.label;
+    showError('');
+    typeCopy('verify');
+    setTimeout(() => {
+      try { recoveryCode.focus({ preventScroll: true }); } catch (error) { /* ignorar */ }
+    }, 180);
+  }
+
+  function showRecoveryPasswordStep() {
+    recoveryStep = 'password';
+    recoveryCodeStep.style.display = 'none';
+    recoveryPasswordStep.style.display = 'block';
     recoveryPassword.value = '';
     recoveryConfirm.value = '';
     btnResetPassword.disabled = true;
@@ -1138,13 +1177,16 @@
     showError('');
     typeCopy('reset');
     setTimeout(() => {
-      try { recoveryCode.focus({ preventScroll: true }); } catch (error) { /* ignorar */ }
-    }, 180);
+      try { recoveryPassword.focus({ preventScroll: true }); } catch (error) { /* ignorar */ }
+    }, 160);
+  }
+
+  function updateCheckRecoveryButton() {
+    btnCheckRecoveryCode.disabled = recoveryCode.value.replace(/\D/g, '').length < 6;
   }
 
   function updateResetButton() {
-    const token = recoveryCode.value.replace(/\D/g, '');
-    btnResetPassword.disabled = token.length < 6 || recoveryPassword.value.length < 6 || recoveryConfirm.value.length < 6;
+    btnResetPassword.disabled = recoveryPassword.value.length < 6 || recoveryConfirm.value.length < 6;
   }
 
   function setMode(mode) {
@@ -1447,6 +1489,7 @@
     if (msg.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Inicia sesión.';
     if (msg.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
     if (msg.includes('new password should be different') || msg.includes('same as the old')) return 'La nueva contraseña debe ser diferente a la anterior.';
+    if (msg.includes('auth session missing') || msg.includes('session missing')) return 'La sesión expiró. Vuelve a pedir el código.';
     if (msg.includes('user not found')) return 'No encontramos una cuenta con ese correo.';
     if (msg.includes('email link is invalid')) return 'El código no es válido o ya expiró. Pide uno nuevo.';
     if (msg.includes('unable to validate email') || msg.includes('invalid email')) return 'El correo no es válido.';
@@ -1631,14 +1674,45 @@
     }
   }
 
-  async function handleResetPassword() {
+  async function handleCheckRecoveryCode() {
     const token = recoveryCode.value.replace(/\D/g, '').slice(0, 8);
-    const password = recoveryPassword.value;
-    const confirm = recoveryConfirm.value;
-
     if (token.length < 6) {
       showError('Escribe el código completo que te llegó al correo.');
       recoveryCode.focus();
+      return;
+    }
+    if (!recoveryEmailValue) {
+      showError('Vuelve a solicitar el código.');
+      return;
+    }
+
+    const sb = client();
+    if (!sb) return;
+
+    showError('');
+    setLoading(btnCheckRecoveryCode, true);
+    try {
+      const { error } = await sb.auth.verifyOtp({
+        email: recoveryEmailValue,
+        token,
+        type: 'recovery'
+      });
+      if (error) { showError(translateError(error)); return; }
+      showRecoveryPasswordStep();
+    } catch (err) {
+      showError(translateError(err));
+    } finally {
+      setLoading(btnCheckRecoveryCode, false);
+      updateCheckRecoveryButton();
+    }
+  }
+
+  async function handleResetPassword() {
+    const password = recoveryPassword.value;
+    const confirm = recoveryConfirm.value;
+
+    if (!recoveryEmailValue) {
+      showError('Vuelve a solicitar el código.');
       return;
     }
     if (password.length < 6) {
@@ -1651,10 +1725,6 @@
       recoveryConfirm.focus();
       return;
     }
-    if (!recoveryEmailValue) {
-      showError('Vuelve a solicitar el código.');
-      return;
-    }
 
     const sb = client();
     if (!sb) return;
@@ -1662,15 +1732,8 @@
     showError('');
     setLoading(btnResetPassword, true);
     try {
-      const { error: verifyError } = await sb.auth.verifyOtp({
-        email: recoveryEmailValue,
-        token,
-        type: 'recovery'
-      });
-      if (verifyError) { showError(translateError(verifyError)); return; }
-
-      const { error: updateError } = await sb.auth.updateUser({ password });
-      if (updateError) { showError(translateError(updateError)); return; }
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) { showError(translateError(error)); return; }
 
       showToast('Contraseña actualizada. Entrando…');
       setTimeout(() => { location.href = 'index.html'; }, 700);
@@ -1698,7 +1761,7 @@
       if (error) { showError(translateError(error)); return; }
       showToast('Código reenviado. Revisa tu correo.');
       recoveryCode.value = '';
-      updateResetButton();
+      updateCheckRecoveryButton();
       recoveryCode.focus();
     } catch (err) {
       showError(translateError(err));
@@ -1711,11 +1774,11 @@
   recoveryCode.addEventListener('input', () => {
     const digits = recoveryCode.value.replace(/\D/g, '').slice(0, 8);
     if (recoveryCode.value !== digits) recoveryCode.value = digits;
-    updateResetButton();
+    updateCheckRecoveryButton();
   });
   recoveryCode.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      recoveryPassword.focus();
+      handleCheckRecoveryCode();
     }
   });
   recoveryPassword.addEventListener('input', updateResetButton);
@@ -1783,6 +1846,7 @@
   btnVerify.addEventListener('click', handleVerify);
   forgotPassword.addEventListener('click', showRecoveryRequest);
   btnSendRecovery.addEventListener('click', handleSendRecovery);
+  btnCheckRecoveryCode.addEventListener('click', handleCheckRecoveryCode);
   btnResetPassword.addEventListener('click', handleResetPassword);
   resendRecovery.addEventListener('click', handleResendRecovery);
   backToLogin.addEventListener('click', showLoginForm);
